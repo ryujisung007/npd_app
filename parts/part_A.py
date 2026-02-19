@@ -1,333 +1,702 @@
 import streamlit as st
 import requests
+import json
 import urllib.parse
 import pandas as pd
-from io import BytesIO
-
-# PDF
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.pdfbase.cidfonts import UnicodeCIDFont
-from reportlab.pdfbase import pdfmetrics
-from reportlab.lib.units import inch
+import plotly.graph_objects as go
+from datetime import date
 
 try:
     from openai import OpenAI
-except:
+except Exception:
     OpenAI = None
 
 
 def run():
 
-    st.markdown("# 🧪 신제품개발시스템")
-    st.markdown("---")
+    # ============================================================
+    # 공통 스타일
+    # ============================================================
+    st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+    .npd-header {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        border-radius: 16px;
+        padding: 28px 32px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+    }
+    .npd-header-icon { font-size: 40px; }
+    .npd-header-title {
+        font-size: 26px;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 0;
+    }
+    .npd-header-sub {
+        font-size: 13px;
+        color: #94a3b8;
+        margin-top: 4px;
+    }
+    .kpi-card {
+        background: linear-gradient(145deg, #1e293b, #0f172a);
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 18px 20px;
+        text-align: center;
+    }
+    .kpi-label { font-size: 12px; color: #64748b; margin-bottom: 6px; }
+    .kpi-value { font-size: 28px; font-weight: 700; color: #38bdf8; }
+    .kpi-desc  { font-size: 11px; color: #475569; margin-top: 4px; }
+    .section-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #e2e8f0;
+        border-left: 4px solid #38bdf8;
+        padding-left: 12px;
+        margin: 24px 0 14px;
+    }
+    .badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        margin: 2px;
+    }
+    .badge-blue   { background: #1e40af; color: #bfdbfe; }
+    .badge-green  { background: #14532d; color: #bbf7d0; }
+    .badge-yellow { background: #713f12; color: #fef08a; }
+    .badge-red    { background: #7f1d1d; color: #fecaca; }
+    .risk-row {
+        background: #1e293b;
+        border-left: 4px solid #ef4444;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .risk-row.medium { border-left-color: #f59e0b; }
+    .risk-row.low    { border-left-color: #22c55e; }
+    .plan-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        color: #e2e8f0;
+    }
+    .plan-table th {
+        background: #0f172a;
+        color: #94a3b8;
+        padding: 10px 14px;
+        text-align: left;
+        font-weight: 500;
+        border-bottom: 1px solid #334155;
+    }
+    .plan-table td {
+        padding: 10px 14px;
+        border-bottom: 1px solid #1e293b;
+    }
+    .plan-table tr:hover td { background: #1e293b; }
+    .ai-box {
+        background: #0f172a;
+        border: 1px solid #1e40af;
+        border-radius: 12px;
+        padding: 24px;
+        margin-top: 20px;
+        line-height: 1.8;
+        font-size: 14px;
+        color: #e2e8f0;
+        white-space: pre-wrap;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
     # ============================================================
-    # 시장정보분석
+    # 헤더
     # ============================================================
-    st.markdown("## 📊 전략 통합 대시보드")
+    st.markdown("""
+    <div class="npd-header">
+        <div class="npd-header-icon">🧪</div>
+        <div>
+            <div class="npd-header-title">신제품개발시스템</div>
+            <div class="npd-header-sub">시장 정보 분석부터 개발보고서까지 신제품 개발 전 과정을 지원합니다.</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
+    # ============================================================
+    # KPI 요약
+    # ============================================================
+    k1, k2, k3, k4 = st.columns(4)
+    for col, icon, label, value, desc in [
+        (k1, "📈", "진행 중 프로젝트", "147", "전월 대비 +12"),
+        (k2, "🧬", "배합비 개발 중",   "32",  "승인 대기 8건"),
+        (k3, "⚠️", "리스크 항목",      "5",   "긴급 조치 필요 2건"),
+        (k4, "📋", "완료 보고서",       "89",  "이번 달 +7"),
+    ]:
+        with col:
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">{icon} {label}</div>
+                <div class="kpi-value">{value}</div>
+                <div class="kpi-desc">{desc}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ============================================================
+    # 공통 DB
+    # ============================================================
     beverage_structure = {
         "건강기능성음료": {
-            "플레이버": ["망고", "베리", "레몬", "복숭아", "초코", "프로틴초코", "콜라겐베리"],
-            "브랜드": ["몬스터", "레드불", "마이밀", "셀시어스", "닥터유"]
+            "플레이버": ["망고", "베리", "레몬", "복숭아", "초코"],
+            "브랜드": ["몬스터", "레드불", "셀시어스", "마이밀", "닥터유"]
         },
         "탄산음료": {
-            "플레이버": ["콜라", "라임", "자몽", "청포도", "유자", "제로콜라"],
+            "플레이버": ["콜라", "레몬", "자몽", "라임", "청포도"],
             "브랜드": ["코카콜라", "펩시", "칠성사이다", "환타"]
         },
         "과일주스": {
-            "플레이버": ["오렌지", "사과", "망고", "포도", "타트체리", "자몽"],
+            "플레이버": ["오렌지", "사과", "망고", "포도", "타트체리"],
             "브랜드": ["델몬트", "썬키스트", "따옴", "돈시몬"]
+        },
+        "전통/차음료": {
+            "플레이버": ["녹차", "홍차", "보리차", "식혜", "쌍화차"],
+            "브랜드": ["동서", "광동", "웅진"]
+        },
+        "제로/저당음료": {
+            "플레이버": ["제로콜라", "제로사이다", "무가당레몬"],
+            "브랜드": ["코카콜라제로", "펩시제로", "칠성제로"]
         }
     }
 
-    selected_group = st.selectbox("📂 분석계열", list(beverage_structure.keys()))
+    # OpenAI 활성화 여부 (전역)
+    try:
+        openai_enabled = (
+            "openai" in st.secrets
+            and bool(st.secrets["openai"].get("OPENAI_API_KEY"))
+            and OpenAI is not None
+        )
+    except Exception:
+        openai_enabled = False
 
-    # 플레이버
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        flavor_select = st.selectbox("추천 플레이버", beverage_structure[selected_group]["플레이버"])
-    with col2:
-        flavor_custom = st.text_input("직접입력(플레이버)")
+    tabs = st.tabs([
+        "📈 시장정보분석",
+        "🧬 배합비개발",
+        "⚠️ 공정리스크확인",
+        "📋 생산계획서",
+        "📝 개발보고서"
+    ])
 
-    final_flavor = flavor_custom if flavor_custom else flavor_select
+    # ============================================================
+    # 📈 탭 0: 시장정보분석
+    # ============================================================
+    with tabs[0]:
 
-    # 브랜드
-    col3, col4 = st.columns([2, 1])
-    with col3:
-        brand_select = st.selectbox("추천 브랜드", beverage_structure[selected_group]["브랜드"])
-    with col4:
-        brand_custom = st.text_input("직접입력(브랜드)")
+        st.markdown('<div class="section-title">음료 시장 트렌드 & 쇼핑 분석</div>', unsafe_allow_html=True)
 
-    final_brand = brand_custom if brand_custom else brand_select
-
-    if st.button("📊 전략 분석 실행"):
-
-        if not final_flavor and not final_brand:
-            st.warning("⚠ 플레이버 또는 브랜드를 선택해야 쇼핑 데이터가 출력됩니다.")
+        if "naver_search" not in st.secrets or "naver_shopping" not in st.secrets:
+            st.error("네이버 API secrets가 설정되지 않았습니다.")
             return
 
-        # ============================================================
-        # 네이버 쇼핑 API 공통 함수
-        # ============================================================
-        def fetch_shopping(keyword, display=100):
-            enc = urllib.parse.quote(keyword)
-            res = requests.get(
-                f"https://openapi.naver.com/v1/search/shop.json?query={enc}&display={display}",
-                headers={
-                    "X-Naver-Client-Id": st.secrets["naver_shopping"]["NAVER_CLIENT_ID"],
-                    "X-Naver-Client-Secret": st.secrets["naver_shopping"]["NAVER_CLIENT_SECRET"],
-                }
-            )
-            if res.status_code != 200:
-                st.error(f"API 오류: {res.text}")
-                return None
-            items = res.json().get("items", [])
-            if not items:
-                return None
-            df = pd.DataFrame(items)
-            df["lprice"] = pd.to_numeric(df["lprice"], errors="coerce")
-            return df
+        # 계열 선택
+        selected_group = st.selectbox("📂 분석 계열", list(beverage_structure.keys()), key="tab0_group")
 
-        # ============================================================
-        # 1) 선택한 브랜드 + 플레이버 검색
-        # ============================================================
-        search_keyword = f"{final_brand} {final_flavor}"
-        df_shop = fetch_shopping(search_keyword)
+        flavors_list = ["없음"] + beverage_structure[selected_group]["플레이버"]
+        brands_list  = ["없음"] + beverage_structure[selected_group]["브랜드"]
 
-        if df_shop is None:
-            st.warning("쇼핑 데이터를 불러오지 못했습니다.")
-            return
-
-        # ============================================================
-        # 2) 건강기능성음료 선택 시 → 기능성 음료 시장 전체 추가 검색
-        # ============================================================
-        df_functional = None
-        flavor_counts = {}
-        brand_counts = {}
-
-        if selected_group == "건강기능성음료":
-            st.info("🔍 기능성 음료 시장 전체 데이터를 추가로 검색합니다...")
-            df_functional = fetch_shopping("기능성 음료", display=100)
-
-        # ============================================================
-        # 지표 계산 (선택 브랜드+플레이버 기준)
-        # ============================================================
-        brand_share = df_shop["brand"].value_counts(normalize=True) * 100
-        dominance_index = brand_share.iloc[0] * len(df_shop)
-        avg_price = df_shop["lprice"].mean()
-        premium_threshold = df_shop["lprice"].median()
-
-        df_shop["price_position"] = df_shop["lprice"].apply(
-            lambda x: "프리미엄" if x > premium_threshold else "가성비"
+        # 플레이버
+        col_f1, col_f2 = st.columns([2, 1])
+        with col_f1:
+            flavor_select = st.selectbox("🍊 플레이버 선택", flavors_list, key="tab0_flavor_sel")
+        with col_f2:
+            flavor_custom = st.text_input("✏️ 플레이버 직접입력", key="tab0_flavor_custom",
+                                          placeholder="없음 선택 시 활성")
+        final_flavor = flavor_custom.strip() if flavor_custom.strip() else (
+            flavor_select if flavor_select != "없음" else ""
         )
 
-        opportunity_score = (100 - brand_share.iloc[0]) * (1 if avg_price < premium_threshold else 0.8)
+        # 브랜드
+        col_b1, col_b2 = st.columns([2, 1])
+        with col_b1:
+            brand_select = st.selectbox("🏷 브랜드 선택", brands_list, key="tab0_brand_sel")
+        with col_b2:
+            brand_custom = st.text_input("✏️ 브랜드 직접입력", key="tab0_brand_custom",
+                                         placeholder="없음 선택 시 활성")
+        final_brand = brand_custom.strip() if brand_custom.strip() else (
+            brand_select if brand_select != "없음" else ""
+        )
 
-        if opportunity_score > 50:
-            strategy_grade = "A"
-        elif opportunity_score > 30:
-            strategy_grade = "B"
-        else:
-            strategy_grade = "C"
+        # 트렌드 기간
+        col_c, col_d, col_e = st.columns(3)
+        with col_c:
+            start_date = st.date_input("시작일", date(2023, 1, 1))
+        with col_d:
+            end_date = st.date_input("종료일", date.today())
+        with col_e:
+            time_unit = st.selectbox("📅 분석 단위", ["month", "week", "date"])
 
-        # ============================================================
-        # 카드뉴스 출력 (브랜드+플레이버)
-        # ============================================================
-        st.markdown(f"### 📰 전략 카드뉴스 — `{search_keyword}`")
+        if st.button("📊 분석 실행", key="market_run"):
 
-        colA, colB = st.columns(2)
-        with colA:
-            st.markdown("#### 🏷 브랜드 점유율")
-            st.bar_chart(brand_share)
-        with colB:
-            st.markdown("#### 💰 평균가격")
-            st.metric("평균가", f"{avg_price:,.0f} 원")
+            # 검색 키워드 조합
+            search_parts = [p for p in [final_brand, final_flavor] if p]
+            if not search_parts:
+                st.warning("⚠️ 플레이버 또는 브랜드 중 하나 이상을 선택하거나 입력하세요.")
+                return
+            search_keyword = " ".join(search_parts)
 
-        colC, colD = st.columns(2)
-        with colC:
-            st.markdown("#### 📊 프리미엄 vs 가성비")
-            st.bar_chart(df_shop["price_position"].value_counts())
-        with colD:
-            st.markdown("#### 🧮 브랜드 지배력 지수")
-            st.metric("지배력지수", f"{dominance_index:.1f}")
+            # ── DataLab 트렌드 ──
+            trend_summary = {}
+            plot_data     = {}
 
-        st.markdown("### 🚀 신규 진입 기회 점수")
-        st.metric("Opportunity Score", f"{opportunity_score:.1f}")
-        st.metric("전략 등급", strategy_grade)
+            beverage_groups_datalab = {
+                "건강기능성음료": ["에너지음료", "비타민음료", "단백질음료", "기능성음료"],
+                "탄산음료":       ["콜라", "사이다", "이온음료", "과즙탄산음료"],
+                "과일주스":       ["오렌지주스", "사과주스", "망고주스", "레몬주스"],
+                "전통/차음료":    ["식혜", "녹차음료", "홍차음료", "보리차"],
+                "제로/저당음료":  ["제로음료", "저당음료", "무설탕음료"],
+            }
 
-        # ============================================================
-        # 기능성음료 시장 현황 (건강기능성음료 선택 시만 표시)
-        # ============================================================
-        if df_functional is not None:
-            st.markdown("---")
-            st.markdown("### 🏥 기능성 음료 시장 전체 현황")
+            keywords_for_group = beverage_groups_datalab.get(selected_group, [search_keyword])
 
-            func_brand_share = df_functional["brand"].value_counts(normalize=True) * 100
-            func_avg_price = df_functional["lprice"].mean()
-            func_premium_threshold = df_functional["lprice"].median()
-            df_functional["price_position"] = df_functional["lprice"].apply(
-                lambda x: "프리미엄" if x > func_premium_threshold else "가성비"
+            body = {
+                "startDate": start_date.strftime("%Y-%m-%d"),
+                "endDate":   end_date.strftime("%Y-%m-%d"),
+                "timeUnit":  time_unit,
+                "keywordGroups": [
+                    {"groupName": selected_group, "keywords": keywords_for_group}
+                ],
+            }
+            response = requests.post(
+                "https://openapi.naver.com/v1/datalab/search",
+                headers={
+                    "X-Naver-Client-Id":     st.secrets["naver_search"]["NAVER_CLIENT_ID"],
+                    "X-Naver-Client-Secret": st.secrets["naver_search"]["NAVER_CLIENT_SECRET"],
+                    "Content-Type": "application/json",
+                },
+                data=json.dumps(body),
             )
 
-            col_f1, col_f2 = st.columns(2)
-            with col_f1:
-                st.markdown("#### 🏷 기능성음료 브랜드 점유율 TOP10")
-                st.bar_chart(func_brand_share.head(10))
-            with col_f2:
-                st.markdown("#### 💰 기능성음료 평균가격")
-                st.metric("평균가", f"{func_avg_price:,.0f} 원")
-                st.markdown("#### 📊 프리미엄 vs 가성비")
-                st.bar_chart(df_functional["price_position"].value_counts())
+            if response.status_code == 200:
+                result = response.json()
+                if "results" in result:
+                    df_trend = pd.DataFrame(result["results"][0]["data"])
+                    df_trend["period"] = pd.to_datetime(df_trend["period"])
+                    plot_data[selected_group] = df_trend
+                    trend_summary[selected_group] = df_trend["ratio"].tolist()[-3:]
 
-            # 플레이버별 시장 노출 비교
-            st.markdown("#### 🍹 플레이버별 시장 노출 비교 (기능성음료)")
-            for flv in beverage_structure["건강기능성음료"]["플레이버"]:
-                flavor_counts[flv] = df_functional["title"].str.contains(flv, na=False).sum()
-            flavor_series = pd.Series(flavor_counts).sort_values(ascending=False)
-            st.bar_chart(flavor_series)
-
-            # 브랜드별 시장 노출 비교
-            st.markdown("#### 🏢 브랜드별 시장 노출 비교 (기능성음료)")
-            for br in beverage_structure["건강기능성음료"]["브랜드"]:
-                brand_counts[br] = df_functional["title"].str.contains(br, na=False, case=False).sum()
-            brand_series = pd.Series(brand_counts).sort_values(ascending=False)
-            st.bar_chart(brand_series)
-
-        # ============================================================
-        # AI 전략 보고서
-        # ============================================================
-        try:
-            openai_enabled = (
-                "openai" in st.secrets
-                and bool(st.secrets["openai"].get("OPENAI_API_KEY"))
-                and OpenAI is not None
-            )
-        except Exception:
-            openai_enabled = False
-
-        if openai_enabled:
-            client = OpenAI(api_key=st.secrets["openai"]["OPENAI_API_KEY"])
-
-            with st.spinner("AI 전략 보고서 생성 중..."):
-
-                # 기능성음료 추가 컨텍스트
-                functional_context = ""
-                if df_functional is not None:
-                    func_brand_top5 = func_brand_share.head(5).to_dict()
-                    functional_context = f"""
-                    [기능성 음료 시장 전체 현황]
-                    - 시장 평균가격: {func_avg_price:,.0f}원
-                    - 브랜드 점유율 TOP5: {func_brand_top5}
-                    - 플레이버 노출 수: {flavor_counts}
-                    - 브랜드 노출 수: {brand_counts}
-                    """
-
-                prompt = f"""
-                [분석 대상]
-                계열: {selected_group}
-                브랜드: {final_brand}, 플레이버: {final_flavor}
-
-                [쇼핑 검색 데이터]
-                - 브랜드 점유율: {brand_share.to_dict()}
-                - 평균가격: {avg_price:,.0f}원
-                - 브랜드 지배력 지수: {dominance_index:.1f}
-                - 신규진입 기회점수: {opportunity_score:.1f}
-                - 전략 등급: {strategy_grade}
-
-                {functional_context}
-
-                위 데이터를 기반으로 아래 항목을 포함한 통합 전략 보고서를 작성하세요:
-                1. 시장 경쟁 구조 분석
-                2. 가격 포지셔닝 전략
-                3. 유망 플레이버 방향
-                4. 신규 진입 전략 및 리스크
-                """
-
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[{"role": "user", "content": prompt}],
+            if plot_data:
+                st.markdown('<div class="section-title">📉 검색 트렌드</div>', unsafe_allow_html=True)
+                fig = go.Figure()
+                for i, (name, df_data) in enumerate(plot_data.items()):
+                    fig.add_trace(go.Scatter(
+                        x=df_data["period"], y=df_data["ratio"],
+                        mode="lines+markers", name=name,
+                        line=dict(color="#38bdf8", width=2),
+                        marker=dict(size=5)
+                    ))
+                fig.update_layout(
+                    paper_bgcolor="#0f172a", plot_bgcolor="#0f172a",
+                    font=dict(color="#94a3b8"),
+                    title=dict(text=f"{selected_group} 트렌드", font=dict(color="#e2e8f0")),
+                    hovermode="x unified",
+                    legend=dict(bgcolor="#1e293b", bordercolor="#334155"),
+                    xaxis=dict(gridcolor="#1e293b"),
+                    yaxis=dict(gridcolor="#1e293b"),
                 )
+                st.plotly_chart(fig, use_container_width=True)
 
-            report_text = response.choices[0].message.content
+            # ── 쇼핑 분석 ──
+            shopping_summary = {}
+            enc = urllib.parse.quote(search_keyword)
+            shop_response = requests.get(
+                f"https://openapi.naver.com/v1/search/shop.json?query={enc}&display=100",
+                headers={
+                    "X-Naver-Client-Id":     st.secrets["naver_shopping"]["NAVER_CLIENT_ID"],
+                    "X-Naver-Client-Secret": st.secrets["naver_shopping"]["NAVER_CLIENT_SECRET"],
+                },
+            )
 
-            # 전문 리포트 스타일 출력
-            st.markdown("""
-            <style>
-            .ai-report-container {
-                background: #0E1117;
-                padding: 30px;
-                border-radius: 14px;
-                margin-top: 25px;
-                border: 1px solid #1F2937;
-                box-shadow: 0 6px 18px rgba(0,0,0,0.4);
-                font-family: 'Segoe UI', 'Roboto', sans-serif;
-            }
-            .ai-report-title {
-                font-size: 20px;
-                font-weight: 700;
-                color: #FFFFFF;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin-bottom: 8px;
-            }
-            .ai-model-label {
-                font-size: 13px;
-                color: #9CA3AF;
-                margin-bottom: 20px;
-            }
-            .ai-report-body {
-                font-size: 15px;
-                line-height: 1.8;
-                color: #F3F4F6;
-                white-space: pre-wrap;
-            }
-            </style>
-            """, unsafe_allow_html=True)
+            if shop_response.status_code == 200:
+                items = shop_response.json().get("items", [])
+                if items:
+                    df_shop = pd.DataFrame(items)
+                    df_shop["lprice"] = pd.to_numeric(df_shop["lprice"], errors="coerce")
 
+                    st.markdown(f'<div class="section-title">🛍 쇼핑 현황 — "{search_keyword}"</div>', unsafe_allow_html=True)
+
+                    m1, m2, m3 = st.columns(3)
+                    m1.metric("평균 가격", f"{df_shop['lprice'].mean():,.0f} 원")
+                    m2.metric("최저 가격", f"{df_shop['lprice'].min():,.0f} 원")
+                    m3.metric("상품 수",   f"{len(df_shop):,} 개")
+
+                    st.dataframe(
+                        df_shop[["title", "lprice", "brand", "mallName"]].rename(columns={
+                            "title": "상품명", "lprice": "최저가", "brand": "브랜드", "mallName": "쇼핑몰"
+                        }),
+                        use_container_width=True, height=220
+                    )
+
+                    brand_rank = df_shop["brand"].value_counts().reset_index()
+                    brand_rank.columns = ["브랜드", "노출건수"]
+
+                    col_b1, col_b2 = st.columns(2)
+                    with col_b1:
+                        st.markdown('<div class="section-title">🏆 브랜드 노출 순위</div>', unsafe_allow_html=True)
+                        st.bar_chart(brand_rank.set_index("브랜드")["노출건수"])
+                    with col_b2:
+                        st.markdown('<div class="section-title">💰 브랜드 평균 가격</div>', unsafe_allow_html=True)
+                        st.bar_chart(df_shop.groupby("brand")["lprice"].mean().sort_values(ascending=False))
+
+                    shopping_summary = {
+                        "평균가격": float(df_shop["lprice"].mean()),
+                        "브랜드순위": brand_rank.to_dict(),
+                    }
+                else:
+                    st.info("쇼핑 검색 결과가 없습니다.")
+
+            # ── AI 보고서 ──
+            if openai_enabled:
+                st.markdown('<div class="section-title">🤖 AI 통합 전략 보고서</div>', unsafe_allow_html=True)
+                with st.spinner("AI 분석 중..."):
+                    client = OpenAI(api_key=st.secrets["openai"]["OPENAI_API_KEY"])
+                    prompt = f"""
+                    검색 키워드: {search_keyword}
+                    트렌드 데이터: {trend_summary}
+                    쇼핑 데이터: {shopping_summary}
+                    위 내용을 기반으로 시장 성장성, 브랜드 경쟁 구조, 가격 전략, 신규 진입 전략을 종합 보고서로 작성하세요.
+                    """
+                    resp = client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[{"role": "user", "content": prompt}],
+                    )
+                st.markdown(f'<div class="ai-box">{resp.choices[0].message.content}</div>', unsafe_allow_html=True)
+            else:
+                st.info("OpenAI 키가 없어 AI 보고서는 비활성화됩니다.")
+
+    # ============================================================
+    # 🧬 탭 1: 배합비개발
+    # ============================================================
+    with tabs[1]:
+
+        st.markdown('<div class="section-title">배합비 설계 & 원료 구성</div>', unsafe_allow_html=True)
+
+        # 계열/플레이버/브랜드 선택
+        selected_group2 = st.selectbox("📂 제품 계열", list(beverage_structure.keys()), key="tab1_group")
+
+        flavors_list2 = ["없음"] + beverage_structure[selected_group2]["플레이버"]
+        brands_list2  = ["없음"] + beverage_structure[selected_group2]["브랜드"]
+
+        col1, col2 = st.columns(2)
+        with col1:
+            f_sel2 = st.selectbox("🍊 플레이버", flavors_list2, key="tab1_flavor_sel")
+            f_cus2 = st.text_input("✏️ 플레이버 직접입력", key="tab1_flavor_custom", placeholder="없음 선택 시 입력")
+            final_flavor2 = f_cus2.strip() if f_cus2.strip() else (f_sel2 if f_sel2 != "없음" else "")
+
+            target_brix = st.slider("🍬 목표 당도 (Brix)", 0.0, 20.0, 10.0, 0.5)
+            target_ph   = st.slider("🧪 목표 pH", 2.0, 7.0, 3.5, 0.1)
+
+        with col2:
+            b_sel2 = st.selectbox("🏷 브랜드", brands_list2, key="tab1_brand_sel")
+            b_cus2 = st.text_input("✏️ 브랜드 직접입력", key="tab1_brand_custom", placeholder="없음 선택 시 입력")
+            final_brand2 = b_cus2.strip() if b_cus2.strip() else (b_sel2 if b_sel2 != "없음" else "")
+
+            target_cost = st.number_input("💰 목표 원가 (원/L)", min_value=0, value=500, step=10)
+            memo        = st.text_area("📝 특이사항", placeholder="특수 원료, 알레르기 주의사항 등", height=68)
+
+        product_name = f"{final_brand2} {final_flavor2}".strip() or "미입력"
+
+        st.markdown('<div class="section-title">원료 구성표</div>', unsafe_allow_html=True)
+
+        ingredient_df = pd.DataFrame({
+            "원료명":      ["정제수", "설탕", "구연산", "향료", "비타민C"],
+            "규격":        ["식품용", "백설탕", "무수", "천연", "L-아스코르브산"],
+            "함량(%)":    [85.0, 8.0, 0.3, 0.2, 0.05],
+            "원가(원/kg)": [10, 800, 2000, 15000, 30000],
+            "비고":        ["기본", "감미", "산미", "향", "기능성"],
+        })
+
+        edited_df = st.data_editor(
+            ingredient_df,
+            use_container_width=True,
+            num_rows="dynamic",
+            key="ingredient_editor"
+        )
+
+        total_ratio    = edited_df["함량(%)"].sum()
+        estimated_cost = (edited_df["함량(%)"] / 100 * edited_df["원가(원/kg)"]).sum() * 10
+
+        s1, s2, s3 = st.columns(3)
+        s1.metric("총 함량 합계", f"{total_ratio:.2f} %",
+                  delta=f"{total_ratio - 100:.2f}%" if abs(total_ratio - 100) > 0.01 else "정상")
+        s2.metric("예상 원가", f"{estimated_cost:,.0f} 원/L")
+        s3.metric("목표 대비", f"{estimated_cost - target_cost:+,.0f} 원", delta_color="inverse")
+
+        if st.button("🧬 배합비 AI 최적화 제안", key="formula_ai"):
+            if openai_enabled:
+                client = OpenAI(api_key=st.secrets["openai"]["OPENAI_API_KEY"])
+                with st.spinner("AI 배합비 분석 중..."):
+                    prompt = f"""
+                    제품명: {product_name}, 계열: {selected_group2}
+                    플레이버: {final_flavor2}, 브랜드: {final_brand2}
+                    목표 당도: {target_brix} Brix, 목표 pH: {target_ph}, 목표 원가: {target_cost}원/L
+                    현재 원료구성: {edited_df.to_dict()}
+                    위 배합비를 분석하고 원가 절감, 관능 개선, 규격 충족 측면에서 개선 방향을 제안하세요.
+                    """
+                    resp = client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[{"role": "user", "content": prompt}],
+                    )
+                st.markdown(f'<div class="ai-box">{resp.choices[0].message.content}</div>', unsafe_allow_html=True)
+            else:
+                st.info("OpenAI 키가 없어 AI 제안은 비활성화됩니다.")
+
+    # ============================================================
+    # ⚠️ 탭 2: 공정리스크확인
+    # ============================================================
+    with tabs[2]:
+
+        st.markdown('<div class="section-title">공정 단계별 리스크 점검</div>', unsafe_allow_html=True)
+
+        process_step = st.selectbox(
+            "🏭 공정 단계 선택",
+            ["전체", "원료 입고", "전처리/용해", "배합", "살균", "충전", "포장", "출하"]
+        )
+
+        risk_data = [
+            {"단계": "원료 입고", "항목": "원료 규격 미달",      "등급": "high",   "조치": "COA 확인 및 반품 절차 진행"},
+            {"단계": "원료 입고", "항목": "이물 혼입 가능성",    "등급": "medium", "조치": "입고 검사 강화 (금속 검출기)"},
+            {"단계": "배합",      "항목": "당도 편차 ±0.5 초과", "등급": "medium", "조치": "자동 계량 시스템 점검"},
+            {"단계": "살균",      "항목": "살균 온도 미달",       "등급": "high",   "조치": "온도 센서 교체 및 재살균"},
+            {"단계": "충전",      "항목": "충전량 편차",          "등급": "low",    "조치": "충전기 노즐 청소"},
+            {"단계": "포장",      "항목": "라벨 오부착",          "등급": "low",    "조치": "비전 검사 시스템 운영"},
+            {"단계": "출하",      "항목": "유통기한 오기재",      "등급": "high",   "조치": "최종 출하 검사 체크리스트 확인"},
+        ]
+
+        filtered = risk_data if process_step == "전체" else [r for r in risk_data if r["단계"] == process_step]
+
+        high_cnt   = sum(1 for r in filtered if r["등급"] == "high")
+        medium_cnt = sum(1 for r in filtered if r["등급"] == "medium")
+        low_cnt    = sum(1 for r in filtered if r["등급"] == "low")
+
+        r1, r2, r3 = st.columns(3)
+        r1.metric("🔴 긴급", f"{high_cnt} 건")
+        r2.metric("🟡 주의", f"{medium_cnt} 건")
+        r3.metric("🟢 일반", f"{low_cnt} 건")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        grade_map = {
+            "high":   ("🔴 긴급", "badge-red",    "risk-row"),
+            "medium": ("🟡 주의", "badge-yellow", "risk-row medium"),
+            "low":    ("🟢 일반", "badge-green",  "risk-row low"),
+        }
+
+        for item in filtered:
+            label, badge_cls, row_cls = grade_map[item["등급"]]
             st.markdown(f"""
-            <div class="ai-report-container">
-                <div class="ai-report-title">
-                    📊 <span>AI 통합 전략 보고서</span>
+            <div class="{row_cls}">
+                <div>
+                    <span class="badge {badge_cls}">{label}</span>
+                    &nbsp;<strong style="color:#e2e8f0">[{item['단계']}]</strong>
+                    &nbsp;<span style="color:#cbd5e1">{item['항목']}</span>
                 </div>
-                <div class="ai-model-label">
-                    🤖 모델: <strong>gpt-4o-mini</strong>
-                </div>
-                <div class="ai-report-body">
-                    {report_text}
+                <div style="font-size:12px;color:#94a3b8;max-width:50%;text-align:right;">
+                    💡 {item['조치']}
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-            # ========================================================
-            # PDF 생성
-            # ========================================================
-            def generate_pdf(text):
-                buffer = BytesIO()
-                doc = SimpleDocTemplate(buffer)
-                pdfmetrics.registerFont(UnicodeCIDFont("HYSMyeongJo-Medium"))
-                styles = getSampleStyleSheet()
-                style = styles["Normal"]
-                style.fontName = "HYSMyeongJo-Medium"
-                style.fontSize = 11
-                elements = []
-                elements.append(Paragraph("AI 통합 전략 보고서", style))
-                elements.append(Spacer(1, 0.3 * inch))
-                elements.append(Paragraph(text.replace("\n", "<br/>"), style))
-                doc.build(elements)
-                buffer.seek(0)
-                return buffer
+        st.markdown('<div class="section-title">리스크 신규 등록</div>', unsafe_allow_html=True)
+        col_n1, col_n2 = st.columns(2)
+        with col_n1:
+            new_step   = st.selectbox("공정 단계", ["원료 입고", "전처리/용해", "배합", "살균", "충전", "포장", "출하"], key="new_step")
+            new_item   = st.text_input("리스크 항목")
+        with col_n2:
+            new_grade  = st.selectbox("등급", ["high", "medium", "low"], key="new_grade")
+            new_action = st.text_input("조치 방안")
 
-            pdf_buffer = generate_pdf(report_text)
+        if st.button("➕ 리스크 등록", key="add_risk"):
+            if new_item:
+                st.success(f"✅ [{new_step}] '{new_item}' 리스크가 등록되었습니다.")
+            else:
+                st.warning("리스크 항목을 입력하세요.")
 
-            st.download_button(
-                label="📄 전략 보고서 PDF 다운로드",
-                data=pdf_buffer,
-                file_name="AI_전략보고서.pdf",
-                mime="application/pdf"
-            )
+    # ============================================================
+    # 📋 탭 3: 생산계획서
+    # ============================================================
+    with tabs[3]:
 
-        else:
-            st.info("OpenAI 키가 없어 AI 보고서는 비활성화됩니다.")
+        st.markdown('<div class="section-title">생산 계획 수립</div>', unsafe_allow_html=True)
+
+        # 계열/플레이버/브랜드
+        selected_group3 = st.selectbox("📂 제품 계열", list(beverage_structure.keys()), key="tab3_group")
+        flavors_list3 = ["없음"] + beverage_structure[selected_group3]["플레이버"]
+        brands_list3  = ["없음"] + beverage_structure[selected_group3]["브랜드"]
+
+        col_p0a, col_p0b = st.columns(2)
+        with col_p0a:
+            f_sel3 = st.selectbox("🍊 플레이버", flavors_list3, key="tab3_flavor_sel")
+            f_cus3 = st.text_input("✏️ 플레이버 직접입력", key="tab3_flavor_custom", placeholder="없음 선택 시 입력")
+            final_flavor3 = f_cus3.strip() if f_cus3.strip() else (f_sel3 if f_sel3 != "없음" else "")
+        with col_p0b:
+            b_sel3 = st.selectbox("🏷 브랜드", brands_list3, key="tab3_brand_sel")
+            b_cus3 = st.text_input("✏️ 브랜드 직접입력", key="tab3_brand_custom", placeholder="없음 선택 시 입력")
+            final_brand3 = b_cus3.strip() if b_cus3.strip() else (b_sel3 if b_sel3 != "없음" else "")
+
+        plan_product = f"{final_brand3} {final_flavor3}".strip() or "미입력"
+
+        col_p1, col_p2, col_p3 = st.columns(3)
+        with col_p1:
+            plan_line  = st.selectbox("생산 라인", ["1라인", "2라인", "3라인", "다목적 라인"])
+        with col_p2:
+            plan_start = st.date_input("생산 시작일", key="plan_start")
+            plan_end   = st.date_input("생산 종료일", key="plan_end")
+        with col_p3:
+            plan_qty  = st.number_input("생산 수량 (개)", min_value=0, value=10000, step=500)
+            plan_unit = st.selectbox("용량", ["200mL", "250mL", "355mL", "500mL", "1L", "1.5L"])
+
+        volume_map   = {"200mL": 0.2, "250mL": 0.25, "355mL": 0.355, "500mL": 0.5, "1L": 1.0, "1.5L": 1.5}
+        total_volume = plan_qty * volume_map.get(plan_unit, 0.5)
+
+        st.markdown(f'<div class="section-title">📦 [{plan_product}] 원부자재 소요량</div>', unsafe_allow_html=True)
+
+        mat_df = pd.DataFrame({
+            "원부자재": ["정제수", "설탕", "구연산", "향료", "용기", "캡", "라벨"],
+            "단위":     ["L", "kg", "kg", "kg", "개", "개", "개"],
+            "소요량":   [
+                round(total_volume * 0.85, 1),
+                round(total_volume * 0.08, 2),
+                round(total_volume * 0.003, 3),
+                round(total_volume * 0.002, 3),
+                plan_qty, plan_qty, plan_qty,
+            ],
+            "재고 현황": ["충분", "충분", "부족", "충분", "충분", "확인 필요", "충분"],
+        })
+
+        def highlight_stock(val):
+            if val == "부족":
+                return "background-color:#7f1d1d;color:#fecaca"
+            elif val == "확인 필요":
+                return "background-color:#713f12;color:#fef08a"
+            return ""
+
+        st.dataframe(mat_df.style.applymap(highlight_stock, subset=["재고 현황"]), use_container_width=True)
+
+        p1, p2, p3 = st.columns(3)
+        p1.metric("총 생산량", f"{plan_qty:,} 개")
+        p2.metric("총 용량",   f"{total_volume:,.0f} L")
+        days = max((plan_end - plan_start).days, 1)
+        p3.metric("일 평균 생산", f"{plan_qty // days:,} 개/일")
+
+        st.markdown('<div class="section-title">생산 일정표</div>', unsafe_allow_html=True)
+        schedule = [
+            ("원료 입고 확인", "원료팀",  "완료"),
+            ("설비 세팅 & CIP", "생산팀", "완료"),
+            ("시험 생산",       "QC팀",   "진행 중"),
+            ("본 생산",         "생산팀", "대기"),
+            ("품질 검사",       "QC팀",   "대기"),
+            ("출하",            "물류팀", "대기"),
+        ]
+        badge_map2 = {"완료": "badge-green", "진행 중": "badge-yellow", "대기": "badge-blue"}
+        rows_html  = "".join(
+            f"<tr><td>{s[0]}</td><td>{s[1]}</td><td><span class='badge {badge_map2[s[2]]}'>{s[2]}</span></td></tr>"
+            for s in schedule
+        )
+        st.markdown(f"""
+        <table class="plan-table">
+          <tr><th>단계</th><th>담당</th><th>상태</th></tr>
+          {rows_html}
+        </table>
+        """, unsafe_allow_html=True)
+
+    # ============================================================
+    # 📝 탭 4: 개발보고서
+    # ============================================================
+    with tabs[4]:
+
+        st.markdown('<div class="section-title">개발보고서 작성</div>', unsafe_allow_html=True)
+
+        # 계열/플레이버/브랜드
+        selected_group4 = st.selectbox("📂 제품 계열", list(beverage_structure.keys()), key="tab4_group")
+        flavors_list4 = ["없음"] + beverage_structure[selected_group4]["플레이버"]
+        brands_list4  = ["없음"] + beverage_structure[selected_group4]["브랜드"]
+
+        col_r1, col_r2 = st.columns(2)
+        with col_r1:
+            f_sel4 = st.selectbox("🍊 플레이버", flavors_list4, key="tab4_flavor_sel")
+            f_cus4 = st.text_input("✏️ 플레이버 직접입력", key="tab4_flavor_custom", placeholder="없음 선택 시 입력")
+            final_flavor4 = f_cus4.strip() if f_cus4.strip() else (f_sel4 if f_sel4 != "없음" else "")
+
+            rep_manager = st.text_input("담당자", placeholder="홍길동")
+            rep_date    = st.date_input("보고서 작성일", date.today())
+
+        with col_r2:
+            b_sel4 = st.selectbox("🏷 브랜드", brands_list4, key="tab4_brand_sel")
+            b_cus4 = st.text_input("✏️ 브랜드 직접입력", key="tab4_brand_custom", placeholder="없음 선택 시 입력")
+            final_brand4 = b_cus4.strip() if b_cus4.strip() else (b_sel4 if b_sel4 != "없음" else "")
+
+            rep_version = st.selectbox("버전", ["v1.0", "v1.1", "v2.0", "최종"])
+            rep_status  = st.selectbox("진행 상태", ["개발 중", "시험 생산", "승인 대기", "완료"])
+
+        rep_product = f"{final_brand4} {final_flavor4}".strip() or "미입력"
+
+        st.markdown('<div class="section-title">개발 내용</div>', unsafe_allow_html=True)
+
+        rep_concept = st.text_area("📌 제품 컨셉 & 개발 배경", height=80, placeholder="소비자 트렌드, 개발 목적 등")
+        rep_formula = st.text_area("🧬 배합비 요약", height=80, placeholder="주요 원료 및 함량 요약")
+        rep_sensory = st.text_area("👅 관능 평가 결과", height=80, placeholder="색상, 향, 맛, 전체적 기호도 등")
+        rep_quality = st.text_area("🔬 품질 규격", height=80, placeholder="당도, pH, 미생물, 이화학 규격 등")
+        rep_issue   = st.text_area("⚠️ 이슈 & 개선사항", height=80, placeholder="발생 이슈 및 해결 방안")
+
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            if st.button("🤖 AI 보고서 초안 생성", key="report_ai"):
+                if openai_enabled:
+                    client = OpenAI(api_key=st.secrets["openai"]["OPENAI_API_KEY"])
+                    with st.spinner("AI 보고서 작성 중..."):
+                        prompt = f"""
+                        제품명: {rep_product}, 계열: {selected_group4}
+                        플레이버: {final_flavor4}, 브랜드: {final_brand4}
+                        담당자: {rep_manager}, 버전: {rep_version}
+                        컨셉: {rep_concept}
+                        배합비: {rep_formula}
+                        관능평가: {rep_sensory}
+                        품질규격: {rep_quality}
+                        이슈: {rep_issue}
+
+                        위 내용을 바탕으로 신제품 개발 보고서를 전문적으로 작성하세요.
+                        항목: 개발배경, 제품특성, 배합비 요약, 관능평가, 품질기준, 향후 과제
+                        """
+                        resp = client.chat.completions.create(
+                            model="gpt-4o-mini",
+                            messages=[{"role": "user", "content": prompt}],
+                        )
+                    st.session_state["report_ai_text"] = resp.choices[0].message.content
+                else:
+                    st.info("OpenAI 키가 없어 AI 초안 생성은 비활성화됩니다.")
+
+        with col_btn2:
+            if st.button("💾 보고서 저장", key="report_save"):
+                st.success(f"✅ [{rep_product}] {rep_version} 보고서가 저장되었습니다.")
+
+        if "report_ai_text" in st.session_state:
+            st.markdown('<div class="section-title">📄 AI 생성 보고서</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="ai-box">{st.session_state["report_ai_text"]}</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="section-title">📁 최근 보고서 목록</div>', unsafe_allow_html=True)
+        history = pd.DataFrame({
+            "제품명":  ["몬스터 망고", "코카콜라 제로", "홍차 라떼", "델몬트 타트체리", "닥터유 베리"],
+            "버전":    ["v2.0", "최종", "v1.1", "최종", "v1.0"],
+            "담당자":  ["김개발", "이연구", "박기획", "최분석", "정연구"],
+            "작성일":  ["2025-01-15", "2025-01-10", "2024-12-20", "2024-12-05", "2024-11-28"],
+            "상태":    ["승인 대기", "완료", "완료", "완료", "개발 중"],
+        })
+        st.dataframe(history, use_container_width=True)
