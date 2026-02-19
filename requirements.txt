@@ -3,3 +3,6 @@ requests
 pandas
 openpyxl
 altair
+openai
+plotly
+reportlab
