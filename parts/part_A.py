@@ -209,4 +209,70 @@ def run():
                 )
 
                 st.markdown(
-                    "<div styl
+                    "<div style='font-size:12px;color:gray;'>"
+                    "AI 모델: gpt-4o-mini</div>",
+                    unsafe_allow_html=True,
+                )
+
+                with st.spinner("AI 전략 보고서 생성 중..."):
+
+                    client = OpenAI(
+                        api_key=st.secrets["openai"]["OPENAI_API_KEY"]
+                    )
+
+                    prompt = f"""
+                    트렌드 데이터:
+                    {trend_summary}
+
+                    쇼핑 데이터:
+                    {shopping_summary}
+
+                    위 내용을 기반으로 시장 성장성,
+                    브랜드 경쟁 구조,
+                    가격 전략,
+                    신규 진입 전략을 종합 보고서로 작성하세요.
+                    """
+
+                    response_ai = client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[{"role": "user", "content": prompt}],
+                    )
+
+                st.markdown(
+                    f"""
+                    <div style='
+                        background:#F4F6F8;
+                        padding:20px;
+                        border-radius:10px;
+                        font-size:14px;
+                        line-height:1.6;
+                        color:#222;
+                    '>
+                    {response_ai.choices[0].message.content}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            else:
+                st.info("OpenAI 키가 없어 AI 보고서는 비활성화됩니다.")
+
+    # ============================================================
+    # 기존 탭 유지
+    # ============================================================
+    with tabs[1]:
+        st.markdown("### 🧬 배합비개발")
+        st.text_area("배합비 메모", height=120)
+
+    with tabs[2]:
+        st.markdown("### ⚠️ 공정리스크확인")
+        st.selectbox("공정 단계 선택", ["원료 입고", "가공", "포장", "출하"])
+
+    with tabs[3]:
+        st.markdown("### 📋 생산계획서")
+        st.date_input("생산 시작일")
+        st.number_input("생산 수량", min_value=0, value=1000)
+
+    with tabs[4]:
+        st.markdown("### 📝 개발보고서")
+        st.text_input("제품명")
