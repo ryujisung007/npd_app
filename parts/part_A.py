@@ -1,4 +1,15 @@
 import streamlit as st
+import requests
+import json
+import urllib.parse
+import pandas as pd
+import plotly.graph_objects as go
+from datetime import date
+from openai import OpenAI
+from parts import part_A_market, part_A_formula, part_A_risk, part_A_plan, part_A_report
+
+
+import streamlit as st
 from parts import part_A_market, part_A_formula, part_A_risk, part_A_plan, part_A_report
 
 
