@@ -14,9 +14,6 @@ except Exception:
 
 def run():
 
-    # ============================================================
-    # part_A 전용 보조 스타일 (main_app.py CSS와 충돌 없는 것만)
-    # ============================================================
     st.markdown("""
     <style>
     .section-title {
@@ -81,19 +78,50 @@ def run():
         color: #E8F0FE;
         white-space: pre-wrap;
     }
+    .product-card {
+        background: #1A2E4A;
+        border: 1px solid #1E3A5A;
+        border-radius: 10px;
+        padding: 10px;
+        text-align: center;
+        height: 100%;
+    }
+    .product-card img {
+        width: 100%;
+        height: 120px;
+        object-fit: contain;
+        border-radius: 6px;
+        background: #0B1629;
+    }
+    .product-card .prod-title {
+        font-size: 11px;
+        color: #E8F0FE;
+        margin-top: 6px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .product-card .prod-price {
+        font-size: 13px;
+        font-weight: 700;
+        color: #00C8D4;
+        margin-top: 4px;
+    }
+    .product-card a {
+        display: block;
+        margin-top: 6px;
+        font-size: 10px;
+        color: #7A9CC0;
+        text-decoration: none;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-    # ============================================================
-    # 페이지 타이틀
-    # ============================================================
     st.markdown("## 🧪 신제품개발시스템")
     st.caption("시장 정보 분석부터 개발보고서까지 신제품 개발 전 과정을 지원합니다.")
     st.markdown("---")
 
-    # ============================================================
-    # KPI 요약
-    # ============================================================
     k1, k2, k3, k4 = st.columns(4)
     for col, label, value in [
         (k1, "📈 진행 중 프로젝트", "147"),
@@ -105,9 +133,6 @@ def run():
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ============================================================
-    # 공통 DB
-    # ============================================================
     beverage_structure = {
         "건강기능성음료": {
             "플레이버": ["망고", "베리", "레몬", "복숭아", "초코"],
@@ -131,7 +156,15 @@ def run():
         }
     }
 
-    # OpenAI 활성화 여부
+    # 계열별 표준 용량 (개당가격 환산용, mL)
+    standard_volume = {
+        "건강기능성음료": 355,
+        "탄산음료":       355,
+        "과일주스":       200,
+        "전통/차음료":    240,
+        "제로/저당음료":  355,
+    }
+
     try:
         openai_enabled = (
             "openai" in st.secrets
@@ -141,9 +174,7 @@ def run():
     except Exception:
         openai_enabled = False
 
-    # 공통 선택 위젯 함수
-    def flavor_brand_selector(group_key, tab_key):
-        """계열별 플레이버/브랜드 선택 + 없음/직접입력 UI"""
+    def flavor_brand_selector(tab_key):
         selected_group = st.selectbox(
             "📂 분석 계열",
             list(beverage_structure.keys()),
@@ -168,9 +199,11 @@ def run():
 
         return selected_group, final_flavor, final_brand
 
-    # ============================================================
-    # 탭
-    # ============================================================
+    # HTML 태그 제거 유틸
+    def strip_html(text):
+        import re
+        return re.sub(r"<[^>]+>", "", text)
+
     tabs = st.tabs([
         "📈 시장정보분석",
         "🧬 배합비개발",
@@ -190,7 +223,7 @@ def run():
             st.error("네이버 API secrets가 설정되지 않았습니다.")
             return
 
-        selected_group0, final_flavor0, final_brand0 = flavor_brand_selector("", "tab0")
+        selected_group0, final_flavor0, final_brand0 = flavor_brand_selector("tab0")
 
         col_c, col_d, col_e = st.columns(3)
         with col_c:
@@ -208,7 +241,9 @@ def run():
                 return
             search_keyword = " ".join(search_parts)
 
-            # DataLab 트렌드
+            # ────────────────────────────────
+            # 1) DataLab 트렌드 (검색어 기반)
+            # ────────────────────────────────
             beverage_groups_datalab = {
                 "건강기능성음료": ["에너지음료", "비타민음료", "단백질음료", "기능성음료"],
                 "탄산음료":       ["콜라", "사이다", "이온음료", "과즙탄산음료"],
@@ -217,14 +252,22 @@ def run():
                 "제로/저당음료":  ["제로음료", "저당음료", "무설탕음료"],
             }
 
+            # 검색어 기반 키워드 그룹 (검색한 단어가 그래프에 표시)
+            keyword_groups = []
+            if final_brand0:
+                keyword_groups.append({"groupName": final_brand0, "keywords": [final_brand0]})
+            if final_flavor0:
+                keyword_groups.append({"groupName": final_flavor0, "keywords": [final_flavor0]})
+            # 계열 트렌드도 추가
+            category_keywords = beverage_groups_datalab.get(selected_group0, [])
+            if category_keywords:
+                keyword_groups.append({"groupName": selected_group0, "keywords": category_keywords})
+
             body = {
                 "startDate": start_date.strftime("%Y-%m-%d"),
                 "endDate":   end_date.strftime("%Y-%m-%d"),
                 "timeUnit":  time_unit,
-                "keywordGroups": [{
-                    "groupName": selected_group0,
-                    "keywords":  beverage_groups_datalab.get(selected_group0, [search_keyword])
-                }],
+                "keywordGroups": keyword_groups,
             }
             response = requests.post(
                 "https://openapi.naver.com/v1/datalab/search",
@@ -241,27 +284,58 @@ def run():
                 result = response.json()
                 if "results" in result:
                     st.markdown('<div class="section-title">📉 검색 트렌드</div>', unsafe_allow_html=True)
-                    df_trend = pd.DataFrame(result["results"][0]["data"])
-                    df_trend["period"] = pd.to_datetime(df_trend["period"])
-                    trend_summary[selected_group0] = df_trend["ratio"].tolist()[-3:]
 
+                    colors = ["#00C8D4", "#B08FFF", "#FFB347", "#34d399", "#f472b6"]
                     fig = go.Figure()
-                    fig.add_trace(go.Scatter(
-                        x=df_trend["period"], y=df_trend["ratio"],
-                        mode="lines+markers", name=selected_group0,
-                        line=dict(color="#00C8D4", width=2), marker=dict(size=5)
-                    ))
+
+                    for i, res in enumerate(result["results"]):
+                        group_name = res["title"]
+                        df_t = pd.DataFrame(res["data"])
+                        df_t["period"] = pd.to_datetime(df_t["period"])
+                        trend_summary[group_name] = df_t["ratio"].tolist()[-3:]
+
+                        color = colors[i % len(colors)]
+
+                        # 라인
+                        fig.add_trace(go.Scatter(
+                            x=df_t["period"],
+                            y=df_t["ratio"],
+                            mode="lines",
+                            name=group_name,
+                            line=dict(color=color, width=2),
+                        ))
+                        # 꼭지점 마커 + 숫자 표시
+                        fig.add_trace(go.Scatter(
+                            x=df_t["period"],
+                            y=df_t["ratio"],
+                            mode="markers+text",
+                            name=f"{group_name} 값",
+                            marker=dict(color=color, size=8, symbol="circle",
+                                        line=dict(color="white", width=1.5)),
+                            text=[f"{v:.1f}" for v in df_t["ratio"]],
+                            textposition="top center",
+                            textfont=dict(size=9, color=color),
+                            showlegend=False,
+                        ))
+
                     fig.update_layout(
                         paper_bgcolor="#0B1629", plot_bgcolor="#0B1629",
                         font=dict(color="#7A9CC0"),
-                        title=dict(text=f"{selected_group0} 트렌드", font=dict(color="#E8F0FE")),
+                        title=dict(
+                            text=f"🔍 '{search_keyword}' 및 계열 트렌드 비교",
+                            font=dict(color="#E8F0FE", size=14)
+                        ),
                         hovermode="x unified",
-                        xaxis=dict(gridcolor="#1A2E4A"),
-                        yaxis=dict(gridcolor="#1A2E4A"),
+                        legend=dict(bgcolor="#1A2E4A", bordercolor="#1E3A5A", font=dict(color="#E8F0FE")),
+                        xaxis=dict(gridcolor="#1A2E4A", color="#7A9CC0"),
+                        yaxis=dict(gridcolor="#1A2E4A", color="#7A9CC0"),
+                        margin=dict(t=50, b=30),
                     )
                     st.plotly_chart(fig, use_container_width=True)
 
-            # 쇼핑 분석
+            # ────────────────────────────────
+            # 2) 쇼핑 분석
+            # ────────────────────────────────
             shopping_summary = {}
             enc = urllib.parse.quote(search_keyword)
             shop_response = requests.get(
@@ -278,30 +352,198 @@ def run():
                     df_shop = pd.DataFrame(items)
                     df_shop["lprice"] = pd.to_numeric(df_shop["lprice"], errors="coerce")
 
-                    st.markdown(f'<div class="section-title">🛍 쇼핑 현황 — "{search_keyword}"</div>', unsafe_allow_html=True)
+                    # 개당 가격 추정 (표준 용량 기준 1L당 환산 후 해당 용량 곱)
+                    vol_ml = standard_volume.get(selected_group0, 355)
 
-                    m1, m2, m3 = st.columns(3)
-                    m1.metric("평균 가격", f"{df_shop['lprice'].mean():,.0f} 원")
-                    m2.metric("최저 가격", f"{df_shop['lprice'].min():,.0f} 원")
-                    m3.metric("상품 수",   f"{len(df_shop):,} 개")
+                    st.markdown(
+                        f'<div class="section-title">🛍 쇼핑 현황 — "{search_keyword}"</div>',
+                        unsafe_allow_html=True
+                    )
 
+                    m1, m2, m3, m4 = st.columns(4)
+                    avg_price = df_shop["lprice"].mean()
+                    min_price = df_shop["lprice"].min()
+                    # 개당 가격 추정: 평균가를 묶음 단위로 나눈 예측치
+                    # (쇼핑 결과는 묶음 단위가 섞여있어 중위수 ÷ 6으로 예측)
+                    per_unit_est = df_shop["lprice"].median() / 6
+                    m1.metric("평균 가격", f"{avg_price:,.0f} 원")
+                    m2.metric("최저 가격", f"{min_price:,.0f} 원")
+                    m3.metric("개당 가격 (예측)", f"≈ {per_unit_est:,.0f} 원")
+                    m4.metric("상품 수", f"{len(df_shop):,} 개")
+
+                    # ── 상품 테이블 + 이미지 + 링크 ──
+                    st.markdown('<div class="section-title">🖼 상품 목록 (이미지 · 링크 포함)</div>', unsafe_allow_html=True)
+
+                    # 이미지 카드 (최대 12개, 4열)
+                    image_items = [it for it in items if it.get("image")][:12]
+                    if image_items:
+                        cols_per_row = 4
+                        for row_start in range(0, len(image_items), cols_per_row):
+                            row_items = image_items[row_start:row_start + cols_per_row]
+                            img_cols = st.columns(cols_per_row)
+                            for col, it in zip(img_cols, row_items):
+                                title_clean = strip_html(it.get("title", ""))
+                                price_val   = it.get("lprice", "")
+                                link_url    = it.get("link", "#")
+                                img_url     = it.get("image", "")
+                                with col:
+                                    st.markdown(f"""
+                                    <div class="product-card">
+                                        <img src="{img_url}" onerror="this.style.display='none'" />
+                                        <div class="prod-title">{title_clean}</div>
+                                        <div class="prod-price">{int(price_val):,} 원</div>
+                                        <a href="{link_url}" target="_blank">🔗 구매 링크</a>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+
+                    # 전체 테이블 (링크 포함)
+                    st.markdown('<div class="section-title">📋 전체 상품 테이블</div>', unsafe_allow_html=True)
+                    df_display = df_shop.copy()
+                    df_display["상품명"] = df_display["title"].apply(strip_html)
+                    df_display["링크"]   = df_display["link"].apply(lambda x: f'<a href="{x}" target="_blank">🔗</a>')
                     st.dataframe(
-                        df_shop[["title", "lprice", "brand", "mallName"]].rename(columns={
-                            "title": "상품명", "lprice": "최저가", "brand": "브랜드", "mallName": "쇼핑몰"
+                        df_display[["상품명", "lprice", "brand", "mallName"]].rename(columns={
+                            "lprice": "최저가", "brand": "브랜드", "mallName": "쇼핑몰"
                         }),
                         use_container_width=True, height=220
                     )
 
+                    # ── 브랜드 노출 순위 + 계열 평균가 겹쳐 표시 ──
+                    st.markdown('<div class="section-title">🏆 브랜드 노출 순위</div>', unsafe_allow_html=True)
+
                     brand_rank = df_shop["brand"].value_counts().reset_index()
                     brand_rank.columns = ["브랜드", "노출건수"]
 
-                    col_b1, col_b2 = st.columns(2)
-                    with col_b1:
-                        st.markdown('<div class="section-title">🏆 브랜드 노출 순위</div>', unsafe_allow_html=True)
-                        st.bar_chart(brand_rank.set_index("브랜드")["노출건수"])
-                    with col_b2:
-                        st.markdown('<div class="section-title">💰 브랜드 평균 가격</div>', unsafe_allow_html=True)
-                        st.bar_chart(df_shop.groupby("brand")["lprice"].mean().sort_values(ascending=False))
+                    fig_brand = go.Figure()
+
+                    # 막대: 노출 건수
+                    fig_brand.add_trace(go.Bar(
+                        x=brand_rank["브랜드"],
+                        y=brand_rank["노출건수"],
+                        name="노출건수",
+                        marker_color="#00C8D4",
+                        opacity=0.85,
+                        yaxis="y1",
+                    ))
+
+                    # 계열 전체 평균가 라인 (표준편차 포함)
+                    brand_avg = df_shop.groupby("brand")["lprice"].agg(["mean", "std"]).reset_index()
+                    brand_avg.columns = ["브랜드", "평균가", "표준편차"]
+                    brand_avg["표준편차"] = brand_avg["표준편차"].fillna(0)
+
+                    # 브랜드 순위 기준으로 정렬 맞추기
+                    brand_avg_sorted = brand_rank.merge(brand_avg, on="브랜드", how="left")
+
+                    fig_brand.add_trace(go.Scatter(
+                        x=brand_avg_sorted["브랜드"],
+                        y=brand_avg_sorted["평균가"],
+                        mode="lines+markers+text",
+                        name="브랜드 평균가",
+                        line=dict(color="#B08FFF", width=2),
+                        marker=dict(size=8, color="#B08FFF",
+                                    line=dict(color="white", width=1.5)),
+                        text=[f"{v:,.0f}원" for v in brand_avg_sorted["평균가"]],
+                        textposition="top center",
+                        textfont=dict(size=9, color="#B08FFF"),
+                        error_y=dict(
+                            type="data",
+                            array=brand_avg_sorted["표준편차"].tolist(),
+                            visible=True,
+                            color="#B08FFF",
+                            thickness=1.5,
+                            width=4,
+                        ),
+                        yaxis="y2",
+                    ))
+
+                    fig_brand.update_layout(
+                        paper_bgcolor="#0B1629", plot_bgcolor="#0B1629",
+                        font=dict(color="#7A9CC0"),
+                        title=dict(text="브랜드 노출건수 + 평균가격(표준편차)", font=dict(color="#E8F0FE", size=13)),
+                        hovermode="x unified",
+                        legend=dict(bgcolor="#1A2E4A", bordercolor="#1E3A5A", font=dict(color="#E8F0FE")),
+                        xaxis=dict(gridcolor="#1A2E4A", color="#7A9CC0"),
+                        yaxis=dict(title="노출건수", gridcolor="#1A2E4A", color="#00C8D4"),
+                        yaxis2=dict(
+                            title="평균 가격 (원)",
+                            overlaying="y",
+                            side="right",
+                            color="#B08FFF",
+                            showgrid=False,
+                        ),
+                        margin=dict(t=50, b=30),
+                    )
+                    st.plotly_chart(fig_brand, use_container_width=True)
+
+                    # ── 브랜드 평균 가격 (개당 가격 포함) + 표준편차 ──
+                    st.markdown('<div class="section-title">💰 브랜드 평균 가격 (개당 예측가 포함)</div>', unsafe_allow_html=True)
+
+                    brand_price = df_shop.groupby("brand")["lprice"].agg(["mean", "std", "count"]).reset_index()
+                    brand_price.columns = ["브랜드", "평균가", "표준편차", "상품수"]
+                    brand_price["표준편차"]   = brand_price["표준편차"].fillna(0)
+                    brand_price["개당예측가"] = brand_price["평균가"] / 6  # 6개 묶음 예측
+                    brand_price = brand_price.sort_values("평균가", ascending=False)
+
+                    fig_price = go.Figure()
+
+                    # 막대: 평균가 (표준편차 오차 막대)
+                    fig_price.add_trace(go.Bar(
+                        x=brand_price["브랜드"],
+                        y=brand_price["평균가"],
+                        name="묶음 평균가",
+                        marker_color="#00C8D4",
+                        opacity=0.8,
+                        error_y=dict(
+                            type="data",
+                            array=brand_price["표준편차"].tolist(),
+                            visible=True,
+                            color="#00F0FF",
+                            thickness=2,
+                            width=6,
+                        ),
+                        text=[f"{v:,.0f}원" for v in brand_price["평균가"]],
+                        textposition="outside",
+                        textfont=dict(size=9, color="#00C8D4"),
+                    ))
+
+                    # 라인: 개당 예측가
+                    fig_price.add_trace(go.Scatter(
+                        x=brand_price["브랜드"],
+                        y=brand_price["개당예측가"],
+                        mode="lines+markers+text",
+                        name="개당 예측가 (÷6)",
+                        line=dict(color="#FFB347", width=2, dash="dot"),
+                        marker=dict(size=8, color="#FFB347",
+                                    line=dict(color="white", width=1.5)),
+                        text=[f"≈{v:,.0f}원" for v in brand_price["개당예측가"]],
+                        textposition="bottom center",
+                        textfont=dict(size=9, color="#FFB347"),
+                    ))
+
+                    fig_price.update_layout(
+                        paper_bgcolor="#0B1629", plot_bgcolor="#0B1629",
+                        font=dict(color="#7A9CC0"),
+                        title=dict(
+                            text="브랜드별 평균가격 (막대) + 개당 예측가 (선, ÷6 기준)",
+                            font=dict(color="#E8F0FE", size=13)
+                        ),
+                        hovermode="x unified",
+                        legend=dict(bgcolor="#1A2E4A", bordercolor="#1E3A5A", font=dict(color="#E8F0FE")),
+                        xaxis=dict(gridcolor="#1A2E4A", color="#7A9CC0"),
+                        yaxis=dict(gridcolor="#1A2E4A", color="#7A9CC0"),
+                        margin=dict(t=60, b=30),
+                        barmode="group",
+                    )
+                    st.plotly_chart(fig_price, use_container_width=True)
+
+                    # 요약 테이블
+                    brand_price["평균가"] = brand_price["평균가"].apply(lambda x: f"{x:,.0f} 원")
+                    brand_price["개당예측가"] = brand_price["개당예측가"].apply(lambda x: f"≈ {x:,.0f} 원")
+                    brand_price["표준편차"]   = brand_price["표준편차"].apply(lambda x: f"±{x:,.0f}")
+                    st.dataframe(
+                        brand_price[["브랜드", "평균가", "개당예측가", "표준편차", "상품수"]],
+                        use_container_width=True
+                    )
 
                     shopping_summary = {
                         "평균가격": float(df_shop["lprice"].mean()),
@@ -310,7 +552,7 @@ def run():
                 else:
                     st.info("쇼핑 검색 결과가 없습니다.")
 
-            # AI 보고서
+            # ── AI 보고서 ──
             if openai_enabled:
                 st.markdown('<div class="section-title">🤖 AI 통합 전략 보고서</div>', unsafe_allow_html=True)
                 with st.spinner("AI 분석 중..."):
@@ -336,7 +578,7 @@ def run():
 
         st.markdown('<div class="section-title">배합비 설계 & 원료 구성</div>', unsafe_allow_html=True)
 
-        selected_group1, final_flavor1, final_brand1 = flavor_brand_selector("", "tab1")
+        selected_group1, final_flavor1, final_brand1 = flavor_brand_selector("tab1")
         product_name1 = f"{final_brand1} {final_flavor1}".strip() or "미입력"
 
         col1, col2 = st.columns(2)
@@ -451,8 +693,8 @@ def run():
         st.markdown('<div class="section-title">리스크 신규 등록</div>', unsafe_allow_html=True)
         col_n1, col_n2 = st.columns(2)
         with col_n1:
-            new_step   = st.selectbox("공정 단계", ["원료 입고", "전처리/용해", "배합", "살균", "충전", "포장", "출하"], key="new_step")
-            new_item   = st.text_input("리스크 항목")
+            new_step = st.selectbox("공정 단계", ["원료 입고", "전처리/용해", "배합", "살균", "충전", "포장", "출하"], key="new_step")
+            new_item = st.text_input("리스크 항목")
         with col_n2:
             new_grade  = st.selectbox("등급", ["high", "medium", "low"], key="new_grade")
             new_action = st.text_input("조치 방안")
@@ -470,7 +712,7 @@ def run():
 
         st.markdown('<div class="section-title">생산 계획 수립</div>', unsafe_allow_html=True)
 
-        selected_group3, final_flavor3, final_brand3 = flavor_brand_selector("", "tab3")
+        selected_group3, final_flavor3, final_brand3 = flavor_brand_selector("tab3")
         plan_product = f"{final_brand3} {final_flavor3}".strip() or "미입력"
 
         col_p1, col_p2, col_p3 = st.columns(3)
@@ -545,7 +787,7 @@ def run():
 
         st.markdown('<div class="section-title">개발보고서 작성</div>', unsafe_allow_html=True)
 
-        selected_group4, final_flavor4, final_brand4 = flavor_brand_selector("", "tab4")
+        selected_group4, final_flavor4, final_brand4 = flavor_brand_selector("tab4")
         rep_product = f"{final_brand4} {final_flavor4}".strip() or "미입력"
 
         col_r1, col_r2 = st.columns(2)
