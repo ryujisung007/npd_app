@@ -3,85 +3,123 @@ import requests
 import json
 import urllib.parse
 import pandas as pd
-import plotly.express as px
+import plotly.graph_objects as go
 from datetime import date
-from io import BytesIO
 
 try:
     from openai import OpenAI
-except:
+except Exception:
     OpenAI = None
 
 
 def run():
 
+    if "final_report" not in st.session_state:
+        st.session_state.final_report = None
+
     st.markdown("# 🧪 신제품개발시스템")
-    st.markdown("##### 시장정보분석 · 배합비개발 · 공정리스크확인 · 생산계획서 · 개발보고서")
+    st.markdown("##### 시장 정보 분석부터 개발보고서까지 신제품 개발 전 과정을 지원합니다.")
     st.markdown("---")
 
-    # ============================================================
-    # 탭 복원
-    # ============================================================
+    # 상단 요약 지표
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("📈 진행 중 프로젝트", "147")
+    c2.metric("🧬 배합비 개발 중", "32")
+    c3.metric("⚠️ 리스크 항목", "5")
+    c4.metric("📋 완료 보고서", "89")
 
-    tabs = st.tabs([
-        "📈 시장정보분석",
-        "🧬 배합비개발",
-        "⚠️ 공정리스크확인",
-        "📋 생산계획서",
-        "📝 개발보고서"
-    ])
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    tabs = st.tabs(
+        ["📈 시장정보분석", "🧬 배합비개발", "⚠️ 공정리스크확인", "📋 생산계획서", "📝 개발보고서"]
+    )
 
     # ============================================================
     # 📈 시장정보분석
     # ============================================================
-
     with tabs[0]:
 
-        st.subheader("📊 네이버 DataLab 음료 트렌드 분석")
+        st.markdown("## 📊 음료 시장 전략 분석")
+
+        if "naver_search" not in st.secrets or "naver_shopping" not in st.secrets:
+            st.error("네이버 API secrets가 설정되지 않았습니다.")
+            return
+
+        openai_enabled = False
+        if "openai" in st.secrets and OpenAI is not None:
+            openai_enabled = True
 
         beverage_structure = {
-            "탄산/청량음료": ["콜라","제로콜라","사이다","에이드","자몽"],
-            "과일주스": ["오렌지","망고","사과","타트체리","블루베리"],
-            "건강기능성": ["단백질음료","비타민음료","콜라겐","프로틴초코"],
-            "차/전통": ["녹차","식혜","쌍화차","헛개차"]
+            "건강기능성음료": {
+                "플레이버": ["망고", "베리", "레몬", "복숭아", "초코"],
+                "브랜드": ["몬스터", "레드불", "셀시어스", "마이밀"]
+            },
+            "탄산음료": {
+                "플레이버": ["콜라", "레몬", "자몽", "라임"],
+                "브랜드": ["코카콜라", "펩시", "칠성사이다"]
+            },
+            "과일주스": {
+                "플레이버": ["오렌지", "사과", "망고", "포도"],
+                "브랜드": ["델몬트", "썬키스트", "따옴"]
+            }
         }
 
-        col1, col2 = st.columns(2)
+        selected_group = st.selectbox(
+            "📂 분석 계열",
+            list(beverage_structure.keys())
+        )
 
+        st.markdown("### 🍊 플레이버 선택")
+        col1, col2 = st.columns([2,1])
         with col1:
-            selected_group = st.selectbox(
-                "분석계열 선택",
-                list(beverage_structure.keys())
+            flavor_select = st.selectbox(
+                "추천 플레이버",
+                beverage_structure[selected_group]["플레이버"]
             )
-
         with col2:
-            selected_flavors = st.multiselect(
-                "플레이버 복수 선택",
-                beverage_structure[selected_group]
+            flavor_custom = st.text_input("직접 입력")
+
+        final_flavor = flavor_custom if flavor_custom else flavor_select
+
+        st.markdown("### 🏷 브랜드 선택")
+        col3, col4 = st.columns([2,1])
+        with col3:
+            brand_select = st.selectbox(
+                "추천 브랜드",
+                beverage_structure[selected_group]["브랜드"]
             )
+        with col4:
+            brand_custom = st.text_input("직접 입력 ")
 
-        start_date = st.date_input("시작일", value=date(2024,1,1))
-        end_date = st.date_input("종료일", value=date.today())
+        final_brand = brand_custom if brand_custom else brand_select
 
-        if st.button("📈 트렌드 분석 실행"):
+        col5, col6 = st.columns(2)
+        with col5:
+            start_date = st.date_input("시작일", date(2023,1,1))
+        with col6:
+            end_date = st.date_input("종료일", date.today())
 
-            if not selected_flavors:
-                st.warning("플레이버를 선택하세요.")
+        time_unit = st.selectbox("📅 분석 단위", ["month", "week", "date"])
+
+        if st.button("📊 분석 실행"):
+
+            if not final_flavor and not final_brand:
+                st.warning("⚠ 플레이버나 브랜드를 선택하셔야, 쇼핑데이터가 출력됩니다.")
                 return
 
-            # ----------------------------
-            # DataLab API 호출
-            # ----------------------------
+            search_keyword = final_flavor if final_flavor else final_brand
 
+            # ====================================================
+            # 1️⃣ DataLab 트렌드 분석 추가
+            # ====================================================
             url = "https://openapi.naver.com/v1/datalab/search"
 
             body = {
                 "startDate": str(start_date),
                 "endDate": str(end_date),
-                "timeUnit": "month",
+                "timeUnit": time_unit,
                 "keywordGroups": [
-                    {"groupName": f, "keywords": [f]}
-                    for f in selected_flavors
+                    {"groupName": search_keyword, "keywords": [search_keyword]}
                 ]
             }
 
@@ -93,84 +131,22 @@ def run():
 
             response = requests.post(url, headers=headers, data=json.dumps(body))
 
-            if response.status_code != 200:
-                st.error(response.text)
+            if response.status_code == 200:
+                result = response.json()
+                df_trend = pd.DataFrame(result["results"][0]["data"])
+
+                st.subheader("📈 검색 트렌드 지수")
+                st.line_chart(df_trend.set_index("period")["ratio"])
+
+                trend_avg = df_trend["ratio"].mean()
+            else:
+                st.error("DataLab 호출 실패")
                 return
 
-            result = response.json()
-
-            df_total = pd.DataFrame()
-
-            for r in result["results"]:
-                df = pd.DataFrame(r["data"])
-                df["keyword"] = r["title"]
-                df_total = pd.concat([df_total, df])
-
-            # ----------------------------
-            # 그래프 출력
-            # ----------------------------
-
-            fig = px.line(
-                df_total,
-                x="period",
-                y="ratio",
-                color="keyword",
-                markers=True
-            )
-
-            fig.update_layout(
-                height=450,
-                legend_title="플레이버"
-            )
-
-            st.plotly_chart(fig, use_container_width=True)
-
-            # ----------------------------
-            # 시장지수 계산
-            # ----------------------------
-
-            market_index = df_total.groupby("keyword")["ratio"].mean()
-            st.write("### 📊 평균 시장지수")
-            st.dataframe(market_index)
-
-            # ========================================================
-            # AI 트렌드 분석
-            # ========================================================
-
-            if "openai" in st.secrets and OpenAI:
-
-                client = OpenAI(api_key=st.secrets["openai"]["OPENAI_API_KEY"])
-
-                with st.spinner("AI 트렌드 분석 중..."):
-
-                    prompt = f"""
-                    다음은 음료 트렌드 지수 데이터입니다.
-                    {market_index.to_dict()}
-
-                    시장 트렌드 분석 보고서를 작성하세요.
-                    """
-
-                    response_ai = client.chat.completions.create(
-                        model="gpt-4o-mini",
-                        messages=[{"role":"user","content":prompt}]
-                    )
-
-                trend_report = response_ai.choices[0].message.content
-
-                st.markdown("## 🧠 AI 트렌드 분석 보고서")
-                st.markdown(trend_report)
-
-            # ========================================================
-            # 쇼핑 분석 자동 연결
-            # ========================================================
-
-            st.markdown("---")
-            st.subheader("🛒 네이버 쇼핑 시장 분석")
-
-            top_keyword = market_index.idxmax()
-            st.info(f"최상위 트렌드 키워드 자동 선택: {top_keyword}")
-
-            enc = urllib.parse.quote(top_keyword)
+            # ====================================================
+            # 2️⃣ 쇼핑 분석
+            # ====================================================
+            enc = urllib.parse.quote(search_keyword)
 
             shop_response = requests.get(
                 f"https://openapi.naver.com/v1/search/shop.json?query={enc}&display=100",
@@ -187,66 +163,83 @@ def run():
             df_shop = pd.DataFrame(shop_response.json()["items"])
             df_shop["lprice"] = pd.to_numeric(df_shop["lprice"], errors="coerce")
 
-            brand_share = df_shop["brand"].value_counts().head(10)
+            st.subheader("🛍 쇼핑 상품 현황")
+            st.dataframe(df_shop[["title", "lprice", "brand", "mallName"]])
 
-            colA, colB = st.columns(2)
+            brand_rank = df_shop["brand"].value_counts().reset_index()
+            brand_rank.columns = ["브랜드", "노출건수"]
 
-            with colA:
-                st.markdown("### 🏷 브랜드 점유")
-                st.bar_chart(brand_share)
+            st.subheader("🏆 브랜드 노출 순위")
+            st.dataframe(brand_rank)
+            st.bar_chart(brand_rank.set_index("브랜드")["노출건수"])
 
-            with colB:
-                st.markdown("### 💰 가격 분포")
-                st.bar_chart(df_shop["lprice"].head(20))
+            # ====================================================
+            # 3️⃣ AI 통합 보고서 생성 + 세션 저장
+            # ====================================================
+            if openai_enabled:
 
-            # ========================================================
-            # AI 통합 전략 보고서
-            # ========================================================
-
-            if "openai" in st.secrets and OpenAI:
+                client = OpenAI(api_key=st.secrets["openai"]["OPENAI_API_KEY"])
 
                 with st.spinner("AI 통합 전략 보고서 생성 중..."):
 
-                    prompt2 = f"""
-                    트렌드 지수: {market_index.to_dict()}
-                    브랜드 점유: {brand_share.to_dict()}
+                    prompt = f"""
+                    트렌드 평균지수: {trend_avg}
+                    브랜드 노출: {brand_rank.to_dict()}
 
-                    통합 전략 보고서를 작성하세요.
+                    위 데이터를 기반으로 트렌드 해석,
+                    시장 경쟁구조 분석,
+                    가격 전략,
+                    신규 진입 전략을 제안하세요.
                     """
 
-                    response_ai2 = client.chat.completions.create(
+                    response_ai = client.chat.completions.create(
                         model="gpt-4o-mini",
-                        messages=[{"role":"user","content":prompt2}]
+                        messages=[{"role": "user", "content": prompt}],
                     )
 
-                final_report = response_ai2.choices[0].message.content
+                st.session_state.final_report = response_ai.choices[0].message.content
 
-                st.markdown("## 📊 AI 통합 전략 보고서")
-                st.markdown(final_report)
+                st.markdown("### 🤖 AI 통합 전략 보고서")
+                st.markdown(st.session_state.final_report)
 
-                # HTML 다운로드
-                st.download_button(
-                    label="📄 보고서 다운로드",
-                    data=final_report,
-                    file_name="전략보고서.txt"
-                )
+            else:
+                st.info("OpenAI 키가 없어 AI 보고서는 비활성화됩니다.")
 
     # ============================================================
-    # 나머지 탭 복원
+    # 기존 탭 유지
     # ============================================================
 
     with tabs[1]:
-        st.subheader("🧬 배합비개발")
-        st.text_area("배합비 설계 입력")
+        st.markdown("### 🧬 배합비개발")
+        st.text_area("배합비 메모", height=120)
 
     with tabs[2]:
-        st.subheader("⚠️ 공정리스크확인")
-        st.selectbox("공정 단계 선택", ["원료 입고","가공","살균","포장"])
+        st.markdown("### ⚠️ 공정리스크확인")
+        st.selectbox("공정 단계 선택", ["원료 입고", "가공", "포장", "출하"])
 
     with tabs[3]:
-        st.subheader("📋 생산계획서")
+        st.markdown("### 📋 생산계획서")
         st.date_input("생산 시작일")
+        st.number_input("생산 수량", min_value=0, value=1000)
 
+    # ============================================================
+    # 📝 개발보고서 (복구 완료)
+    # ============================================================
     with tabs[4]:
-        st.subheader("📝 개발보고서")
-        st.text_input("제품명 입력")
+
+        st.markdown("### 📝 개발보고서")
+        product_name = st.text_input("제품명")
+
+        if st.button("📄 보고서 자동 생성"):
+
+            if st.session_state.final_report:
+                st.markdown("## 📊 최종 전략 보고서")
+                st.markdown(st.session_state.final_report)
+
+                st.download_button(
+                    label="📥 보고서 다운로드",
+                    data=st.session_state.final_report,
+                    file_name=f"{product_name}_전략보고서.txt"
+                )
+            else:
+                st.warning("시장정보분석을 먼저 실행하세요.")
