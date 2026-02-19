@@ -167,69 +167,47 @@ def run():
 
             st.plotly_chart(fig, use_container_width=True)
 
-            # ------------------------------------------------------------
-            # 2️⃣ 네이버 쇼핑 제품 현황 분석
-            # ------------------------------------------------------------
-            shopping_summary = {}
+                    # ============================================================
+        # 2️⃣ 네이버 쇼핑 트렌드 분석 (카테고리 기반)
+        # ============================================================
 
-            if flavor_input:
+        shopping_trend_summary = {}
 
-                enc = urllib.parse.quote(flavor_input)
-                shop_url = (
-                    f"https://openapi.naver.com/v1/search/shop.json?"
-                    f"query={enc}&display=100"
-                )
+        if flavor_input:
 
-                shop_response = requests.get(
-                    shop_url,
-                    headers={
-                        "X-Naver-Client-Id": st.secrets["naver_shopping"]["NAVER_CLIENT_ID"],
-                        "X-Naver-Client-Secret": st.secrets["naver_shopping"]["NAVER_CLIENT_SECRET"],
-                    },
-                )
+            category_body = {
+                "startDate": start_date.strftime("%Y-%m-%d"),
+                "endDate": end_date.strftime("%Y-%m-%d"),
+                "timeUnit": time_unit,
+                "category": [
+                    {
+                        "name": flavor_input,
+                        "param": ["50000000"]  # 식품 카테고리 (예시 코드)
+                    }
+                ]
+            }
 
-                if shop_response.status_code == 200:
+            shopping_trend_response = requests.post(
+                "https://openapi.naver.com/v1/datalab/shopping/categories",
+                headers={
+                    "X-Naver-Client-Id": st.secrets["naver_search"]["NAVER_CLIENT_ID"],
+                    "X-Naver-Client-Secret": st.secrets["naver_search"]["NAVER_CLIENT_SECRET"],
+                    "Content-Type": "application/json",
+                },
+                data=json.dumps(category_body),
+            )
 
-                    df_shop = pd.DataFrame(shop_response.json()["items"])
-                    if not df_shop.empty:
+            if shopping_trend_response.status_code == 200:
+                result = shopping_trend_response.json()
 
-                        df_shop["lprice"] = pd.to_numeric(
-                            df_shop["lprice"], errors="coerce"
-                        )
+                if "results" in result:
+                    df_shop_trend = pd.DataFrame(result["results"][0]["data"])
+                    df_shop_trend["period"] = pd.to_datetime(df_shop_trend["period"])
 
-                        shopping_summary = {
-                            "평균가격": float(df_shop["lprice"].mean()),
-                            "상위브랜드": df_shop["brand"]
-                            .value_counts()
-                            .head(5)
-                            .to_dict(),
-                            "상위판매처": df_shop["mallName"]
-                            .value_counts()
-                            .head(5)
-                            .to_dict(),
-                        }
+                    st.subheader("🛒 쇼핑 트렌드 흐름")
+                    st.line_chart(df_shop_trend.set_index("period")["ratio"])
 
-                        st.subheader("🛍 네이버 쇼핑 제품 현황")
-                        st.dataframe(
-                            df_shop[
-                                ["title", "lprice", "brand", "mallName"]
-                            ].rename(
-                                columns={
-                                    "title": "상품명",
-                                    "lprice": "최저가",
-                                    "brand": "브랜드",
-                                    "mallName": "판매처",
-                                }
-                            )
-                        )
-
-                        st.metric(
-                            "평균 가격",
-                            f"{df_shop['lprice'].mean():,.0f} 원",
-                        )
-
-                        st.markdown("**브랜드 TOP5**")
-                        st.bar_chart(df_shop["brand"].value_counts().head(5))
+                    shopping_trend_summary = df_shop_trend["ratio"].tolist()[-3:]
 
             # ------------------------------------------------------------
             # 3️⃣ AI 통합 전략 보고서
