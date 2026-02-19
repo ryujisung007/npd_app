@@ -3,7 +3,11 @@ import requests, json, urllib.parse
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import date
-from openai import OpenAI
+
+try:
+    from openai import OpenAI
+except:
+    OpenAI = None
 
 
 def run():
@@ -27,7 +31,7 @@ def run():
     # ============================================================
     with tabs[0]:
 
-        # 🔥 드롭다운 강제 가독성 개선
+        # 🔥 드롭다운 가독성 개선
         st.markdown("""
         <style>
         div[data-baseweb="select"] > div {
@@ -51,13 +55,22 @@ def run():
 
         st.markdown("## 📊 전략 비교 대시보드")
 
+        # ─────────────────────────────
+        # API 키 체크
+        # ─────────────────────────────
         if "naver_search" not in st.secrets or "naver_shopping" not in st.secrets:
             st.error("네이버 API secrets가 설정되지 않았습니다.")
             return
 
-        if "openai" not in st.secrets:
+        openai_enabled = False
+        if "openai" in st.secrets and OpenAI is not None:
+            openai_enabled = True
+        else:
             st.warning("OpenAI 키가 없습니다. AI 해석은 비활성화됩니다.")
 
+        # ─────────────────────────────
+        # 계열 정의
+        # ─────────────────────────────
         beverage_groups = {
             "탄산음료": ["콜라","사이다","이온음료","과즙탄산음료","에이드음료"],
             "과일주스": ["오렌지주스","사과주스","포도주스","망고주스","레몬주스","타트체리주스"],
@@ -67,15 +80,11 @@ def run():
             "제로/저당음료": ["제로음료","저당음료","무설탕음료"]
         }
 
-        # ──────────────
-        # 계열 복수 선택
-        # ──────────────
         selected_groups = st.multiselect(
             "📂 분석 계열 (복수 선택 가능)",
             list(beverage_groups.keys())
         )
 
-        # 하위 카테고리 동적 생성
         sub_candidates = []
         for g in selected_groups:
             sub_candidates.extend(beverage_groups[g])
@@ -95,6 +104,9 @@ def run():
 
         time_unit = st.selectbox("📅 분석 단위", ["month","week","date"])
 
+        # ============================================================
+        # 분석 실행
+        # ============================================================
         if st.button("📊 분석 실행"):
 
             compare_targets = selected_sub if selected_sub else selected_groups
@@ -107,12 +119,18 @@ def run():
 
             for target in compare_targets:
 
+                # 🔥 계열 선택 시 내부 키워드 묶음 처리
+                if target in beverage_groups:
+                    keywords = beverage_groups[target]
+                else:
+                    keywords = [target]
+
                 body = {
                     "startDate": start_date.strftime("%Y-%m-%d"),
                     "endDate": end_date.strftime("%Y-%m-%d"),
                     "timeUnit": time_unit,
                     "keywordGroups": [
-                        {"groupName": target, "keywords": [target]}
+                        {"groupName": target, "keywords": keywords}
                     ]
                 }
 
@@ -126,14 +144,29 @@ def run():
                     data=json.dumps(body)
                 )
 
-                if response.status_code == 200:
-                    df = pd.DataFrame(response.json()["results"][0]["data"])
-                    df["period"] = pd.to_datetime(df["period"])
-                    data_dict[target] = df
+                if response.status_code != 200:
+                    continue
 
-            # ──────────────
+                result = response.json()
+
+                if "results" not in result or len(result["results"]) == 0:
+                    continue
+
+                df = pd.DataFrame(result["results"][0]["data"])
+
+                if df.empty or "period" not in df.columns:
+                    continue
+
+                df["period"] = pd.to_datetime(df["period"])
+                data_dict[target] = df
+
+            if not data_dict:
+                st.warning("유효한 트렌드 데이터가 없습니다.")
+                return
+
+            # ─────────────────────────────
             # Plotly 비교 그래프
-            # ──────────────
+            # ─────────────────────────────
             fig = go.Figure()
 
             for name, df_data in data_dict.items():
@@ -157,10 +190,10 @@ def run():
 
             st.plotly_chart(fig, use_container_width=True)
 
-            # ──────────────
-            # AI 분석
-            # ──────────────
-            if "openai" in st.secrets:
+            # ─────────────────────────────
+            # AI 전략 해석
+            # ─────────────────────────────
+            if openai_enabled:
 
                 client = OpenAI(api_key=st.secrets["openai"]["OPENAI_API_KEY"])
 
@@ -170,7 +203,7 @@ def run():
                 다음은 음료 트렌드 최근 데이터입니다:
                 {summary_data}
 
-                성장 관점에서 전략 인사이트를 5줄 요약하세요.
+                성장 관점 전략 인사이트를 5줄 요약하세요.
                 """
 
                 response_ai = client.chat.completions.create(
@@ -181,13 +214,12 @@ def run():
                 st.subheader("🤖 AI 전략 해석")
                 st.write(response_ai.choices[0].message.content)
 
-            # ──────────────
+            # ─────────────────────────────
             # 플레이버 쇼핑 분석
-            # ──────────────
+            # ─────────────────────────────
             if flavor_input:
 
-                search_query = flavor_input
-                enc = urllib.parse.quote(search_query)
+                enc = urllib.parse.quote(flavor_input)
 
                 shop_url = f"https://openapi.naver.com/v1/search/shop.json?query={enc}&display=100"
 
@@ -200,6 +232,7 @@ def run():
                 )
 
                 if shop_response.status_code == 200:
+
                     df_shop = pd.DataFrame(shop_response.json()["items"])
                     df_shop["lprice"] = pd.to_numeric(df_shop["lprice"], errors="coerce")
 
@@ -210,7 +243,7 @@ def run():
                     st.bar_chart(df_shop["brand"].value_counts().head(5))
 
     # ============================================================
-    # 이하 기존 탭 유지
+    # 기존 탭 유지
     # ============================================================
     with tabs[1]:
         st.markdown("### 🧬 배합비개발")
