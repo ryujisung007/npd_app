@@ -7,6 +7,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+st.title("TEST OK")
+
+
 # ── 공통 CSS ──
 st.markdown("""
 <style>
