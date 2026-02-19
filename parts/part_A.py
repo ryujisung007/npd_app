@@ -5,7 +5,6 @@ def run():
     st.markdown("##### 시장 정보 분석부터 개발보고서까지 신제품 개발 전 과정을 지원합니다.")
     st.markdown("---")
 
-    # 요약 지표
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("📈 진행 중 프로젝트", "147")
     c2.metric("🧬 배합비 개발 중", "32")
@@ -17,34 +16,62 @@ def run():
     tabs = st.tabs(["📈 시장정보분석", "🧬 배합비개발", "⚠️ 공정리스크확인", "📋 생산계획서", "📝 개발보고서"])
 
     # ─────────────────────────────────────────────
-    # 📈 시장정보분석 (계열 트렌드 → 플레이버 쇼핑 검색)
+    # 📈 시장정보분석 (완전 확장 구조)
     # ─────────────────────────────────────────────
     with tabs[0]:
         st.markdown("### 📈 시장정보분석")
-        st.info("음료 계열 트렌드 분석 후 플레이버 기반 쇼핑 시장 구조를 분석합니다.")
+        st.info("음료 계열별 트렌드 분석 + 플레이버 쇼핑 구조 분석 + 자동 추천")
 
         import requests, json, urllib.parse, pandas as pd
         from datetime import date
 
-        # 🔐 secrets 체크
         if "naver_search" not in st.secrets or "naver_shopping" not in st.secrets:
             st.error("⚠️ 네이버 API secrets가 설정되지 않았습니다.")
-            st.info("로컬 실행 시 .streamlit/secrets.toml 파일을 생성하세요.")
             return
 
-        # ─────────────
-        # 1️⃣ 음료 계열 정의
-        # ─────────────
+        # ─────────────────────────────
+        # 1️⃣ 완전 확장 계열 정의 (분말 제외)
+        # ─────────────────────────────
         beverage_groups = {
-            "청량/탄산음료": ["콜라", "사이다", "탄산음료", "에이드"],
-            "주스/과즙음료": ["오렌지주스", "사과주스", "타트체리주스"],
-            "건강기능성음료": ["에너지음료", "비타민음료", "단백질음료"],
-            "전통/차음료": ["식혜", "쌍화차", "녹차음료"],
-            "대체유/두유": ["두유", "아몬드우유", "귀리우유"]
+
+            "탄산음료": [
+                "콜라", "사이다", "이온음료",
+                "무알콜음료", "과즙탄산음료",
+                "아이스티음료", "에이드음료",
+                "기타탄산음료"
+            ],
+
+            "과일주스": [
+                "오렌지주스", "사과주스", "포도주스",
+                "망고주스", "자몽주스", "감귤주스",
+                "레몬주스", "타트체리주스",
+                "코코넛주스", "토마토주스",
+                "과채주스", "매실주스"
+            ],
+
+            "건강기능성음료": [
+                "에너지음료", "비타민음료",
+                "단백질음료", "기타건강기능성음료"
+            ],
+
+            "전통/차음료": [
+                "식혜", "수정과",
+                "녹차음료", "홍차음료",
+                "곡물음료", "쌍화차"
+            ],
+
+            "우유/요거트/대체유": [
+                "우유", "요거트",
+                "아몬드우유", "귀리우유", "두유"
+            ],
+
+            "제로/저당음료": [
+                "제로음료", "저당음료",
+                "무설탕음료"
+            ]
         }
 
         selected_group = st.selectbox("📂 분석 계열 선택", list(beverage_groups.keys()))
-
         flavor_input = st.text_input("🍊 플레이버 입력", placeholder="망고, 레몬, 저당, 타트체리 등")
 
         col1, col2 = st.columns(2)
@@ -57,7 +84,56 @@ def run():
 
         if st.button("📊 계열 트렌드 분석"):
 
-            keywords = beverage_groups[selected_group]
+            growth_dict = {}
+
+            # ─────────────────────────────
+            # 2️⃣ 계열별 성장률 비교
+            # ─────────────────────────────
+            for group_name, keywords in beverage_groups.items():
+
+                body = {
+                    "startDate": start_date.strftime("%Y-%m-%d"),
+                    "endDate": end_date.strftime("%Y-%m-%d"),
+                    "timeUnit": time_unit,
+                    "keywordGroups": [
+                        {
+                            "groupName": group_name,
+                            "keywords": keywords
+                        }
+                    ]
+                }
+
+                response = requests.post(
+                    "https://openapi.naver.com/v1/datalab/search",
+                    headers={
+                        "X-Naver-Client-Id": st.secrets["naver_search"]["NAVER_CLIENT_ID"],
+                        "X-Naver-Client-Secret": st.secrets["naver_search"]["NAVER_CLIENT_SECRET"],
+                        "Content-Type": "application/json"
+                    },
+                    data=json.dumps(body)
+                )
+
+                if response.status_code == 200:
+                    df = pd.DataFrame(response.json()["results"][0]["data"])
+                    df["growth"] = df["ratio"].pct_change()
+                    growth = df["growth"].iloc[-1]
+                    growth_dict[group_name] = growth
+
+            # 성장률 순위
+            growth_df = pd.DataFrame.from_dict(growth_dict, orient="index", columns=["growth"])
+            growth_df = growth_df.sort_values("growth", ascending=False)
+
+            st.subheader("📈 계열별 최근 성장률 비교")
+            st.bar_chart(growth_df)
+
+            # 자동 추천
+            top_group = growth_df.index[0]
+            st.success(f"🤖 AI 추천 성장 계열: {top_group}")
+
+            # ─────────────────────────────
+            # 3️⃣ 선택 계열 트렌드 상세
+            # ─────────────────────────────
+            selected_keywords = beverage_groups[selected_group]
 
             body = {
                 "startDate": start_date.strftime("%Y-%m-%d"),
@@ -66,7 +142,7 @@ def run():
                 "keywordGroups": [
                     {
                         "groupName": selected_group,
-                        "keywords": keywords
+                        "keywords": selected_keywords
                     }
                 ]
             }
@@ -82,59 +158,42 @@ def run():
             )
 
             if response.status_code == 200:
-                df_trend = pd.DataFrame(response.json()["results"][0]["data"])
+                df_selected = pd.DataFrame(response.json()["results"][0]["data"])
+                st.subheader(f"📊 {selected_group} 트렌드")
+                st.line_chart(df_selected.set_index("period")["ratio"])
 
-                st.subheader("📊 계열 트렌드")
-                st.line_chart(df_trend.set_index("period")["ratio"])
+            # ─────────────────────────────
+            # 4️⃣ 플레이버 기반 쇼핑 분석
+            # ─────────────────────────────
+            if flavor_input:
 
-                df_trend["growth_rate"] = df_trend["ratio"].pct_change()
-                latest_growth = df_trend["growth_rate"].iloc[-1] * 100
-                st.metric("최근 성장률", f"{latest_growth:.1f}%")
+                search_query = f"{selected_group} {flavor_input}"
+                enc = urllib.parse.quote(search_query)
 
-                # ─────────────
-                # 2️⃣ 플레이버 기반 쇼핑 검색
-                # ─────────────
-                if flavor_input:
+                shop_url = f"https://openapi.naver.com/v1/search/shop.json?query={enc}&display=100"
 
-                    search_query = f"{selected_group} {flavor_input}"
-                    enc = urllib.parse.quote(search_query)
+                shop_response = requests.get(
+                    shop_url,
+                    headers={
+                        "X-Naver-Client-Id": st.secrets["naver_shopping"]["NAVER_CLIENT_ID"],
+                        "X-Naver-Client-Secret": st.secrets["naver_shopping"]["NAVER_CLIENT_SECRET"]
+                    }
+                )
 
-                    shop_url = f"https://openapi.naver.com/v1/search/shop.json?query={enc}&display=100"
+                if shop_response.status_code == 200:
+                    df_shop = pd.DataFrame(shop_response.json()["items"])
+                    df_shop["lprice"] = pd.to_numeric(df_shop["lprice"], errors="coerce")
 
-                    shop_response = requests.get(
-                        shop_url,
-                        headers={
-                            "X-Naver-Client-Id": st.secrets["naver_shopping"]["NAVER_CLIENT_ID"],
-                            "X-Naver-Client-Secret": st.secrets["naver_shopping"]["NAVER_CLIENT_SECRET"]
-                        }
-                    )
+                    st.subheader("💰 평균 가격")
+                    st.metric("평균가", f"{df_shop['lprice'].mean():,.0f} 원")
 
-                    if shop_response.status_code == 200:
+                    st.subheader("🏷 브랜드 TOP5")
+                    st.bar_chart(df_shop["brand"].value_counts().head(5))
 
-                        df_shop = pd.DataFrame(shop_response.json()["items"])
-                        df_shop["lprice"] = pd.to_numeric(df_shop["lprice"], errors="coerce")
+                    st.subheader("📂 세부 카테고리 분포")
+                    st.bar_chart(df_shop["category3"].value_counts())
 
-                        st.subheader("💰 평균 가격")
-                        st.metric("평균가", f"{df_shop['lprice'].mean():,.0f} 원")
-
-                        st.subheader("🏷 브랜드 TOP5")
-                        st.bar_chart(df_shop["brand"].value_counts().head(5))
-
-                        st.subheader("📂 세부 카테고리 분포")
-                        st.bar_chart(df_shop["category3"].value_counts())
-
-                        st.subheader("📋 상세 데이터")
-                        st.dataframe(df_shop[["title","lprice","brand","category3"]])
-
-                    else:
-                        st.error(shop_response.text)
-
-            else:
-                st.error(response.text)
-
-    # ─────────────────────────────────────────────
     # 이하 기존 코드 유지
-    # ─────────────────────────────────────────────
     with tabs[1]:
         st.markdown("### 🧬 배합비개발")
         st.info("원재료 배합 비율을 설계하고 최적 조합을 도출합니다. 영양성분 자동 계산 포함.")
