@@ -209,51 +209,58 @@ def run():
 
                     shopping_trend_summary = df_shop_trend["ratio"].tolist()[-3:]
 
-            # ------------------------------------------------------------
-            # 3️⃣ AI 통합 전략 보고서
-            # ------------------------------------------------------------
+                        # ============================================================
+            # 3️⃣ AI 통합 전략 보고서 (가독성 개선)
+            # ============================================================
+
             if openai_enabled:
 
-                st.subheader("🤖 AI 통합 전략 보고서")
-                st.markdown("**AI 모델: gpt-4o-mini**")
+                st.markdown("""
+                <div style='font-size:18px;font-weight:700;margin-top:20px;'>
+                🤖 AI 통합 전략 보고서
+                </div>
+                """, unsafe_allow_html=True)
+
+                st.markdown("<div style='font-size:13px;color:gray;'>AI 모델: gpt-4o-mini</div>", unsafe_allow_html=True)
 
                 with st.spinner("AI 통합 분석 보고서 생성 중..."):
 
-                    client = OpenAI(
-                        api_key=st.secrets["openai"]["OPENAI_API_KEY"]
-                    )
+                    client = OpenAI(api_key=st.secrets["openai"]["OPENAI_API_KEY"])
 
                     prompt = f"""
-                    다음은 음료 시장 트렌드 요약 데이터입니다:
+                    트렌드 데이터:
                     {trend_summary}
 
-                    다음은 네이버 쇼핑 검색 결과 요약입니다:
+                    쇼핑 상품 요약:
                     {shopping_summary}
 
-                    위 두 데이터를 통합하여:
+                    쇼핑 트렌드 데이터:
+                    {shopping_trend_summary}
 
-                    1. 시장 성장 해석
-                    2. 가격 포지셔닝 전략
-                    3. 유망 플레이버 방향
-                    4. 브랜드 전략 제안
-                    5. 실행 전략
-
-                    보고서 형식으로 작성하세요.
+                    위 데이터를 통합하여 전략 보고서를 작성하세요.
                     """
 
                     response_ai = client.chat.completions.create(
                         model="gpt-4o-mini",
-                        messages=[
-                            {"role": "user", "content": prompt}
-                        ],
+                        messages=[{"role": "user", "content": prompt}],
                     )
 
-                st.write(response_ai.choices[0].message.content)
-
-            else:
-                st.info(
-                    "OpenAI 키가 없어 통합 AI 보고서가 비활성화됩니다."
+                st.markdown(
+                    f"""
+                    <div style='
+                        background-color:#F4F6F8;
+                        padding:20px;
+                        border-radius:10px;
+                        font-size:14px;
+                        line-height:1.6;
+                        color:#222;
+                    '>
+                    {response_ai.choices[0].message.content}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
                 )
+
 
     # ============================================================
     # 이하 기존 탭 구조 그대로 유지
