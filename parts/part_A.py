@@ -1,12 +1,15 @@
 import streamlit as st
-import requests, json, urllib.parse
+import requests
+import json
+import urllib.parse
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import date
 
+# OpenAI는 선택적 로드 (없어도 앱이 죽지 않도록)
 try:
     from openai import OpenAI
-except:
+except Exception:
     OpenAI = None
 
 
@@ -16,6 +19,9 @@ def run():
     st.markdown("##### 시장 정보 분석부터 개발보고서까지 신제품 개발 전 과정을 지원합니다.")
     st.markdown("---")
 
+    # ─────────────────────────────
+    # 상단 요약 지표 (기존 유지)
+    # ─────────────────────────────
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("📈 진행 중 프로젝트", "147")
     c2.metric("🧬 배합비 개발 중", "32")
@@ -24,62 +30,76 @@ def run():
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    tabs = st.tabs(["📈 시장정보분석", "🧬 배합비개발", "⚠️ 공정리스크확인", "📋 생산계획서", "📝 개발보고서"])
+    tabs = st.tabs(
+        ["📈 시장정보분석", "🧬 배합비개발", "⚠️ 공정리스크확인", "📋 생산계획서", "📝 개발보고서"]
+    )
 
     # ============================================================
-    # 📈 시장정보분석 (AI 통합 보고서 버전)
+    # 📈 시장정보분석 (트렌드 + 쇼핑 + AI 통합 보고서)
     # ============================================================
     with tabs[0]:
 
         st.markdown("## 📊 전략 비교 대시보드")
 
+        # ─────────────────────────────
+        # API 키 체크
+        # ─────────────────────────────
         if "naver_search" not in st.secrets or "naver_shopping" not in st.secrets:
             st.error("네이버 API secrets가 설정되지 않았습니다.")
             return
 
         openai_enabled = False
-        if "openai" in st.secrets:
-            try:
-                from openai import OpenAI
-                openai_enabled = True
-            except:
-                openai_enabled = False
+        if "openai" in st.secrets and OpenAI is not None:
+            openai_enabled = True
 
         # ─────────────────────────────
-        # 계열 정의
+        # 음료 계열 정의
         # ─────────────────────────────
         beverage_groups = {
-            "탄산음료": ["콜라","사이다","이온음료","과즙탄산음료","에이드음료"],
-            "과일주스": ["오렌지주스","사과주스","포도주스","망고주스","레몬주스","타트체리주스"],
-            "건강기능성음료": ["에너지음료","비타민음료","단백질음료"],
-            "전통/차음료": ["식혜","쌍화차","녹차음료","홍차음료"],
-            "우유/요거트/대체유": ["우유","요거트","두유","아몬드우유","귀리우유"],
-            "제로/저당음료": ["제로음료","저당음료","무설탕음료"]
+            "탄산음료": ["콜라", "사이다", "이온음료", "과즙탄산음료", "에이드음료"],
+            "과일주스": ["오렌지주스", "사과주스", "포도주스", "망고주스", "레몬주스", "타트체리주스"],
+            "건강기능성음료": ["에너지음료", "비타민음료", "단백질음료"],
+            "전통/차음료": ["식혜", "쌍화차", "녹차음료", "홍차음료"],
+            "우유/요거트/대체유": ["우유", "요거트", "두유", "아몬드우유", "귀리우유"],
+            "제로/저당음료": ["제로음료", "저당음료", "무설탕음료"],
         }
 
+        # ─────────────────────────────
+        # 사용자 입력
+        # ─────────────────────────────
         selected_groups = st.multiselect(
             "📂 분석 계열 (복수 선택 가능)",
-            list(beverage_groups.keys())
+            list(beverage_groups.keys()),
         )
 
-        flavor_input = st.text_input("🍊 플레이버 (선택)", placeholder="망고, 레몬 등")
+        flavor_input = st.text_input(
+            "🍊 플레이버 (선택)",
+            placeholder="예: 망고, 레몬, 저당 등",
+        )
 
         col1, col2 = st.columns(2)
         with col1:
-            start_date = st.date_input("시작일")
+            start_date = st.date_input("시작일", date(2023, 1, 1))
         with col2:
-            end_date = st.date_input("종료일")
+            end_date = st.date_input("종료일", date.today())
 
-        time_unit = st.selectbox("📅 분석 단위", ["month","week","date"])
+        time_unit = st.selectbox("📅 분석 단위", ["month", "week", "date"])
 
+        # ============================================================
+        # 분석 실행
+        # ============================================================
         if st.button("📊 분석 실행"):
 
-            # ============================================================
-            # 1️⃣ 트렌드 분석
-            # ============================================================
+            if not selected_groups:
+                st.warning("최소 1개 이상의 분석 계열을 선택하세요.")
+                return
+
             trend_summary = {}
             plot_data = {}
 
+            # ------------------------------------------------------------
+            # 1️⃣ 트렌드 분석 (DataLab)
+            # ------------------------------------------------------------
             for group in selected_groups:
 
                 keywords = beverage_groups[group]
@@ -90,7 +110,7 @@ def run():
                     "timeUnit": time_unit,
                     "keywordGroups": [
                         {"groupName": group, "keywords": keywords}
-                    ]
+                    ],
                 }
 
                 response = requests.post(
@@ -98,190 +118,9 @@ def run():
                     headers={
                         "X-Naver-Client-Id": st.secrets["naver_search"]["NAVER_CLIENT_ID"],
                         "X-Naver-Client-Secret": st.secrets["naver_search"]["NAVER_CLIENT_SECRET"],
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
-                    data=json.dumps(body)
-                )
-
-                if response.status_code != 200:
-                    continue
-
-                result = response.json()
-
-                if "results" not in result:
-                    continue
-
-                df = pd.DataFrame(result["results"][0]["data"])
-                if df.empty:
-                    continue
-
-                df["period"] = pd.to_datetime(df["period"])
-                plot_data[group] = df
-
-                trend_summary[group] = df["ratio"].tolist()[-3:]
-
-            # Plotly 그래프
-            import plotly.graph_objects as go
-            fig = go.Figure()
-
-            for name, df_data in plot_data.items():
-                fig.add_trace(
-                    go.Scatter(
-                        x=df_data["period"],
-                        y=df_data["ratio"],
-                        mode="lines+markers",
-                        name=name
-                    )
-                )
-
-            st.plotly_chart(fig, use_container_width=True)
-
-            # ============================================================
-            # 2️⃣ 네이버 쇼핑 검색 순위 분석
-            # ============================================================
-            shopping_summary = {}
-
-            if flavor_input:
-
-                enc = urllib.parse.quote(flavor_input)
-                shop_url = f"https://openapi.naver.com/v1/search/shop.json?query={enc}&display=100"
-
-                shop_response = requests.get(
-                    shop_url,
-                    headers={
-                        "X-Naver-Client-Id": st.secrets["naver_shopping"]["NAVER_CLIENT_ID"],
-                        "X-Naver-Client-Secret": st.secrets["naver_shopping"]["NAVER_CLIENT_SECRET"]
-                    }
-                )
-
-                if shop_response.status_code == 200:
-
-                    df_shop = pd.DataFrame(shop_response.json()["items"])
-                    df_shop["lprice"] = pd.to_numeric(df_shop["lprice"], errors="coerce")
-
-                    shopping_summary = {
-                        "평균가격": float(df_shop["lprice"].mean()),
-                        "상위브랜드": df_shop["brand"].value_counts().head(5).to_dict(),
-                        "판매처분포": df_shop["mallName"].value_counts().head(5).to_dict()
-                    }
-
-                    st.subheader("🛍 쇼핑 제품 현황")
-                    st.dataframe(df_shop[["title","lprice","brand","mallName"]])
-
-            # ============================================================
-            # 3️⃣ AI 통합 전략 보고서
-            # ============================================================
-            if openai_enabled:
-
-                st.subheader("🤖 AI 통합 전략 보고서")
-                st.markdown("**AI 모델: gpt-4o-mini**")
-
-                with st.spinner("AI 통합 분석 보고서 생성 중..."):
-
-                    client = OpenAI(api_key=st.secrets["openai"]["OPENAI_API_KEY"])
-
-                    prompt = f"""
-                    다음은 음료 시장 트렌드 요약 데이터입니다:
-                    {trend_summary}
-
-                    다음은 네이버 쇼핑 검색 결과 요약입니다:
-                    {shopping_summary}
-
-                    위 두 데이터를 통합하여:
-                    1. 시장 성장 해석
-                    2. 가격 포지셔닝 전략
-                    3. 유망 플레이버 방향
-                    4. 브랜드 전략 제안
-                    5. 실행 전략
-
-                    보고서 형식으로 작성하세요.
-                    """
-
-                    response_ai = client.chat.completions.create(
-                        model="gpt-4o-mini",
-                        messages=[{"role":"user","content":prompt}]
-                    )
-
-                st.write(response_ai.choices[0].message.content)
-
-            else:
-                st.info("OpenAI 키가 없어 통합 AI 보고서가 비활성화됩니다.")
-
-
-        # ─────────────────────────────
-        # 계열 정의
-        # ─────────────────────────────
-        beverage_groups = {
-            "탄산음료": ["콜라","사이다","이온음료","과즙탄산음료","에이드음료"],
-            "과일주스": ["오렌지주스","사과주스","포도주스","망고주스","레몬주스","타트체리주스"],
-            "건강기능성음료": ["에너지음료","비타민음료","단백질음료"],
-            "전통/차음료": ["식혜","쌍화차","녹차음료","홍차음료"],
-            "우유/요거트/대체유": ["우유","요거트","두유","아몬드우유","귀리우유"],
-            "제로/저당음료": ["제로음료","저당음료","무설탕음료"]
-        }
-
-        selected_groups = st.multiselect(
-            "📂 분석 계열 (복수 선택 가능)",
-            list(beverage_groups.keys())
-        )
-
-        sub_candidates = []
-        for g in selected_groups:
-            sub_candidates.extend(beverage_groups[g])
-
-        selected_sub = st.multiselect(
-            "📁 하위 카테고리 (복수 선택 가능)",
-            sub_candidates
-        )
-
-        flavor_input = st.text_input("🍊 플레이버 (선택)", placeholder="망고, 레몬 등")
-
-        col1, col2 = st.columns(2)
-        with col1:
-            start_date = st.date_input("시작일", date(2023,1,1))
-        with col2:
-            end_date = st.date_input("종료일", date.today())
-
-        time_unit = st.selectbox("📅 분석 단위", ["month","week","date"])
-
-        # ============================================================
-        # 분석 실행
-        # ============================================================
-        if st.button("📊 분석 실행"):
-
-            compare_targets = selected_sub if selected_sub else selected_groups
-
-            if not compare_targets:
-                st.warning("계열 또는 하위 카테고리를 선택하세요.")
-                return
-
-            data_dict = {}
-
-            for target in compare_targets:
-
-                # 🔥 계열 선택 시 내부 키워드 묶음 처리
-                if target in beverage_groups:
-                    keywords = beverage_groups[target]
-                else:
-                    keywords = [target]
-
-                body = {
-                    "startDate": start_date.strftime("%Y-%m-%d"),
-                    "endDate": end_date.strftime("%Y-%m-%d"),
-                    "timeUnit": time_unit,
-                    "keywordGroups": [
-                        {"groupName": target, "keywords": keywords}
-                    ]
-                }
-
-                response = requests.post(
-                    "https://openapi.naver.com/v1/datalab/search",
-                    headers={
-                        "X-Naver-Client-Id": st.secrets["naver_search"]["NAVER_CLIENT_ID"],
-                        "X-Naver-Client-Secret": st.secrets["naver_search"]["NAVER_CLIENT_SECRET"],
-                        "Content-Type": "application/json"
-                    },
-                    data=json.dumps(body)
+                    data=json.dumps(body),
                 )
 
                 if response.status_code != 200:
@@ -293,106 +132,183 @@ def run():
                     continue
 
                 df = pd.DataFrame(result["results"][0]["data"])
-
-                if df.empty or "period" not in df.columns:
+                if df.empty:
                     continue
 
                 df["period"] = pd.to_datetime(df["period"])
-                data_dict[target] = df
+                plot_data[group] = df
 
-            if not data_dict:
-                st.warning("유효한 트렌드 데이터가 없습니다.")
+                trend_summary[group] = df["ratio"].tolist()[-3:]
+
+            if not plot_data:
+                st.warning("트렌드 데이터를 가져오지 못했습니다.")
                 return
 
-            # ─────────────────────────────
             # Plotly 비교 그래프
-            # ─────────────────────────────
             fig = go.Figure()
-
-            for name, df_data in data_dict.items():
+            for name, df_data in plot_data.items():
                 fig.add_trace(
                     go.Scatter(
                         x=df_data["period"],
                         y=df_data["ratio"],
                         mode="lines+markers",
                         name=name,
-                        hovertemplate="항목: %{fullData.name}<br>기간: %{x}<br>관심도: %{y:.2f}<extra></extra>"
+                        hovertemplate="항목: %{fullData.name}<br>기간: %{x}<br>관심도: %{y:.2f}<extra></extra>",
                     )
                 )
 
             fig.update_layout(
-                title="📈 트렌드 비교",
+                title="📈 계열별 트렌드 비교",
                 xaxis_title="기간",
                 yaxis_title="상대 관심도",
-                legend_title="비교 항목",
-                hovermode="x unified"
+                legend_title="비교 계열",
+                hovermode="x unified",
             )
 
             st.plotly_chart(fig, use_container_width=True)
 
-            # ─────────────────────────────
-            # AI 전략 해석
-            # ─────────────────────────────
-            if openai_enabled:
+            # ------------------------------------------------------------
+            # 2️⃣ 네이버 쇼핑 제품 현황 분석
+            # ------------------------------------------------------------
+            shopping_summary = {}
 
-                client = OpenAI(api_key=st.secrets["openai"]["OPENAI_API_KEY"])
-
-                summary_data = {k: v["ratio"].tolist()[-3:] for k, v in data_dict.items()}
-
-                prompt = f"""
-                다음은 음료 트렌드 최근 데이터입니다:
-                {summary_data}
-
-                성장 관점 전략 인사이트를 5줄 요약하세요.
-                """
-
-                response_ai = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[{"role":"user","content":prompt}]
-                )
-
-                st.subheader("🤖 AI 전략 해석")
-                st.write(response_ai.choices[0].message.content)
-
-            # ─────────────────────────────
-            # 플레이버 쇼핑 분석
-            # ─────────────────────────────
             if flavor_input:
 
                 enc = urllib.parse.quote(flavor_input)
-
-                shop_url = f"https://openapi.naver.com/v1/search/shop.json?query={enc}&display=100"
+                shop_url = (
+                    f"https://openapi.naver.com/v1/search/shop.json?"
+                    f"query={enc}&display=100"
+                )
 
                 shop_response = requests.get(
                     shop_url,
                     headers={
                         "X-Naver-Client-Id": st.secrets["naver_shopping"]["NAVER_CLIENT_ID"],
-                        "X-Naver-Client-Secret": st.secrets["naver_shopping"]["NAVER_CLIENT_SECRET"]
-                    }
+                        "X-Naver-Client-Secret": st.secrets["naver_shopping"]["NAVER_CLIENT_SECRET"],
+                    },
                 )
 
                 if shop_response.status_code == 200:
 
                     df_shop = pd.DataFrame(shop_response.json()["items"])
-                    df_shop["lprice"] = pd.to_numeric(df_shop["lprice"], errors="coerce")
+                    if not df_shop.empty:
 
-                    st.subheader("💰 평균 가격")
-                    st.metric("평균가", f"{df_shop['lprice'].mean():,.0f} 원")
+                        df_shop["lprice"] = pd.to_numeric(
+                            df_shop["lprice"], errors="coerce"
+                        )
 
-                    st.subheader("🏷 브랜드 TOP5")
-                    st.bar_chart(df_shop["brand"].value_counts().head(5))
+                        shopping_summary = {
+                            "평균가격": float(df_shop["lprice"].mean()),
+                            "상위브랜드": df_shop["brand"]
+                            .value_counts()
+                            .head(5)
+                            .to_dict(),
+                            "상위판매처": df_shop["mallName"]
+                            .value_counts()
+                            .head(5)
+                            .to_dict(),
+                        }
+
+                        st.subheader("🛍 네이버 쇼핑 제품 현황")
+                        st.dataframe(
+                            df_shop[
+                                ["title", "lprice", "brand", "mallName"]
+                            ].rename(
+                                columns={
+                                    "title": "상품명",
+                                    "lprice": "최저가",
+                                    "brand": "브랜드",
+                                    "mallName": "판매처",
+                                }
+                            )
+                        )
+
+                        st.metric(
+                            "평균 가격",
+                            f"{df_shop['lprice'].mean():,.0f} 원",
+                        )
+
+                        st.markdown("**브랜드 TOP5**")
+                        st.bar_chart(df_shop["brand"].value_counts().head(5))
+
+            # ------------------------------------------------------------
+            # 3️⃣ AI 통합 전략 보고서
+            # ------------------------------------------------------------
+            if openai_enabled:
+
+                st.subheader("🤖 AI 통합 전략 보고서")
+                st.markdown("**AI 모델: gpt-4o-mini**")
+
+                with st.spinner("AI 통합 분석 보고서 생성 중..."):
+
+                    client = OpenAI(
+                        api_key=st.secrets["openai"]["OPENAI_API_KEY"]
+                    )
+
+                    prompt = f"""
+                    다음은 음료 시장 트렌드 요약 데이터입니다:
+                    {trend_summary}
+
+                    다음은 네이버 쇼핑 검색 결과 요약입니다:
+                    {shopping_summary}
+
+                    위 두 데이터를 통합하여:
+
+                    1. 시장 성장 해석
+                    2. 가격 포지셔닝 전략
+                    3. 유망 플레이버 방향
+                    4. 브랜드 전략 제안
+                    5. 실행 전략
+
+                    보고서 형식으로 작성하세요.
+                    """
+
+                    response_ai = client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[
+                            {"role": "user", "content": prompt}
+                        ],
+                    )
+
+                st.write(response_ai.choices[0].message.content)
+
+            else:
+                st.info(
+                    "OpenAI 키가 없어 통합 AI 보고서가 비활성화됩니다."
+                )
 
     # ============================================================
-    # 기존 탭 유지
+    # 이하 기존 탭 구조 그대로 유지
     # ============================================================
     with tabs[1]:
         st.markdown("### 🧬 배합비개발")
+        st.text_area("배합비 메모", height=120)
+        if st.button("영양성분 자동 계산", key="A_calc"):
+            st.success("계산 기능 연동 예정입니다.")
 
     with tabs[2]:
         st.markdown("### ⚠️ 공정리스크확인")
+        st.selectbox(
+            "공정 단계 선택",
+            ["원료 입고", "세척/선별", "가공/혼합", "살균/멸균", "충전/포장", "출하"],
+        )
+        if st.button("리스크 평가 실행", key="A_risk"):
+            st.warning("리스크 평가 기능 연동 예정입니다.")
 
     with tabs[3]:
         st.markdown("### 📋 생산계획서")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.date_input("생산 시작일")
+        with col2:
+            st.number_input(
+                "생산 수량 (개)", min_value=0, value=1000, step=100
+            )
+        if st.button("계획서 생성", key="A_plan"):
+            st.success("생산계획서 생성 기능 연동 예정입니다.")
 
     with tabs[4]:
         st.markdown("### 📝 개발보고서")
+        st.text_input("제품명")
+        if st.button("보고서 자동 생성", key="A_report"):
+            st.success("보고서 생성 기능 연동 예정입니다.")
