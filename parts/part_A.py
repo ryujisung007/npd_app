@@ -208,6 +208,19 @@ def run():
                     st.line_chart(df_shop_trend.set_index("period")["ratio"])
 
                     shopping_trend_summary = df_shop_trend["ratio"].tolist()[-3:]
+st.subheader("🏆 브랜드 노출 순위")
+
+brand_rank = (
+    df_shop["brand"]
+    .value_counts()
+    .reset_index()
+)
+
+brand_rank.columns = ["브랜드", "노출건수"]
+
+st.dataframe(brand_rank)
+
+st.bar_chart(brand_rank.set_index("브랜드")["노출건수"])
 
                         # ============================================================
             # 3️⃣ AI 통합 전략 보고서 (가독성 개선)
