@@ -26,34 +26,186 @@ def run():
 
     tabs = st.tabs(["📈 시장정보분석", "🧬 배합비개발", "⚠️ 공정리스크확인", "📋 생산계획서", "📝 개발보고서"])
 
-    # ============================================================
-    # 📈 시장정보분석
+        # ============================================================
+    # 📈 시장정보분석 (AI 통합 보고서 버전)
     # ============================================================
     with tabs[0]:
 
-        # 🔥 드롭다운 가독성 개선
-        st.markdown("""
-        <style>
-        div[data-baseweb="select"] > div {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
-            font-weight: 900 !important;
-            border: 3px solid #00C8D4 !important;
-        }
-        ul[role="listbox"] {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
-            font-weight: 800 !important;
-        }
-        div[data-baseweb="tag"] {
-            background-color: #00C8D4 !important;
-            color: #000000 !important;
-            font-weight: 800 !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
         st.markdown("## 📊 전략 비교 대시보드")
+
+        if "naver_search" not in st.secrets or "naver_shopping" not in st.secrets:
+            st.error("네이버 API secrets가 설정되지 않았습니다.")
+            return
+
+        openai_enabled = False
+        if "openai" in st.secrets:
+            try:
+                from openai import OpenAI
+                openai_enabled = True
+            except:
+                openai_enabled = False
+
+        # ─────────────────────────────
+        # 계열 정의
+        # ─────────────────────────────
+        beverage_groups = {
+            "탄산음료": ["콜라","사이다","이온음료","과즙탄산음료","에이드음료"],
+            "과일주스": ["오렌지주스","사과주스","포도주스","망고주스","레몬주스","타트체리주스"],
+            "건강기능성음료": ["에너지음료","비타민음료","단백질음료"],
+            "전통/차음료": ["식혜","쌍화차","녹차음료","홍차음료"],
+            "우유/요거트/대체유": ["우유","요거트","두유","아몬드우유","귀리우유"],
+            "제로/저당음료": ["제로음료","저당음료","무설탕음료"]
+        }
+
+        selected_groups = st.multiselect(
+            "📂 분석 계열 (복수 선택 가능)",
+            list(beverage_groups.keys())
+        )
+
+        flavor_input = st.text_input("🍊 플레이버 (선택)", placeholder="망고, 레몬 등")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            start_date = st.date_input("시작일")
+        with col2:
+            end_date = st.date_input("종료일")
+
+        time_unit = st.selectbox("📅 분석 단위", ["month","week","date"])
+
+        if st.button("📊 분석 실행"):
+
+            # ============================================================
+            # 1️⃣ 트렌드 분석
+            # ============================================================
+            trend_summary = {}
+            plot_data = {}
+
+            for group in selected_groups:
+
+                keywords = beverage_groups[group]
+
+                body = {
+                    "startDate": start_date.strftime("%Y-%m-%d"),
+                    "endDate": end_date.strftime("%Y-%m-%d"),
+                    "timeUnit": time_unit,
+                    "keywordGroups": [
+                        {"groupName": group, "keywords": keywords}
+                    ]
+                }
+
+                response = requests.post(
+                    "https://openapi.naver.com/v1/datalab/search",
+                    headers={
+                        "X-Naver-Client-Id": st.secrets["naver_search"]["NAVER_CLIENT_ID"],
+                        "X-Naver-Client-Secret": st.secrets["naver_search"]["NAVER_CLIENT_SECRET"],
+                        "Content-Type": "application/json"
+                    },
+                    data=json.dumps(body)
+                )
+
+                if response.status_code != 200:
+                    continue
+
+                result = response.json()
+
+                if "results" not in result:
+                    continue
+
+                df = pd.DataFrame(result["results"][0]["data"])
+                if df.empty:
+                    continue
+
+                df["period"] = pd.to_datetime(df["period"])
+                plot_data[group] = df
+
+                trend_summary[group] = df["ratio"].tolist()[-3:]
+
+            # Plotly 그래프
+            import plotly.graph_objects as go
+            fig = go.Figure()
+
+            for name, df_data in plot_data.items():
+                fig.add_trace(
+                    go.Scatter(
+                        x=df_data["period"],
+                        y=df_data["ratio"],
+                        mode="lines+markers",
+                        name=name
+                    )
+                )
+
+            st.plotly_chart(fig, use_container_width=True)
+
+            # ============================================================
+            # 2️⃣ 네이버 쇼핑 검색 순위 분석
+            # ============================================================
+            shopping_summary = {}
+
+            if flavor_input:
+
+                enc = urllib.parse.quote(flavor_input)
+                shop_url = f"https://openapi.naver.com/v1/search/shop.json?query={enc}&display=100"
+
+                shop_response = requests.get(
+                    shop_url,
+                    headers={
+                        "X-Naver-Client-Id": st.secrets["naver_shopping"]["NAVER_CLIENT_ID"],
+                        "X-Naver-Client-Secret": st.secrets["naver_shopping"]["NAVER_CLIENT_SECRET"]
+                    }
+                )
+
+                if shop_response.status_code == 200:
+
+                    df_shop = pd.DataFrame(shop_response.json()["items"])
+                    df_shop["lprice"] = pd.to_numeric(df_shop["lprice"], errors="coerce")
+
+                    shopping_summary = {
+                        "평균가격": float(df_shop["lprice"].mean()),
+                        "상위브랜드": df_shop["brand"].value_counts().head(5).to_dict(),
+                        "판매처분포": df_shop["mallName"].value_counts().head(5).to_dict()
+                    }
+
+                    st.subheader("🛍 쇼핑 제품 현황")
+                    st.dataframe(df_shop[["title","lprice","brand","mallName"]])
+
+            # ============================================================
+            # 3️⃣ AI 통합 전략 보고서
+            # ============================================================
+            if openai_enabled:
+
+                st.subheader("🤖 AI 통합 전략 보고서")
+                st.markdown("**AI 모델: gpt-4o-mini**")
+
+                with st.spinner("AI 통합 분석 보고서 생성 중..."):
+
+                    client = OpenAI(api_key=st.secrets["openai"]["OPENAI_API_KEY"])
+
+                    prompt = f"""
+                    다음은 음료 시장 트렌드 요약 데이터입니다:
+                    {trend_summary}
+
+                    다음은 네이버 쇼핑 검색 결과 요약입니다:
+                    {shopping_summary}
+
+                    위 두 데이터를 통합하여:
+                    1. 시장 성장 해석
+                    2. 가격 포지셔닝 전략
+                    3. 유망 플레이버 방향
+                    4. 브랜드 전략 제안
+                    5. 실행 전략
+
+                    보고서 형식으로 작성하세요.
+                    """
+
+                    response_ai = client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[{"role":"user","content":prompt}]
+                    )
+
+                st.write(response_ai.choices[0].message.content)
+
+            else:
+                st.info("OpenAI 키가 없어 통합 AI 보고서가 비활성화됩니다.")
 
         # ─────────────────────────────
         # API 키 체크
