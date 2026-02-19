@@ -15,57 +15,24 @@ except Exception:
 def run():
 
     # ============================================================
-    # 공통 스타일
+    # part_A 전용 보조 스타일 (main_app.py CSS와 충돌 없는 것만)
     # ============================================================
     st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
-
-    .npd-header {
-        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-        border-radius: 16px;
-        padding: 28px 32px;
-        margin-bottom: 24px;
-        display: flex;
-        align-items: center;
-        gap: 18px;
-    }
-    .npd-header-icon { font-size: 40px; }
-    .npd-header-title {
-        font-size: 26px;
-        font-weight: 700;
-        color: #ffffff;
-        margin: 0;
-    }
-    .npd-header-sub {
-        font-size: 13px;
-        color: #94a3b8;
-        margin-top: 4px;
-    }
-    .kpi-card {
-        background: linear-gradient(145deg, #1e293b, #0f172a);
-        border: 1px solid #334155;
-        border-radius: 12px;
-        padding: 18px 20px;
-        text-align: center;
-    }
-    .kpi-label { font-size: 12px; color: #64748b; margin-bottom: 6px; }
-    .kpi-value { font-size: 28px; font-weight: 700; color: #38bdf8; }
-    .kpi-desc  { font-size: 11px; color: #475569; margin-top: 4px; }
     .section-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: #e2e8f0;
-        border-left: 4px solid #38bdf8;
-        padding-left: 12px;
-        margin: 24px 0 14px;
+        font-size: 15px;
+        font-weight: 700;
+        color: #00C8D4;
+        border-left: 4px solid #00C8D4;
+        padding-left: 10px;
+        margin: 20px 0 12px;
     }
     .badge {
         display: inline-block;
         padding: 3px 10px;
         border-radius: 20px;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
         margin: 2px;
     }
     .badge-blue   { background: #1e40af; color: #bfdbfe; }
@@ -73,7 +40,7 @@ def run():
     .badge-yellow { background: #713f12; color: #fef08a; }
     .badge-red    { background: #7f1d1d; color: #fecaca; }
     .risk-row {
-        background: #1e293b;
+        background: #1A2E4A;
         border-left: 4px solid #ef4444;
         border-radius: 8px;
         padding: 12px 16px;
@@ -88,66 +55,53 @@ def run():
         width: 100%;
         border-collapse: collapse;
         font-size: 13px;
-        color: #e2e8f0;
+        color: #E8F0FE;
     }
     .plan-table th {
-        background: #0f172a;
-        color: #94a3b8;
+        background: #0B1629;
+        color: #7A9CC0;
         padding: 10px 14px;
         text-align: left;
-        font-weight: 500;
-        border-bottom: 1px solid #334155;
+        font-weight: 600;
+        border-bottom: 1px solid #1E3A5A;
     }
     .plan-table td {
         padding: 10px 14px;
-        border-bottom: 1px solid #1e293b;
+        border-bottom: 1px solid #1A2E4A;
     }
-    .plan-table tr:hover td { background: #1e293b; }
+    .plan-table tr:hover td { background: #1A2E4A; }
     .ai-box {
-        background: #0f172a;
-        border: 1px solid #1e40af;
+        background: #0B1629;
+        border: 1px solid #00C8D4;
         border-radius: 12px;
-        padding: 24px;
-        margin-top: 20px;
+        padding: 20px 24px;
+        margin-top: 16px;
         line-height: 1.8;
         font-size: 14px;
-        color: #e2e8f0;
+        color: #E8F0FE;
         white-space: pre-wrap;
     }
     </style>
     """, unsafe_allow_html=True)
 
     # ============================================================
-    # 헤더
+    # 페이지 타이틀
     # ============================================================
-    st.markdown("""
-    <div class="npd-header">
-        <div class="npd-header-icon">🧪</div>
-        <div>
-            <div class="npd-header-title">신제품개발시스템</div>
-            <div class="npd-header-sub">시장 정보 분석부터 개발보고서까지 신제품 개발 전 과정을 지원합니다.</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("## 🧪 신제품개발시스템")
+    st.caption("시장 정보 분석부터 개발보고서까지 신제품 개발 전 과정을 지원합니다.")
+    st.markdown("---")
 
     # ============================================================
     # KPI 요약
     # ============================================================
     k1, k2, k3, k4 = st.columns(4)
-    for col, icon, label, value, desc in [
-        (k1, "📈", "진행 중 프로젝트", "147", "전월 대비 +12"),
-        (k2, "🧬", "배합비 개발 중",   "32",  "승인 대기 8건"),
-        (k3, "⚠️", "리스크 항목",      "5",   "긴급 조치 필요 2건"),
-        (k4, "📋", "완료 보고서",       "89",  "이번 달 +7"),
+    for col, label, value in [
+        (k1, "📈 진행 중 프로젝트", "147"),
+        (k2, "🧬 배합비 개발 중",   "32"),
+        (k3, "⚠️ 리스크 항목",      "5"),
+        (k4, "📋 완료 보고서",       "89"),
     ]:
-        with col:
-            st.markdown(f"""
-            <div class="kpi-card">
-                <div class="kpi-label">{icon} {label}</div>
-                <div class="kpi-value">{value}</div>
-                <div class="kpi-desc">{desc}</div>
-            </div>
-            """, unsafe_allow_html=True)
+        col.metric(label, value)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -157,27 +111,27 @@ def run():
     beverage_structure = {
         "건강기능성음료": {
             "플레이버": ["망고", "베리", "레몬", "복숭아", "초코"],
-            "브랜드": ["몬스터", "레드불", "셀시어스", "마이밀", "닥터유"]
+            "브랜드":   ["몬스터", "레드불", "셀시어스", "마이밀", "닥터유"]
         },
         "탄산음료": {
             "플레이버": ["콜라", "레몬", "자몽", "라임", "청포도"],
-            "브랜드": ["코카콜라", "펩시", "칠성사이다", "환타"]
+            "브랜드":   ["코카콜라", "펩시", "칠성사이다", "환타"]
         },
         "과일주스": {
             "플레이버": ["오렌지", "사과", "망고", "포도", "타트체리"],
-            "브랜드": ["델몬트", "썬키스트", "따옴", "돈시몬"]
+            "브랜드":   ["델몬트", "썬키스트", "따옴", "돈시몬"]
         },
         "전통/차음료": {
             "플레이버": ["녹차", "홍차", "보리차", "식혜", "쌍화차"],
-            "브랜드": ["동서", "광동", "웅진"]
+            "브랜드":   ["동서", "광동", "웅진"]
         },
         "제로/저당음료": {
             "플레이버": ["제로콜라", "제로사이다", "무가당레몬"],
-            "브랜드": ["코카콜라제로", "펩시제로", "칠성제로"]
+            "브랜드":   ["코카콜라제로", "펩시제로", "칠성제로"]
         }
     }
 
-    # OpenAI 활성화 여부 (전역)
+    # OpenAI 활성화 여부
     try:
         openai_enabled = (
             "openai" in st.secrets
@@ -187,6 +141,36 @@ def run():
     except Exception:
         openai_enabled = False
 
+    # 공통 선택 위젯 함수
+    def flavor_brand_selector(group_key, tab_key):
+        """계열별 플레이버/브랜드 선택 + 없음/직접입력 UI"""
+        selected_group = st.selectbox(
+            "📂 분석 계열",
+            list(beverage_structure.keys()),
+            key=f"{tab_key}_group"
+        )
+        flavors_list = ["없음"] + beverage_structure[selected_group]["플레이버"]
+        brands_list  = ["없음"] + beverage_structure[selected_group]["브랜드"]
+
+        col_f1, col_f2 = st.columns([2, 1])
+        with col_f1:
+            f_sel = st.selectbox("추천 플레이버", flavors_list, key=f"{tab_key}_fsel")
+        with col_f2:
+            f_cus = st.text_input("직접입력(플레이버)", key=f"{tab_key}_fcus", placeholder="없음 선택 후 입력")
+        final_flavor = f_cus.strip() if f_cus.strip() else (f_sel if f_sel != "없음" else "")
+
+        col_b1, col_b2 = st.columns([2, 1])
+        with col_b1:
+            b_sel = st.selectbox("추천 브랜드", brands_list, key=f"{tab_key}_bsel")
+        with col_b2:
+            b_cus = st.text_input("직접입력(브랜드)", key=f"{tab_key}_bcus", placeholder="없음 선택 후 입력")
+        final_brand = b_cus.strip() if b_cus.strip() else (b_sel if b_sel != "없음" else "")
+
+        return selected_group, final_flavor, final_brand
+
+    # ============================================================
+    # 탭
+    # ============================================================
     tabs = st.tabs([
         "📈 시장정보분석",
         "🧬 배합비개발",
@@ -206,35 +190,8 @@ def run():
             st.error("네이버 API secrets가 설정되지 않았습니다.")
             return
 
-        # 계열 선택
-        selected_group = st.selectbox("📂 분석 계열", list(beverage_structure.keys()), key="tab0_group")
+        selected_group0, final_flavor0, final_brand0 = flavor_brand_selector("", "tab0")
 
-        flavors_list = ["없음"] + beverage_structure[selected_group]["플레이버"]
-        brands_list  = ["없음"] + beverage_structure[selected_group]["브랜드"]
-
-        # 플레이버
-        col_f1, col_f2 = st.columns([2, 1])
-        with col_f1:
-            flavor_select = st.selectbox("🍊 플레이버 선택", flavors_list, key="tab0_flavor_sel")
-        with col_f2:
-            flavor_custom = st.text_input("✏️ 플레이버 직접입력", key="tab0_flavor_custom",
-                                          placeholder="없음 선택 시 활성")
-        final_flavor = flavor_custom.strip() if flavor_custom.strip() else (
-            flavor_select if flavor_select != "없음" else ""
-        )
-
-        # 브랜드
-        col_b1, col_b2 = st.columns([2, 1])
-        with col_b1:
-            brand_select = st.selectbox("🏷 브랜드 선택", brands_list, key="tab0_brand_sel")
-        with col_b2:
-            brand_custom = st.text_input("✏️ 브랜드 직접입력", key="tab0_brand_custom",
-                                         placeholder="없음 선택 시 활성")
-        final_brand = brand_custom.strip() if brand_custom.strip() else (
-            brand_select if brand_select != "없음" else ""
-        )
-
-        # 트렌드 기간
         col_c, col_d, col_e = st.columns(3)
         with col_c:
             start_date = st.date_input("시작일", date(2023, 1, 1))
@@ -245,17 +202,13 @@ def run():
 
         if st.button("📊 분석 실행", key="market_run"):
 
-            # 검색 키워드 조합
-            search_parts = [p for p in [final_brand, final_flavor] if p]
+            search_parts = [p for p in [final_brand0, final_flavor0] if p]
             if not search_parts:
                 st.warning("⚠️ 플레이버 또는 브랜드 중 하나 이상을 선택하거나 입력하세요.")
                 return
             search_keyword = " ".join(search_parts)
 
-            # ── DataLab 트렌드 ──
-            trend_summary = {}
-            plot_data     = {}
-
+            # DataLab 트렌드
             beverage_groups_datalab = {
                 "건강기능성음료": ["에너지음료", "비타민음료", "단백질음료", "기능성음료"],
                 "탄산음료":       ["콜라", "사이다", "이온음료", "과즙탄산음료"],
@@ -264,15 +217,14 @@ def run():
                 "제로/저당음료":  ["제로음료", "저당음료", "무설탕음료"],
             }
 
-            keywords_for_group = beverage_groups_datalab.get(selected_group, [search_keyword])
-
             body = {
                 "startDate": start_date.strftime("%Y-%m-%d"),
                 "endDate":   end_date.strftime("%Y-%m-%d"),
                 "timeUnit":  time_unit,
-                "keywordGroups": [
-                    {"groupName": selected_group, "keywords": keywords_for_group}
-                ],
+                "keywordGroups": [{
+                    "groupName": selected_group0,
+                    "keywords":  beverage_groups_datalab.get(selected_group0, [search_keyword])
+                }],
             }
             response = requests.post(
                 "https://openapi.naver.com/v1/datalab/search",
@@ -284,36 +236,32 @@ def run():
                 data=json.dumps(body),
             )
 
+            trend_summary = {}
             if response.status_code == 200:
                 result = response.json()
                 if "results" in result:
+                    st.markdown('<div class="section-title">📉 검색 트렌드</div>', unsafe_allow_html=True)
                     df_trend = pd.DataFrame(result["results"][0]["data"])
                     df_trend["period"] = pd.to_datetime(df_trend["period"])
-                    plot_data[selected_group] = df_trend
-                    trend_summary[selected_group] = df_trend["ratio"].tolist()[-3:]
+                    trend_summary[selected_group0] = df_trend["ratio"].tolist()[-3:]
 
-            if plot_data:
-                st.markdown('<div class="section-title">📉 검색 트렌드</div>', unsafe_allow_html=True)
-                fig = go.Figure()
-                for i, (name, df_data) in enumerate(plot_data.items()):
+                    fig = go.Figure()
                     fig.add_trace(go.Scatter(
-                        x=df_data["period"], y=df_data["ratio"],
-                        mode="lines+markers", name=name,
-                        line=dict(color="#38bdf8", width=2),
-                        marker=dict(size=5)
+                        x=df_trend["period"], y=df_trend["ratio"],
+                        mode="lines+markers", name=selected_group0,
+                        line=dict(color="#00C8D4", width=2), marker=dict(size=5)
                     ))
-                fig.update_layout(
-                    paper_bgcolor="#0f172a", plot_bgcolor="#0f172a",
-                    font=dict(color="#94a3b8"),
-                    title=dict(text=f"{selected_group} 트렌드", font=dict(color="#e2e8f0")),
-                    hovermode="x unified",
-                    legend=dict(bgcolor="#1e293b", bordercolor="#334155"),
-                    xaxis=dict(gridcolor="#1e293b"),
-                    yaxis=dict(gridcolor="#1e293b"),
-                )
-                st.plotly_chart(fig, use_container_width=True)
+                    fig.update_layout(
+                        paper_bgcolor="#0B1629", plot_bgcolor="#0B1629",
+                        font=dict(color="#7A9CC0"),
+                        title=dict(text=f"{selected_group0} 트렌드", font=dict(color="#E8F0FE")),
+                        hovermode="x unified",
+                        xaxis=dict(gridcolor="#1A2E4A"),
+                        yaxis=dict(gridcolor="#1A2E4A"),
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
 
-            # ── 쇼핑 분석 ──
+            # 쇼핑 분석
             shopping_summary = {}
             enc = urllib.parse.quote(search_keyword)
             shop_response = requests.get(
@@ -362,7 +310,7 @@ def run():
                 else:
                     st.info("쇼핑 검색 결과가 없습니다.")
 
-            # ── AI 보고서 ──
+            # AI 보고서
             if openai_enabled:
                 st.markdown('<div class="section-title">🤖 AI 통합 전략 보고서</div>', unsafe_allow_html=True)
                 with st.spinner("AI 분석 중..."):
@@ -388,30 +336,16 @@ def run():
 
         st.markdown('<div class="section-title">배합비 설계 & 원료 구성</div>', unsafe_allow_html=True)
 
-        # 계열/플레이버/브랜드 선택
-        selected_group2 = st.selectbox("📂 제품 계열", list(beverage_structure.keys()), key="tab1_group")
-
-        flavors_list2 = ["없음"] + beverage_structure[selected_group2]["플레이버"]
-        brands_list2  = ["없음"] + beverage_structure[selected_group2]["브랜드"]
+        selected_group1, final_flavor1, final_brand1 = flavor_brand_selector("", "tab1")
+        product_name1 = f"{final_brand1} {final_flavor1}".strip() or "미입력"
 
         col1, col2 = st.columns(2)
         with col1:
-            f_sel2 = st.selectbox("🍊 플레이버", flavors_list2, key="tab1_flavor_sel")
-            f_cus2 = st.text_input("✏️ 플레이버 직접입력", key="tab1_flavor_custom", placeholder="없음 선택 시 입력")
-            final_flavor2 = f_cus2.strip() if f_cus2.strip() else (f_sel2 if f_sel2 != "없음" else "")
-
             target_brix = st.slider("🍬 목표 당도 (Brix)", 0.0, 20.0, 10.0, 0.5)
             target_ph   = st.slider("🧪 목표 pH", 2.0, 7.0, 3.5, 0.1)
-
         with col2:
-            b_sel2 = st.selectbox("🏷 브랜드", brands_list2, key="tab1_brand_sel")
-            b_cus2 = st.text_input("✏️ 브랜드 직접입력", key="tab1_brand_custom", placeholder="없음 선택 시 입력")
-            final_brand2 = b_cus2.strip() if b_cus2.strip() else (b_sel2 if b_sel2 != "없음" else "")
-
             target_cost = st.number_input("💰 목표 원가 (원/L)", min_value=0, value=500, step=10)
-            memo        = st.text_area("📝 특이사항", placeholder="특수 원료, 알레르기 주의사항 등", height=68)
-
-        product_name = f"{final_brand2} {final_flavor2}".strip() or "미입력"
+            memo        = st.text_area("📝 특이사항", placeholder="특수 원료, 알레르기 주의사항 등", height=82)
 
         st.markdown('<div class="section-title">원료 구성표</div>', unsafe_allow_html=True)
 
@@ -444,11 +378,11 @@ def run():
                 client = OpenAI(api_key=st.secrets["openai"]["OPENAI_API_KEY"])
                 with st.spinner("AI 배합비 분석 중..."):
                     prompt = f"""
-                    제품명: {product_name}, 계열: {selected_group2}
-                    플레이버: {final_flavor2}, 브랜드: {final_brand2}
+                    제품명: {product_name1}, 계열: {selected_group1}
+                    플레이버: {final_flavor1}, 브랜드: {final_brand1}
                     목표 당도: {target_brix} Brix, 목표 pH: {target_ph}, 목표 원가: {target_cost}원/L
                     현재 원료구성: {edited_df.to_dict()}
-                    위 배합비를 분석하고 원가 절감, 관능 개선, 규격 충족 측면에서 개선 방향을 제안하세요.
+                    원가 절감, 관능 개선, 규격 충족 측면에서 개선 방향을 제안하세요.
                     """
                     resp = client.chat.completions.create(
                         model="gpt-4o-mini",
@@ -505,10 +439,10 @@ def run():
             <div class="{row_cls}">
                 <div>
                     <span class="badge {badge_cls}">{label}</span>
-                    &nbsp;<strong style="color:#e2e8f0">[{item['단계']}]</strong>
-                    &nbsp;<span style="color:#cbd5e1">{item['항목']}</span>
+                    &nbsp;<strong style="color:#E8F0FE">[{item['단계']}]</strong>
+                    &nbsp;<span style="color:#7A9CC0">{item['항목']}</span>
                 </div>
-                <div style="font-size:12px;color:#94a3b8;max-width:50%;text-align:right;">
+                <div style="font-size:12px;color:#7A9CC0;max-width:50%;text-align:right;">
                     💡 {item['조치']}
                 </div>
             </div>
@@ -536,26 +470,12 @@ def run():
 
         st.markdown('<div class="section-title">생산 계획 수립</div>', unsafe_allow_html=True)
 
-        # 계열/플레이버/브랜드
-        selected_group3 = st.selectbox("📂 제품 계열", list(beverage_structure.keys()), key="tab3_group")
-        flavors_list3 = ["없음"] + beverage_structure[selected_group3]["플레이버"]
-        brands_list3  = ["없음"] + beverage_structure[selected_group3]["브랜드"]
-
-        col_p0a, col_p0b = st.columns(2)
-        with col_p0a:
-            f_sel3 = st.selectbox("🍊 플레이버", flavors_list3, key="tab3_flavor_sel")
-            f_cus3 = st.text_input("✏️ 플레이버 직접입력", key="tab3_flavor_custom", placeholder="없음 선택 시 입력")
-            final_flavor3 = f_cus3.strip() if f_cus3.strip() else (f_sel3 if f_sel3 != "없음" else "")
-        with col_p0b:
-            b_sel3 = st.selectbox("🏷 브랜드", brands_list3, key="tab3_brand_sel")
-            b_cus3 = st.text_input("✏️ 브랜드 직접입력", key="tab3_brand_custom", placeholder="없음 선택 시 입력")
-            final_brand3 = b_cus3.strip() if b_cus3.strip() else (b_sel3 if b_sel3 != "없음" else "")
-
+        selected_group3, final_flavor3, final_brand3 = flavor_brand_selector("", "tab3")
         plan_product = f"{final_brand3} {final_flavor3}".strip() or "미입력"
 
         col_p1, col_p2, col_p3 = st.columns(3)
         with col_p1:
-            plan_line  = st.selectbox("생산 라인", ["1라인", "2라인", "3라인", "다목적 라인"])
+            plan_line = st.selectbox("생산 라인", ["1라인", "2라인", "3라인", "다목적 라인"])
         with col_p2:
             plan_start = st.date_input("생산 시작일", key="plan_start")
             plan_end   = st.date_input("생산 종료일", key="plan_end")
@@ -598,16 +518,17 @@ def run():
 
         st.markdown('<div class="section-title">생산 일정표</div>', unsafe_allow_html=True)
         schedule = [
-            ("원료 입고 확인", "원료팀",  "완료"),
-            ("설비 세팅 & CIP", "생산팀", "완료"),
-            ("시험 생산",       "QC팀",   "진행 중"),
-            ("본 생산",         "생산팀", "대기"),
-            ("품질 검사",       "QC팀",   "대기"),
-            ("출하",            "물류팀", "대기"),
+            ("원료 입고 확인",  "원료팀",  "완료"),
+            ("설비 세팅 & CIP", "생산팀",  "완료"),
+            ("시험 생산",       "QC팀",    "진행 중"),
+            ("본 생산",         "생산팀",  "대기"),
+            ("품질 검사",       "QC팀",    "대기"),
+            ("출하",            "물류팀",  "대기"),
         ]
         badge_map2 = {"완료": "badge-green", "진행 중": "badge-yellow", "대기": "badge-blue"}
         rows_html  = "".join(
-            f"<tr><td>{s[0]}</td><td>{s[1]}</td><td><span class='badge {badge_map2[s[2]]}'>{s[2]}</span></td></tr>"
+            f"<tr><td>{s[0]}</td><td>{s[1]}</td>"
+            f"<td><span class='badge {badge_map2[s[2]]}'>{s[2]}</span></td></tr>"
             for s in schedule
         )
         st.markdown(f"""
@@ -624,29 +545,16 @@ def run():
 
         st.markdown('<div class="section-title">개발보고서 작성</div>', unsafe_allow_html=True)
 
-        # 계열/플레이버/브랜드
-        selected_group4 = st.selectbox("📂 제품 계열", list(beverage_structure.keys()), key="tab4_group")
-        flavors_list4 = ["없음"] + beverage_structure[selected_group4]["플레이버"]
-        brands_list4  = ["없음"] + beverage_structure[selected_group4]["브랜드"]
+        selected_group4, final_flavor4, final_brand4 = flavor_brand_selector("", "tab4")
+        rep_product = f"{final_brand4} {final_flavor4}".strip() or "미입력"
 
         col_r1, col_r2 = st.columns(2)
         with col_r1:
-            f_sel4 = st.selectbox("🍊 플레이버", flavors_list4, key="tab4_flavor_sel")
-            f_cus4 = st.text_input("✏️ 플레이버 직접입력", key="tab4_flavor_custom", placeholder="없음 선택 시 입력")
-            final_flavor4 = f_cus4.strip() if f_cus4.strip() else (f_sel4 if f_sel4 != "없음" else "")
-
             rep_manager = st.text_input("담당자", placeholder="홍길동")
             rep_date    = st.date_input("보고서 작성일", date.today())
-
         with col_r2:
-            b_sel4 = st.selectbox("🏷 브랜드", brands_list4, key="tab4_brand_sel")
-            b_cus4 = st.text_input("✏️ 브랜드 직접입력", key="tab4_brand_custom", placeholder="없음 선택 시 입력")
-            final_brand4 = b_cus4.strip() if b_cus4.strip() else (b_sel4 if b_sel4 != "없음" else "")
-
             rep_version = st.selectbox("버전", ["v1.0", "v1.1", "v2.0", "최종"])
             rep_status  = st.selectbox("진행 상태", ["개발 중", "시험 생산", "승인 대기", "완료"])
-
-        rep_product = f"{final_brand4} {final_flavor4}".strip() or "미입력"
 
         st.markdown('<div class="section-title">개발 내용</div>', unsafe_allow_html=True)
 
@@ -671,7 +579,6 @@ def run():
                         관능평가: {rep_sensory}
                         품질규격: {rep_quality}
                         이슈: {rep_issue}
-
                         위 내용을 바탕으로 신제품 개발 보고서를 전문적으로 작성하세요.
                         항목: 개발배경, 제품특성, 배합비 요약, 관능평가, 품질기준, 향후 과제
                         """
@@ -689,7 +596,10 @@ def run():
 
         if "report_ai_text" in st.session_state:
             st.markdown('<div class="section-title">📄 AI 생성 보고서</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="ai-box">{st.session_state["report_ai_text"]}</div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="ai-box">{st.session_state["report_ai_text"]}</div>',
+                unsafe_allow_html=True
+            )
 
         st.markdown('<div class="section-title">📁 최근 보고서 목록</div>', unsafe_allow_html=True)
         history = pd.DataFrame({
