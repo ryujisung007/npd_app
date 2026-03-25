@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>음료 배합 시뮬레이터 | KFI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Pretendard Variable', -apple-system, sans-serif; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const B="#1975BC",BD="#135A91",BL="#E8F1F8",GRN="#2E8B57",ORG="#E07030",RED="#D94040",DT="#1E1E1E",TM="#444",TL="#888";
+
+const INGREDIENTS_DB = {
+  sweeteners: [
+    { name:"설탕", brix:1.0, ph:7.0, cost:1200, note:"기본 감미료" },
+    { name:"스테비올배당체", brix:0, ph:6.5, cost:45000, note:"천연 고감미, 200-300배" },
+    { name:"알룰로스", brix:0.7, ph:6.8, cost:8000, note:"저칼로리, 설탕 70% 감미" },
+    { name:"에리스리톨", brix:0, ph:7.0, cost:6000, note:"당알코올, 청량감" },
+    { name:"수크랄로스", brix:0, ph:6.0, cost:120000, note:"인공 고감미, 600배" },
+  ],
+  acids: [
+    { name:"구연산", ph:2.2, cost:3500, note:"가장 범용, 상큼한 산미" },
+    { name:"젖산", ph:2.4, cost:4000, note:"부드러운 산미, 발효감" },
+    { name:"사과산", ph:2.0, cost:5000, note:"사과류 풍미, 샤프한 산미" },
+    { name:"주석산", ph:2.2, cost:8000, note:"포도류 풍미, 날카로운 산미" },
+  ],
+  flavors: [
+    { name:"레몬향", cost:15000, note:"시트러스 계열" },
+    { name:"자몽향", cost:18000, note:"비터 시트러스" },
+    { name:"복숭아향", cost:16000, note:"스톤프룻 계열" },
+    { name:"청포도향", cost:14000, note:"그린 프루티" },
+    { name:"유자향", cost:20000, note:"한국 시트러스" },
+    { name:"매실향", cost:17000, note:"전통 과실" },
+  ],
+  functional: [
+    { name:"비타민C", cost:12000, note:"항산화, 1일 100mg 권장" },
+    { name:"비타민B군", cost:25000, note:"에너지 대사" },
+    { name:"콜라겐펩타이드", cost:35000, note:"피부, 2-5g/일" },
+    { name:"식이섬유(이눌린)", cost:8000, note:"프리바이오틱스" },
+    { name:"L-테아닌", cost:45000, note:"릴렉스, 200mg/일" },
+  ]
+};
+
+const BEVERAGE_TYPES = [
+  { name:"탄산음료", brixRange:[8,13], phRange:[2.5,3.5], carbonated:true },
+  { name:"과채음료", brixRange:[10,15], phRange:[3.0,4.5], carbonated:false },
+  { name:"기능성음료", brixRange:[5,10], phRange:[3.0,4.0], carbonated:false },
+  { name:"유산균음료", brixRange:[12,18], phRange:[3.5,4.5], carbonated:false },
+  { name:"제로칼로리", brixRange:[0,2], phRange:[2.8,3.5], carbonated:true },
+];
+
+function generateFormulation(type, targetBrix, targetPh, selectedIngredients) {
+  const bt = BEVERAGE_TYPES.find(b => b.name === type);
+  let formulation = [];
+  let totalPct = 0;
+
+  // Water base
+  let waterPct = 85;
+
+  // Sweetener
+  const sw = selectedIngredients.sweetener;
+  if (sw) {
+    let swPct = type === "제로칼로리" ? 0.03 : Math.min(targetBrix * 1.0, 12);
+    if (sw.name === "스테비올배당체") swPct = 0.015;
+    else if (sw.name === "수크랄로스") swPct = 0.008;
+    else if (sw.name === "에리스리톨") swPct = targetBrix * 0.5;
+    else if (sw.name === "알룰로스") swPct = targetBrix * 0.8;
+    formulation.push({ name: sw.name, pct: swPct, role: "감미료", note: sw.note });
+    totalPct += swPct;
+  }
+
+  // Acid
+  const ac = selectedIngredients.acid;
+  if (ac) {
+    let acPct = (4.0 - targetPh) * 0.15;
+    acPct = Math.max(0.05, Math.min(acPct, 0.5));
+    formulation.push({ name: ac.name, pct: acPct, role: "산미료", note: ac.note });
+    totalPct += acPct;
+  }
+
+  // Flavor
+  const fl = selectedIngredients.flavor;
+  if (fl) {
+    formulation.push({ name: fl.name, pct: 0.1, role: "향료", note: fl.note });
+    totalPct += 0.1;
+  }
+
+  // Functional
+  const fn = selectedIngredients.functional;
+  if (fn) {
+    let fnPct = fn.name.includes("콜라겐") ? 1.0 : fn.name.includes("섬유") ? 2.0 : 0.05;
+    formulation.push({ name: fn.name, pct: fnPct, role: "기능성 원료", note: fn.note });
+    totalPct += fnPct;
+  }
+
+  if (bt?.carbonated) {
+    formulation.push({ name: "탄산가스(CO₂)", pct: 0.4, role: "탄산", note: "3.0~4.0 vol" });
+    totalPct += 0.4;
+  }
+
+  waterPct = 100 - totalPct;
+  formulation.unshift({ name: "정제수", pct: waterPct, role: "기재", note: "Water Balance" });
+
+  // Warnings
+  let warnings = [];
+  if (targetBrix < bt?.brixRange[0] || targetBrix > bt?.brixRange[1])
+    warnings.push(`⚠️ ${type}의 일반적 Brix 범위는 ${bt.brixRange[0]}~${bt.brixRange[1]}입니다.`);
+  if (targetPh < bt?.phRange[0] || targetPh > bt?.phRange[1])
+    warnings.push(`⚠️ ${type}의 일반적 pH 범위는 ${bt.phRange[0]}~${bt.phRange[1]}입니다.`);
+  warnings.push("⚠️ 이 배합은 AI 시뮬레이션입니다. 실제 제조 시 반드시 실험 검증이 필요합니다.");
+  warnings.push("⚠️ 식품첨가물 사용 기준은 식품첨가물공전에서 반드시 확인하세요.");
+
+  return { formulation, warnings, totalCost: formulation.reduce((s,f) => s + (f.pct/100)*10000, 0) };
+}
+
+function Selector({ label, items, value, onChange }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <label style={{ fontSize: 13, fontWeight: 700, color: DT, display: "block", marginBottom: 6 }}>{label}</label>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        {items.map(item => (
+          <button key={item.name} onClick={() => onChange(value?.name === item.name ? null : item)}
+            style={{
+              padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer",
+              border: `1.5px solid ${value?.name === item.name ? B : "#ddd"}`,
+              background: value?.name === item.name ? BL : "#fff",
+              color: value?.name === item.name ? B : TM, transition: "all 0.2s"
+            }}>{item.name}</button>
+        ))}
+      </div>
+      {value && <p style={{ fontSize: 11, color: TL, marginTop: 4, paddingLeft: 4 }}>💡 {value.note}</p>}
+    </div>
+  );
+}
+
+function App() {
+  const [bevType, setBevType] = React.useState("탄산음료");
+  const [brix, setBrix] = React.useState(10);
+  const [ph, setPh] = React.useState(3.2);
+  const [selected, setSelected] = React.useState({ sweetener:null, acid:null, flavor:null, functional:null });
+  const [result, setResult] = React.useState(null);
+
+  const simulate = () => {
+    const r = generateFormulation(bevType, brix, ph, selected);
+    setResult(r);
+  };
+
+  return (
+    <div style={{ minHeight:"100vh", background:"#FAF8F5", fontFamily:"'Pretendard Variable',-apple-system,sans-serif" }}>
+      <style>{`
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        input[type=range]{width:100%;accent-color:${B};}
+      `}</style>
+
+      {/* Header */}
+      <div style={{ background:`linear-gradient(135deg,${B},${BD})`, color:"#fff", position:"sticky", top:0, zIndex:100, boxShadow:"0 4px 24px rgba(25,117,188,0.25)" }}>
+        <div style={{ maxWidth:900, margin:"0 auto", padding:"14px 24px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <span style={{ background:"rgba(255,255,255,0.15)", border:"1px solid rgba(255,255,255,0.25)", borderRadius:6, padding:"3px 12px", fontWeight:800, fontSize:12, letterSpacing:1 }}>KFI</span>
+            <span style={{ fontSize:13, fontWeight:500, opacity:0.9 }}>한국식품정보원</span>
+          </div>
+          <span style={{ fontSize:12, opacity:0.7 }}>배합 시뮬레이터 데모</span>
+        </div>
+      </div>
+
+      {/* Hero */}
+      <div style={{ background:`linear-gradient(160deg,${B},#2A8DD4,${BD})`, color:"#fff", padding:"36px 24px 30px" }}>
+        <div style={{ maxWidth:900, margin:"0 auto" }}>
+          <span style={{ display:"inline-block", background:"rgba(255,255,255,0.15)", borderRadius:20, padding:"4px 14px", fontSize:12, fontWeight:600, marginBottom:10 }}>⚗️ 인터랙티브 실습</span>
+          <h1 style={{ fontSize:26, fontWeight:800, marginBottom:6 }}>음료 배합 시뮬레이터</h1>
+          <p style={{ fontSize:14, opacity:0.85 }}>목표 Brix/pH와 원료를 선택하면 배합 초안을 자동 생성합니다.</p>
+        </div>
+      </div>
+
+      <div style={{ maxWidth:900, margin:"0 auto", padding:"28px 24px 60px" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20 }}>
+          {/* LEFT: Controls */}
+          <div>
+            <div style={{ background:"#fff", border:"1px solid #E0E0E0", borderRadius:14, padding:22, marginBottom:16 }}>
+              <h3 style={{ fontSize:15, fontWeight:700, color:DT, marginBottom:14 }}>🎯 제품 유형 선택</h3>
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:16 }}>
+                {BEVERAGE_TYPES.map(bt => (
+                  <button key={bt.name} onClick={() => { setBevType(bt.name); setResult(null); }}
+                    style={{
+                      padding:"7px 16px", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer",
+                      border:`1.5px solid ${bevType===bt.name?B:"#ddd"}`,
+                      background:bevType===bt.name?B:"#fff", color:bevType===bt.name?"#fff":TM, transition:"all 0.2s"
+                    }}>{bt.name}</button>
+                ))}
+              </div>
+
+              <h3 style={{ fontSize:15, fontWeight:700, color:DT, marginBottom:10 }}>📊 목표 물성</h3>
+              <div style={{ marginBottom:14 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                  <span style={{ fontSize:13, fontWeight:600, color:TM }}>Brix (당도)</span>
+                  <span style={{ fontSize:15, fontWeight:800, color:B }}>{brix}°Bx</span>
+                </div>
+                <input type="range" min="0" max="20" step="0.5" value={brix} onChange={e => { setBrix(+e.target.value); setResult(null); }} />
+              </div>
+              <div style={{ marginBottom:8 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                  <span style={{ fontSize:13, fontWeight:600, color:TM }}>pH (산도)</span>
+                  <span style={{ fontSize:15, fontWeight:800, color:ORG }}>{ph.toFixed(1)}</span>
+                </div>
+                <input type="range" min="2.0" max="5.0" step="0.1" value={ph} onChange={e => { setPh(+e.target.value); setResult(null); }} />
+              </div>
+            </div>
+
+            <div style={{ background:"#fff", border:"1px solid #E0E0E0", borderRadius:14, padding:22 }}>
+              <h3 style={{ fontSize:15, fontWeight:700, color:DT, marginBottom:14 }}>🧪 원료 선택</h3>
+              <Selector label="감미료" items={INGREDIENTS_DB.sweeteners} value={selected.sweetener} onChange={v => { setSelected({...selected, sweetener:v}); setResult(null); }} />
+              <Selector label="산미료" items={INGREDIENTS_DB.acids} value={selected.acid} onChange={v => { setSelected({...selected, acid:v}); setResult(null); }} />
+              <Selector label="향료" items={INGREDIENTS_DB.flavors} value={selected.flavor} onChange={v => { setSelected({...selected, flavor:v}); setResult(null); }} />
+              <Selector label="기능성 원료 (선택)" items={INGREDIENTS_DB.functional} value={selected.functional} onChange={v => { setSelected({...selected, functional:v}); setResult(null); }} />
+
+              <button onClick={simulate} style={{
+                width:"100%", padding:"14px", borderRadius:10, border:"none", marginTop:8,
+                background:`linear-gradient(135deg,${B},#2A8DD4)`, color:"#fff",
+                fontSize:15, fontWeight:700, cursor:"pointer", boxShadow:"0 4px 16px rgba(25,117,188,0.3)"
+              }}>⚗️ 배합 시뮬레이션 실행</button>
+            </div>
+          </div>
+
+          {/* RIGHT: Results */}
+          <div>
+            {!result ? (
+              <div style={{ background:"#fff", border:"1px solid #E0E0E0", borderRadius:14, padding:40, textAlign:"center", height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+                <div style={{ fontSize:48, marginBottom:16, opacity:0.3 }}>⚗️</div>
+                <p style={{ fontSize:15, color:TL }}>제품 유형과 원료를 선택하고<br />시뮬레이션을 실행하세요</p>
+              </div>
+            ) : (
+              <div style={{ animation:"fadeUp 0.4s ease" }}>
+                <div style={{ background:"#fff", border:"1px solid #E0E0E0", borderRadius:14, padding:22, marginBottom:16 }}>
+                  <h3 style={{ fontSize:15, fontWeight:700, color:DT, marginBottom:4 }}>📋 배합 결과</h3>
+                  <p style={{ fontSize:12, color:TL, marginBottom:14 }}>{bevType} · Brix {brix}°Bx · pH {ph.toFixed(1)}</p>
+                  <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+                    <thead>
+                      <tr style={{ background:BL }}>
+                        {["원료명","배합비(%)","역할","비고"].map(h => (
+                          <th key={h} style={{ padding:"8px 10px", textAlign:"left", fontWeight:700, color:B, fontSize:11, borderBottom:`2px solid ${B}` }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.formulation.map((f,i) => (
+                        <tr key={i} style={{ borderBottom:"1px solid #F0F0F0" }}>
+                          <td style={{ padding:"8px 10px", fontWeight:600, color:DT }}>{f.name}</td>
+                          <td style={{ padding:"8px 10px", color:B, fontWeight:700 }}>{f.pct.toFixed(3)}</td>
+                          <td style={{ padding:"8px 10px", color:TM }}>{f.role}</td>
+                          <td style={{ padding:"8px 10px", color:TL, fontSize:11 }}>{f.note}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Warnings */}
+                <div style={{ background:"#FFFDE8", border:"1px solid #E8D880", borderRadius:12, padding:16, marginBottom:16 }}>
+                  <h4 style={{ fontSize:13, fontWeight:700, color:ORG, marginBottom:8 }}>⚠️ 주의사항</h4>
+                  {result.warnings.map((w,i) => (
+                    <p key={i} style={{ fontSize:12, color:TM, lineHeight:1.5, marginBottom:4 }}>{w}</p>
+                  ))}
+                </div>
+
+                {/* AI Prompt suggestion */}
+                <div style={{ background:"#F9F7F2", border:"2px dashed #C8C0B0", borderRadius:12, padding:16 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
+                    <span style={{ background:"#2D3B2D", color:"#fff", padding:"2px 10px", borderRadius:4, fontSize:10, fontWeight:700 }}>✨ AI PROMPT</span>
+                  </div>
+                  <p style={{ fontSize:12, color:DT, lineHeight:1.6 }}>
+                    "너는 음료 R&D 15년차 배합 전문가야. 아래 {bevType} 배합에서 목표 Brix {brix}°Bx, pH {ph.toFixed(1)}을 달성하기 위한 최적화안을 제시해줘.
+                    {result.formulation.filter(f=>f.name!=="정제수").map(f=>`${f.name} ${f.pct.toFixed(2)}%`).join(", ")}.
+                    각 원료의 식품공전 사용 기준을 확인하고, 미확인 시 '확인 필요'로 표기해줘."
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background:BD, color:"rgba(255,255,255,0.6)", padding:"14px 24px", textAlign:"center", fontSize:11 }}>
+        <strong style={{ color:"rgba(255,255,255,0.85)" }}>KFI 한국식품정보원</strong> · 배합 시뮬레이터 데모 · 교육용
+      </div>
+    </div>
+  );
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>

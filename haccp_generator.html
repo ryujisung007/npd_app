@@ -1,0 +1,164 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>HACCP 관리계획서 생성기 | KFI</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>:root{--b:#1975BC;--bl:#E8F1F8;--w:#fff;--dt:#1E1E1E;--tm:#444;--tl:#888;--grn:#2E8B57;--org:#E07030;--red:#D94040;--pur:#7C3AED;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Pretendard Variable',-apple-system,sans-serif;background:#FAF8F5;color:var(--dt);line-height:1.5;}button{font-family:inherit;cursor:pointer;border:none;transition:all .15s;}
+.hd{background:linear-gradient(135deg,var(--b),#135A91);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;}
+.wrap{max-width:900px;margin:0 auto;padding:20px;}
+.card{background:var(--w);border:1px solid #E8E4E0;border-radius:12px;padding:18px;margin-bottom:14px;}
+label{display:block;font-size:11px;font-weight:600;color:var(--tl);margin-bottom:2px;}
+input,select,textarea{width:100%;padding:7px 10px;border:1.5px solid #E0E0E0;border-radius:8px;font-size:12px;font-family:inherit;}
+input:focus{outline:none;border-color:var(--b);}
+.btn{width:100%;padding:14px;border-radius:10px;background:linear-gradient(135deg,var(--red),var(--org));color:#fff;font-size:15px;font-weight:700;margin-bottom:16px;box-shadow:0 4px 16px rgba(217,64,64,.3);}
+.step-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin:12px 0;}
+.step-btn{padding:10px;border-radius:8px;border:1.5px solid #E0E0E0!important;background:var(--w);text-align:center;font-size:11px;font-weight:600;transition:all .2s;}
+.step-btn.on{border-color:var(--b)!important;background:var(--bl);color:var(--b);}
+.step-btn .ic{font-size:18px;display:block;margin-bottom:2px;}
+/* Document output */
+.doc{background:var(--w);border:1px solid #ccc;padding:28px;font-size:12px;line-height:1.6;}
+.doc h1{font-size:18px;text-align:center;border-bottom:3px double #333;padding-bottom:8px;margin-bottom:16px;}
+.doc h2{font-size:14px;background:var(--bl);padding:6px 10px;border-left:4px solid var(--b);margin:16px 0 8px;}
+.doc table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px;}
+.doc th,.doc td{border:1px solid #ccc;padding:6px 8px;}
+.doc th{background:#F0F0F0;font-weight:700;text-align:center;font-size:10px;}
+.doc .ccp{background:#FFF5F5;font-weight:700;color:var(--red);}
+.doc .print-btn{display:block;margin:16px auto 0;padding:10px 24px;background:var(--b);color:#fff;border-radius:8px;font-size:13px;font-weight:600;}
+@media print{.hd,.card,.btn,.step-grid,.print-btn{display:none!important;}.doc{border:none;padding:10px;}}
+</style></head><body>
+<div class="hd"><span style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:3px 10px;font-weight:800;font-size:11px;letter-spacing:1px">KFI</span><div><div style="font-size:14px;font-weight:700">🛡️ HACCP 관리계획서 생성기</div><div style="font-size:9px;opacity:.5">공정 입력 → 위해분석 → 문서 자동 생성</div></div></div>
+<div class="wrap">
+<div class="card">
+  <h3 style="font-size:15px;font-weight:800;margin-bottom:10px">📋 제품·업체 정보</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div><label>업체명</label><input id="company" value="(주)내추럴랩 베버리지"/></div>
+    <div><label>제품명</label><input id="product" value="스파클링 유자"/></div>
+    <div><label>식품유형</label><select id="foodType"><option>탄산음료</option><option>과·채음료</option><option>유산균음료</option><option>혼합음료</option></select></div>
+    <div><label>생산규모</label><input id="capacity" value="일 10,000병 (350mL PET)"/></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="font-size:14px;font-weight:700;margin-bottom:6px">🏭 공정 단계 선택</h3>
+  <p style="font-size:10px;color:var(--tl);margin-bottom:8px">해당하는 공정을 순서대로 클릭하세요</p>
+  <div class="step-grid" id="stepGrid"></div>
+  <div style="margin-top:8px"><label>선택된 공정 순서</label><div id="selectedSteps" style="font-size:12px;color:var(--b);font-weight:600;min-height:20px;padding:6px;background:#FAFAFA;border-radius:6px;margin-top:4px"></div></div>
+</div>
+
+<button class="btn" onclick="generate()">🛡️ HACCP 관리계획서 생성</button>
+<div id="output"></div>
+</div>
+
+<script>
+const ALL_STEPS=[
+  {id:"receive",nm:"원료 입고·검수",ic:"📦",bio:"원료 미생물 오염",chem:"잔류농약, 중금속",phys:"이물질 (금속, 유리)"},
+  {id:"store",nm:"원료 보관",ic:"🏪",bio:"보관 중 미생물 증식",chem:"교차오염",phys:"해충"},
+  {id:"weigh",nm:"계량",ic:"⚖️",bio:"교차오염",chem:"오첨가",phys:"이물질 혼입"},
+  {id:"mix",nm:"혼합·교반",ic:"🔄",bio:"교차오염",chem:"배합 오류",phys:"이물질"},
+  {id:"dissolve",nm:"용해",ic:"💧",bio:"미생물 오염",chem:"-",phys:"미용해물"},
+  {id:"filter",nm:"여과",ic:"🔽",bio:"-",chem:"-",phys:"이물질 제거 불량"},
+  {id:"heat",nm:"가열",ic:"🔥",bio:"내열성 균 잔존",chem:"-",phys:"-"},
+  {id:"pasteurize",nm:"살균 (HTST/UHT)",ic:"⚡",bio:"살균 불충분",chem:"-",phys:"-",ccp:true,limit:"72°C 15초 이상 / 135°C 2초 이상",monitor:"온도계·유량계 연속 기록",corrective:"재살균, 해당 롯 폐기",verify:"온도 기록지 매 로트 확인"},
+  {id:"cool",nm:"냉각",ic:"❄️",bio:"냉각 지연 시 균 재증식",chem:"-",phys:"-",limit:"10°C 이하 30분 이내",monitor:"온도·시간 기록"},
+  {id:"carbonate",nm:"탄산 주입",ic:"🫧",bio:"-",chem:"CO₂ 순도",phys:"-"},
+  {id:"homo",nm:"균질",ic:"💨",bio:"-",chem:"-",phys:"-"},
+  {id:"fill",nm:"충전",ic:"🧴",bio:"충전 중 오염",chem:"-",phys:"이물질",ccp:true,limit:"무균 충전 환경 유지, 양압 관리",monitor:"환경 모니터링, 낙하균 검사",corrective:"라인 정지, 세척·소독 후 재개",verify:"낙하균 결과 일 1회 확인"},
+  {id:"seal",nm:"밀봉·포장",ic:"📦",bio:"밀봉 불량 시 오염",chem:"-",phys:"-"},
+  {id:"metal",nm:"금속검출",ic:"🔍",bio:"-",chem:"-",phys:"금속 이물",ccp:true,limit:"Fe 1.5mm, SUS 2.0mm 이하",monitor:"매 30분 테스트피스 통과 확인",corrective:"해당 제품 격리, 전수 재검",verify:"테스트피스 기록 일 1회 검토"},
+  {id:"label",nm:"표시·라벨링",ic:"🏷️",bio:"-",chem:"-",phys:"-"},
+  {id:"store_fin",nm:"제품 보관",ic:"🏭",bio:"보관 온도 일탈",chem:"-",phys:"물리적 손상"},
+  {id:"ship",nm:"출하",ic:"🚛",bio:"운송 온도 관리",chem:"-",phys:"-"},
+];
+
+let selected=[];
+
+function renderSteps(){
+  let h="";ALL_STEPS.forEach(s=>{
+    const on=selected.includes(s.id);
+    h+=`<div class="step-btn ${on?'on':''}" onclick="toggleStep('${s.id}')"><span class="ic">${s.ic}</span>${s.nm}</div>`;
+  });
+  document.getElementById("stepGrid").innerHTML=h;
+  document.getElementById("selectedSteps").textContent=selected.map(id=>ALL_STEPS.find(s=>s.id===id)?.nm).join(" → ")||"(공정을 선택하세요)";
+}
+
+function toggleStep(id){
+  const i=selected.indexOf(id);
+  if(i>=0)selected.splice(i,1);else selected.push(id);
+  renderSteps();
+}
+
+function generate(){
+  if(selected.length<3){alert("최소 3개 이상의 공정을 선택하세요.");return;}
+  const company=document.getElementById("company").value;
+  const product=document.getElementById("product").value;
+  const foodType=document.getElementById("foodType").value;
+  const capacity=document.getElementById("capacity").value;
+  const steps=selected.map(id=>ALL_STEPS.find(s=>s.id===id));
+  const ccps=steps.filter(s=>s.ccp);
+  const today=new Date().toISOString().slice(0,10);
+
+  let h=`<div class="doc">`;
+  h+=`<h1>🛡️ HACCP 관리계획서</h1>`;
+  h+=`<table><tr><th>업체명</th><td>${company}</td><th>작성일</th><td>${today}</td></tr><tr><th>제품명</th><td>${product}</td><th>식품유형</th><td>${foodType}</td></tr><tr><th>생산규모</th><td colspan="3">${capacity}</td></tr></table>`;
+
+  // 1. Process flow
+  h+=`<h2>1. 공정흐름도</h2>`;
+  h+=`<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:10px;background:#FAFAFA;border-radius:8px;margin-bottom:12px">`;
+  steps.forEach((s,i)=>{
+    h+=`<div style="background:${s.ccp?'#FFF5F5':'var(--bl)'};border:${s.ccp?'2px solid var(--red)':'1px solid #E0E0E0'};border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;text-align:center">${s.ic} ${s.nm}${s.ccp?'<br><span style="color:var(--red);font-size:9px">★ CCP</span>':''}</div>`;
+    if(i<steps.length-1)h+='<span style="color:var(--tl)">→</span>';
+  });
+  h+=`</div>`;
+
+  // 2. Hazard Analysis
+  h+=`<h2>2. 위해요소 분석 (HA)</h2>`;
+  h+=`<table><thead><tr><th>공정</th><th>생물학적 위해</th><th>화학적 위해</th><th>물리적 위해</th><th>CCP 여부</th></tr></thead><tbody>`;
+  steps.forEach(s=>{
+    h+=`<tr ${s.ccp?'class="ccp"':''}><td>${s.ic} ${s.nm}</td><td>${s.bio}</td><td>${s.chem}</td><td>${s.phys}</td><td style="text-align:center;font-weight:700;color:${s.ccp?'var(--red)':'var(--tl)'};">${s.ccp?'★ CCP':'OP'}</td></tr>`;
+  });
+  h+=`</tbody></table>`;
+
+  // 3. CCP Management
+  if(ccps.length){
+    h+=`<h2>3. 중요관리점 (CCP) 관리계획</h2>`;
+    ccps.forEach((c,i)=>{
+      h+=`<table style="margin-bottom:12px"><thead><tr><th colspan="2" style="background:#FFF5F5;color:var(--red);font-size:13px">CCP-${i+1}: ${c.nm}</th></tr></thead><tbody>`;
+      h+=`<tr><th style="width:30%">한계기준 (CL)</th><td>${c.limit||'-'}</td></tr>`;
+      h+=`<tr><th>모니터링 방법</th><td>${c.monitor||'-'}</td></tr>`;
+      h+=`<tr><th>개선조치</th><td>${c.corrective||'-'}</td></tr>`;
+      h+=`<tr><th>검증 방법</th><td>${c.verify||'-'}</td></tr>`;
+      h+=`<tr><th>기록 관리</th><td>CCP-${i+1} 모니터링 일지, 개선조치 보고서, 검증 기록부</td></tr>`;
+      h+=`</tbody></table>`;
+    });
+  }
+
+  // 4. Prerequisite programs
+  h+=`<h2>4. 선행요건 관리</h2>`;
+  h+=`<table><thead><tr><th>관리항목</th><th>관리기준</th><th>점검주기</th></tr></thead><tbody>`;
+  const prereqs=[
+    ["영업장 관리","작업장 청결 유지, 교차오염 방지 구획","매일"],
+    ["위생 관리","작업자 손 세척·소독, 위생복 착용","매일"],
+    ["제조시설 관리","설비 세척·살균 (CIP), 정기 점검","매일/주 1회"],
+    ["보관·운송 관리","냉장 0~10°C 유지, 온도 기록","매일"],
+    ["용수 관리","음용수 기준 적합, 잔류염소 0.1ppm↑","주 1회"],
+    ["검사 관리","자가품질검사 (미생물, 이화학)","월 1회"],
+    ["회수 프로그램","부적합 제품 회수·폐기 절차","수시"],
+  ];
+  prereqs.forEach(p=>{h+=`<tr><td style="font-weight:600">${p[0]}</td><td>${p[1]}</td><td style="text-align:center">${p[2]}</td></tr>`;});
+  h+=`</tbody></table>`;
+
+  h+=`<div style="margin-top:20px;border-top:2px solid #333;padding-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;text-align:center;font-size:11px">`;
+  h+=`<div>작성자: ___________<br><span style="color:var(--tl)">(품질관리팀)</span></div>`;
+  h+=`<div>검토자: ___________<br><span style="color:var(--tl)">(HACCP팀장)</span></div>`;
+  h+=`<div>승인자: ___________<br><span style="color:var(--tl)">(대표이사)</span></div>`;
+  h+=`</div>`;
+
+  h+=`<button class="print-btn" onclick="window.print()">🖨️ 인쇄 / PDF 저장</button>`;
+  h+=`<p style="text-align:center;font-size:9px;color:var(--tl);margin-top:8px">⚠️ 교육용 자동 생성 문서입니다. 실제 HACCP 인증 시 전문가 검토가 필요합니다.</p>`;
+  h+=`</div>`;
+
+  document.getElementById("output").innerHTML=h;
+  document.getElementById("output").scrollIntoView({behavior:'smooth'});
+}
+
+// Default selection
+selected=["receive","store","weigh","mix","dissolve","filter","pasteurize","cool","carbonate","fill","metal","seal","label","store_fin","ship"];
+renderSteps();
+</script></body></html>

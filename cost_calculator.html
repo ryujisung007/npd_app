@@ -1,0 +1,137 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>원가 계산기 | KFI</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>:root{--b:#1975BC;--bl:#E8F1F8;--w:#fff;--dt:#1E1E1E;--tm:#444;--tl:#888;--grn:#2E8B57;--org:#E07030;--red:#D94040;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Pretendard Variable',-apple-system,sans-serif;background:#FAF8F5;color:var(--dt);line-height:1.5;}button{font-family:inherit;cursor:pointer;border:none;}
+.hd{background:linear-gradient(135deg,var(--b),#135A91);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;}
+.wrap{max-width:800px;margin:0 auto;padding:20px;}
+.card{background:var(--w);border:1px solid #E8E4E0;border-radius:10px;padding:16px;margin-bottom:12px;}
+table{width:100%;border-collapse:collapse;font-size:12px;}th,td{padding:8px 6px;border-bottom:1px solid #F0F0F0;text-align:left;}th{background:var(--bl);font-weight:700;color:var(--b);font-size:11px;}
+input[type=text],input[type=number]{width:100%;padding:6px 8px;border:1px solid #E0E0E0;border-radius:6px;font-size:12px;font-family:inherit;}
+input:focus{outline:none;border-color:var(--b);}
+.total-row{background:#FFFDE8;font-weight:700;}
+.add-btn{background:var(--bl);color:var(--b);padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;margin-top:8px;}
+.del-btn{background:#FFF5F5;color:var(--red);padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;}
+.pie-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+</style></head><body>
+<div class="hd"><span style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:3px 10px;font-weight:800;font-size:11px;letter-spacing:1px">KFI</span><div><div style="font-size:14px;font-weight:700">💰 제품 원가 계산기</div><div style="font-size:9px;opacity:.5">음료/식품 제품 원가 산출</div></div></div>
+<div class="wrap">
+<div class="card">
+  <h3 style="font-size:14px;font-weight:700;margin-bottom:4px">📦 제품 정보</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+    <div><label style="font-size:10px;color:var(--tl)">제품명</label><input type="text" id="pName" value="스파클링 유자" /></div>
+    <div><label style="font-size:10px;color:var(--tl)">용량 (mL)</label><input type="number" id="pVol" value="350" /></div>
+    <div><label style="font-size:10px;color:var(--tl)">생산량 (병/일)</label><input type="number" id="pQty" value="10000" /></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="font-size:14px;font-weight:700;margin-bottom:8px">🧪 원료비</h3>
+  <table id="ingTable">
+    <thead><tr><th>원료명</th><th>단가 (원/kg)</th><th>사용량 (g/병)</th><th>원가 (원/병)</th><th></th></tr></thead>
+    <tbody id="ingBody"></tbody>
+    <tfoot><tr class="total-row"><td colspan="3" style="text-align:right">원료비 소계</td><td id="ingTotal">0</td><td></td></tr></tfoot>
+  </table>
+  <button class="add-btn" onclick="addRow()">+ 원료 추가</button>
+</div>
+
+<div class="card">
+  <h3 style="font-size:14px;font-weight:700;margin-bottom:8px">🏭 제조 경비</h3>
+  <table>
+    <thead><tr><th>항목</th><th>단가 (원/병)</th></tr></thead>
+    <tbody>
+      <tr><td>포장재 (PET+캡+라벨)</td><td><input type="number" id="pkg" value="120" onchange="calcAll()"/></td></tr>
+      <tr><td>충전·살균 가공비</td><td><input type="number" id="proc" value="80" onchange="calcAll()"/></td></tr>
+      <tr><td>인건비 (제조)</td><td><input type="number" id="labor" value="50" onchange="calcAll()"/></td></tr>
+      <tr><td>유틸리티 (전기·가스·용수)</td><td><input type="number" id="util" value="30" onchange="calcAll()"/></td></tr>
+      <tr><td>검사비 (QC/HACCP)</td><td><input type="number" id="qc" value="15" onchange="calcAll()"/></td></tr>
+    </tbody>
+    <tfoot><tr class="total-row"><td style="text-align:right">제조경비 소계</td><td id="mfgTotal">0</td></tr></tfoot>
+  </table>
+</div>
+
+<div class="card">
+  <h3 style="font-size:14px;font-weight:700;margin-bottom:8px">📊 원가 분석 결과</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div>
+      <table>
+        <tr><td style="font-weight:600">원료비</td><td id="r_ing" style="text-align:right;font-weight:700;color:var(--b)">0원</td></tr>
+        <tr><td style="font-weight:600">제조경비</td><td id="r_mfg" style="text-align:right;font-weight:700;color:var(--grn)">0원</td></tr>
+        <tr style="border-top:2px solid var(--b)"><td style="font-weight:800">제조원가</td><td id="r_cost" style="text-align:right;font-weight:800;color:var(--b);font-size:16px">0원</td></tr>
+        <tr><td style="font-weight:600">마진 30% 적용</td><td id="r_ex" style="text-align:right;font-weight:700;color:var(--org)">0원</td></tr>
+        <tr><td style="font-weight:600">유통마진 40% 적용</td><td id="r_retail" style="text-align:right;font-weight:800;color:var(--red);font-size:15px">0원</td></tr>
+      </table>
+    </div>
+    <div id="pieChart" style="text-align:center;"></div>
+  </div>
+</div>
+</div>
+
+<script>
+let rows=[
+  {name:"정제수",price:2,amount:300},
+  {name:"유자즙",price:8000,amount:17.5},
+  {name:"알룰로스",price:8000,amount:25},
+  {name:"스테비올배당체",price:45000,amount:0.05},
+  {name:"구연산",price:3500,amount:1.5},
+  {name:"탄산가스",price:500,amount:3},
+  {name:"유자향",price:20000,amount:0.3},
+];
+
+function renderTable(){
+  let h="";
+  rows.forEach((r,i)=>{
+    const cost=(r.price*r.amount/1000).toFixed(1);
+    h+=`<tr>
+      <td><input type="text" value="${r.name}" onchange="rows[${i}].name=this.value;calcAll()"/></td>
+      <td><input type="number" value="${r.price}" onchange="rows[${i}].price=+this.value;calcAll()"/></td>
+      <td><input type="number" value="${r.amount}" step="0.1" onchange="rows[${i}].amount=+this.value;calcAll()"/></td>
+      <td style="font-weight:700;color:var(--b)">${cost}</td>
+      <td><button class="del-btn" onclick="rows.splice(${i},1);renderTable();calcAll();">✕</button></td>
+    </tr>`;
+  });
+  document.getElementById("ingBody").innerHTML=h;
+  calcAll();
+}
+
+function addRow(){rows.push({name:"새 원료",price:0,amount:0});renderTable();}
+
+function calcAll(){
+  let ingCost=0;
+  rows.forEach(r=>{ingCost+=r.price*r.amount/1000;});
+  document.getElementById("ingTotal").textContent=ingCost.toFixed(1)+"원";
+
+  const mfg=["pkg","proc","labor","util","qc"].reduce((s,id)=>s+(+document.getElementById(id).value||0),0);
+  document.getElementById("mfgTotal").textContent=mfg+"원";
+
+  const total=ingCost+mfg;
+  const ex=total/0.7;
+  const retail=ex/0.6;
+
+  document.getElementById("r_ing").textContent=ingCost.toFixed(1)+"원";
+  document.getElementById("r_mfg").textContent=mfg+"원";
+  document.getElementById("r_cost").textContent=total.toFixed(0)+"원";
+  document.getElementById("r_ex").textContent=Math.round(ex)+"원";
+  document.getElementById("r_retail").textContent=Math.round(Math.ceil(retail/100)*100)+"원";
+
+  // Pie
+  const parts=[{l:"원료비",v:ingCost,c:"#1975BC"},{l:"포장재",v:+document.getElementById("pkg").value,c:"#2E8B57"},{l:"가공비",v:+document.getElementById("proc").value,c:"#E07030"},{l:"인건비",v:+document.getElementById("labor").value,c:"#7C3AED"},{l:"기타",v:(+document.getElementById("util").value)+(+document.getElementById("qc").value),c:"#0EA5E9"}];
+  const sum=parts.reduce((s,p)=>s+p.v,0);
+  let angle=0;
+  let segs="";let legend="";
+  parts.forEach(p=>{
+    if(p.v<=0)return;
+    const pct=p.v/sum*100;
+    const end=angle+pct*3.6;
+    const lg=pct>50?1:0;
+    const x1=50+40*Math.cos((angle-90)*Math.PI/180);
+    const y1=50+40*Math.sin((angle-90)*Math.PI/180);
+    const x2=50+40*Math.cos((end-90)*Math.PI/180);
+    const y2=50+40*Math.sin((end-90)*Math.PI/180);
+    segs+=`<path d="M50,50 L${x1},${y1} A40,40 0 ${lg},1 ${x2},${y2} Z" fill="${p.c}" opacity="0.8"/>`;
+    legend+=`<span style="font-size:10px;color:var(--tm);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:${p.c};display:inline-block"></span>${p.l} ${pct.toFixed(0)}%</span>`;
+    angle=end;
+  });
+  document.getElementById("pieChart").innerHTML=`<svg viewBox="0 0 100 100" style="width:120px;height:120px">${segs}</svg><div style="display:flex;flex-direction:column;gap:2px;margin-top:6px">${legend}</div>`;
+}
+
+renderTable();
+</script></body></html>

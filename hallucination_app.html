@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>할루시네이션 교안 앱 | KFI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Pretendard Variable', -apple-system, sans-serif; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const B = "#1975BC";
+const BD = "#135A91";
+const BL = "#E8F1F8";
+const BM = "#3A8FD0";
+const RED = "#D94040";
+const GRN = "#2E8B57";
+const ORG = "#E07030";
+const DK = "#2D3B2D";
+const DT = "#1E1E1E";
+const TM = "#444";
+const TL = "#888";
+
+// ─── Prompt Simulator Data ───
+const SCENARIOS = [
+  {
+    id: 1,
+    label: "스테비올배당체 사용 기준",
+    badPrompt: "탄산음료에 스테비올배당체 사용 기준을 알려줘",
+    badAnswer: "스테비올배당체는 탄산음료에 0.02g/kg 이하로 사용 가능합니다.",
+    badNote: "❌ 실제 식품공전에는 해당 수치가 존재하지 않음 — AI가 수치를 지어냄",
+    goodPrompt: "스테비올배당체의 식품공전 사용 기준을 알려줘. 반드시 식품첨가물공전 원문을 근거로 제시하고, 확인 불가능한 정보는 '미확인'으로 표기해줘",
+    goodAnswer: "스테비올배당체는 감미료 품목에 해당하며, 식품유형별 사용 기준은 식품첨가물공전 별표3을 참고하시기 바랍니다. 탄산음료 카테고리의 구체적 수치는 원문 확인이 필요합니다.",
+    goodNote: "✅ 근거 불명 정보를 솔직하게 '확인 필요'로 표기함",
+  },
+  {
+    id: 2,
+    label: "자몽추출물 인허가 현황",
+    badPrompt: "자몽추출물의 식품첨가물 인허가 현황은?",
+    badAnswer: "자몽종자추출물은 식품첨가물공전에 보존료로 등재되어 있습니다.",
+    badNote: "❌ 실제로는 미등재 — AI가 사실을 완전히 꾸며냄",
+    goodPrompt: "자몽종자추출물이 식품첨가물공전에 등재되어 있는지 확인해줘. 등재 여부가 불확실하면 '미확인'으로 답변하고, 대안 검색 경로를 안내해줘",
+    goodAnswer: "자몽종자추출물의 식품첨가물공전 등재 여부는 현재 확인이 어렵습니다(미확인). 정확한 확인을 위해 식품안전나라(foodsafetykorea.go.kr)의 식품첨가물공전 검색을 권장합니다.",
+    goodNote: "✅ 불확실한 정보를 '미확인'으로 표기하고 대안 제시",
+  },
+  {
+    id: 3,
+    label: "콜라겐 음료 기능성 표시",
+    badPrompt: "콜라겐 음료에 피부 개선 효과를 표시해도 돼?",
+    badAnswer: "네, 콜라겐 음료에 '피부 건강에 도움을 줄 수 있음'이라고 표시할 수 있습니다.",
+    badNote: "❌ 건강기능식품 인증 없이는 기능성 표시 불가 — AI가 규정을 무시함",
+    goodPrompt: "콜라겐 음료에 피부 관련 기능성 표시를 하려면 어떤 법적 요건이 필요한지 건강기능식품법과 식품표시광고법을 근거로 설명해줘. 확실하지 않은 부분은 명확히 표시해줘",
+    goodAnswer: "콜라겐 음료에 기능성 표시를 하려면 건강기능식품법에 따라 기능성 원료 인정을 받아야 합니다. 일반식품으로는 '피부 개선' 등의 기능성 표현이 식품표시광고법에 의해 금지됩니다. 구체적 인정 절차는 식약처 건강기능식품 정보를 참고하시기 바랍니다.",
+    goodNote: "✅ 법적 근거를 명시하고 일반식품/건기식 구분을 정확히 안내",
+  },
+];
+
+const QUIZ = [
+  {
+    q: "AI가 '스테비아는 탄산음료에 0.05% 사용 가능합니다'라고 답했다면?",
+    options: ["그대로 보고서에 인용한다", "식품첨가물공전 별표3에서 직접 확인한다", "다른 AI에게 같은 질문을 한다", "인터넷 블로그에서 확인한다"],
+    answer: 1,
+    explain: "AI 답변의 수치는 반드시 식품첨가물공전 원문에서 직접 확인해야 합니다."
+  },
+  {
+    q: "할루시네이션을 방지하기 위한 프롬프트 전략으로 가장 적절한 것은?",
+    options: ["최대한 짧게 질문한다", "출처 명시 + 불확실 시 '미확인' 표기를 요구한다", "'정확하게 답해줘'라고만 쓴다", "영어로 질문한다"],
+    answer: 1,
+    explain: "출처 제시 요구와 불확실한 정보의 '미확인' 표기 요청이 핵심 전략입니다."
+  },
+  {
+    q: "AI 답변을 교차 검증할 때 가장 신뢰할 수 있는 출처는?",
+    options: ["네이버 블로그", "식품안전나라 (foodsafetykorea.go.kr)", "유튜브 영상", "위키백과"],
+    answer: 1,
+    explain: "식품안전나라는 식약처 공식 데이터베이스로, 식품공전과 첨가물공전 원문을 직접 확인할 수 있습니다."
+  },
+];
+
+// ─── Components ───
+function Header({ currentSection }) {
+  return (
+    <div style={{
+      background: `linear-gradient(135deg, ${B} 0%, ${BD} 100%)`,
+      color: "#fff", position: "sticky", top: 0, zIndex: 100,
+      boxShadow: "0 4px 24px rgba(25,117,188,0.25)"
+    }}>
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 6, padding: "3px 12px", fontWeight: 800, fontSize: 12, letterSpacing: 1 }}>KFI</span>
+          <span style={{ fontSize: 13, fontWeight: 500, opacity: 0.9 }}>한국식품정보원</span>
+        </div>
+        <div style={{ display: "flex", gap: 4 }}>
+          {["개요","사례","체크리스트","시뮬레이터","퀴즈"].map((t, i) => (
+            <span key={i} style={{
+              padding: "4px 10px", borderRadius: 12, fontSize: 11, fontWeight: 600,
+              background: currentSection === i ? "rgba(255,255,255,0.25)" : "transparent",
+              opacity: currentSection === i ? 1 : 0.6,
+              transition: "all 0.3s"
+            }}>{t}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProgressBar({ current, total }) {
+  return (
+    <div style={{ background: "#E8E4E0", height: 3 }}>
+      <div style={{ background: B, height: 3, width: `${((current + 1) / total) * 100}%`, transition: "width 0.5s ease", borderRadius: "0 2px 2px 0" }} />
+    </div>
+  );
+}
+
+function SectionWrapper({ children, style }) {
+  return <div style={{ maxWidth: 900, margin: "0 auto", padding: "36px 24px", ...style }}>{children}</div>;
+}
+
+function SectionTitle({ color, children }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 22 }}>
+      <div style={{ width: 5, height: 28, borderRadius: 3, background: color, flexShrink: 0 }} />
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: DT, margin: 0 }}>{children}</h2>
+    </div>
+  );
+}
+
+function Card({ icon, title, children, style }) {
+  const [hov, setHov] = React.useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{
+        background: "#F2F8F4", border: "1px solid #C8DED0", borderRadius: 12,
+        padding: "22px 22px 20px", position: "relative", overflow: "hidden",
+        transform: hov ? "translateY(-2px)" : "none",
+        boxShadow: hov ? "0 6px 20px rgba(0,0,0,0.08)" : "none",
+        transition: "all 0.2s", ...style
+      }}>
+      <div style={{ position: "absolute", bottom: 0, left: 20, right: 20, height: 3, background: GRN, borderRadius: "2px 2px 0 0" }} />
+      <div style={{ fontSize: 22, marginBottom: 6 }}>{icon}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: DT, marginBottom: 10 }}>{title}</div>
+      <div style={{ fontSize: 14.5, color: TM, lineHeight: 1.7 }}>{children}</div>
+    </div>
+  );
+}
+
+function NavButtons({ onPrev, onNext, prevLabel, nextLabel, disablePrev, disableNext }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 32 }}>
+      <button onClick={onPrev} disabled={disablePrev} style={{
+        padding: "10px 24px", borderRadius: 8, border: `1px solid ${disablePrev ? "#ddd" : B}`,
+        background: "transparent", color: disablePrev ? "#ccc" : B, fontSize: 14, fontWeight: 600,
+        cursor: disablePrev ? "default" : "pointer", transition: "all 0.2s"
+      }}>← {prevLabel || "이전"}</button>
+      <button onClick={onNext} disabled={disableNext} style={{
+        padding: "10px 24px", borderRadius: 8, border: "none",
+        background: disableNext ? "#ccc" : B, color: "#fff", fontSize: 14, fontWeight: 600,
+        cursor: disableNext ? "default" : "pointer", transition: "all 0.2s"
+      }}>{nextLabel || "다음"} →</button>
+    </div>
+  );
+}
+
+// ─── Sections ───
+function S0_Overview() {
+  return (
+    <>
+      <div style={{
+        background: `linear-gradient(160deg, ${B} 0%, ${BM} 50%, ${BD} 100%)`,
+        color: "#fff", padding: "48px 24px 40px", borderRadius: "0 0 20px 20px", marginBottom: 32,
+        position: "relative", overflow: "hidden"
+      }}>
+        <div style={{ position: "absolute", top: "-50%", right: "-15%", width: 400, height: 400, borderRadius: "50%", background: "rgba(255,255,255,0.04)" }} />
+        <div style={{ maxWidth: 900, margin: "0 auto", position: "relative", zIndex: 1 }}>
+          <span style={{ display: "inline-block", background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 20, padding: "4px 14px", fontSize: 12, fontWeight: 600, marginBottom: 14 }}>📘 식품전공 학생 대상 교안</span>
+          <h1 style={{ fontSize: 30, fontWeight: 800, marginBottom: 10, lineHeight: 1.3 }}>AI의 함정: 할루시네이션</h1>
+          <p style={{ fontSize: 15.5, opacity: 0.88, maxWidth: 560, lineHeight: 1.65 }}>
+            AI가 만들어내는 '그럴듯한 거짓말'을 식별하고,<br />식품 R&D 현장에서 신뢰할 수 있는 결과를 얻는 방법을 배웁니다.
+          </p>
+          <div style={{ marginTop: 18, display: "flex", gap: 20, fontSize: 13, opacity: 0.7 }}>
+            <span>📋 학습 시간: 30분</span><span>🎯 난이도: 기초~중급</span><span>📝 퀴즈 포함</span>
+          </div>
+        </div>
+      </div>
+      <SectionWrapper>
+        <SectionTitle color={ORG}>AI의 함정: 할루시네이션</SectionTitle>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+          <Card icon="⚠️" title="정보의 왜곡 (Hallucination)">
+            ChatGPT나 제미나이는 LLM(대화형 생성모델)입니다. 정확한 지침이 없으면 존재하지 않는 원료나 법규를 지어내는 <strong>정보 왜곡</strong>이 발생합니다.
+          </Card>
+          <Card icon="🛡️" title="현실 왜곡 방지 전략">
+            AI가 임의로 판단하지 않도록 정확한 데이터와 기술 자료를 먼저 제공해야 합니다. 이는 AI 결과물의 <strong>신뢰성을 결정</strong>하는 핵심입니다.
+          </Card>
+        </div>
+        {/* Prompt */}
+        <div>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: DK, color: "#fff", padding: "5px 14px", borderRadius: "6px 6px 0 0", fontSize: 11, fontWeight: 700, letterSpacing: 0.5 }}>
+            <span>✨</span> AI AGENT PROMPT
+          </div>
+          <div style={{ background: "#F9F7F2", border: "2px dashed #C8C0B0", borderRadius: "0 12px 12px 12px", padding: "18px 22px", display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ width: 68, height: 48, background: "#eee", border: "1px solid #ddd", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#aaa", flexShrink: 0 }}>600×400</div>
+            <div style={{ flex: 1, fontSize: 14.5, color: DT, lineHeight: 1.6 }}>
+              "현재 분석된 제품 트렌드에서 식품 공전 상 허용되지 않는 원료 조합이 포함되어 있는지 법적 근거를 바탕으로 검증해줘."
+            </div>
+            <button style={{ background: DK, color: "#fff", border: "none", padding: "9px 18px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>✨ 실행</button>
+          </div>
+        </div>
+        <p style={{ textAlign: "center", fontSize: 13, color: TL, marginTop: 14 }}>※ 프롬프트에 법적 근거와 데이터 기반 검증을 요청하면 할루시네이션을 효과적으로 방지할 수 있습니다.</p>
+      </SectionWrapper>
+    </>
+  );
+}
+
+function S1_Examples() {
+  return (
+    <SectionWrapper>
+      <SectionTitle color={RED}>이런 답변, 믿어도 될까?</SectionTitle>
+      {/* Bad */}
+      <div style={{ background: "#FFF5F5", border: "1px solid #F0D0D0", borderRadius: 12, padding: "20px 22px", marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}><span style={{ fontSize: 18 }}>❌</span><span style={{ fontSize: 15, fontWeight: 700, color: RED }}>할루시네이션 발생 사례</span></div>
+        {SCENARIOS.map((s) => (
+          <div key={s.id} style={{ marginBottom: 14, paddingBottom: 14, borderBottom: "1px solid #F0D0D0" }}>
+            <div style={{ fontSize: 14, color: TM, marginBottom: 4 }}><strong>Q.</strong> "{s.badPrompt}"</div>
+            <div style={{ fontSize: 14, color: RED, marginBottom: 4 }}><strong>A.</strong> "{s.badAnswer}"</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: TM, paddingLeft: 16 }}>{s.badNote}</div>
+          </div>
+        ))}
+      </div>
+      {/* Good */}
+      <div style={{ background: "#F0FFF5", border: "1px solid #C0E8D0", borderRadius: 12, padding: "20px 22px", marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}><span style={{ fontSize: 18 }}>✅</span><span style={{ fontSize: 15, fontWeight: 700, color: GRN }}>올바른 프롬프트로 방지한 사례</span></div>
+        {SCENARIOS.map((s) => (
+          <div key={s.id} style={{ marginBottom: 14, paddingBottom: 14, borderBottom: "1px solid #C0E8D0" }}>
+            <div style={{ fontSize: 14, color: TM, marginBottom: 4 }}><strong>Q.</strong> "{s.goodPrompt}"</div>
+            <div style={{ fontSize: 14, color: GRN, marginBottom: 4 }}><strong>A.</strong> "{s.goodAnswer}"</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: TM, paddingLeft: 16 }}>{s.goodNote}</div>
+          </div>
+        ))}
+      </div>
+      {/* Key */}
+      <div style={{ background: "#FFFDE8", border: "1px solid #E8D880", borderRadius: 12, padding: "16px 22px", display: "flex", alignItems: "flex-start", gap: 12 }}>
+        <span style={{ fontSize: 22, flexShrink: 0 }}>🧪</span>
+        <p style={{ fontSize: 14.5, color: DT, lineHeight: 1.7, margin: 0 }}>
+          <strong style={{ color: ORG }}>핵심</strong>&nbsp;&nbsp;
+          AI는 '그럴듯한 거짓말'을 잘 합니다. 식품공전·첨가물공전 원문 확인은 필수이며,
+          <strong style={{ color: ORG }}>"출처를 밝혀라"</strong>, <strong style={{ color: ORG }}>"모르면 모른다고 해라"</strong>를 프롬프트에 반드시 포함하세요.
+        </p>
+      </div>
+    </SectionWrapper>
+  );
+}
+
+function S2_Checklist() {
+  const steps = [
+    { num: "STEP 1", title: "출처 명시 요구", icon: "📖", color: B, bg: BL, border: "#C0D8EC",
+      body: <>프롬프트에 반드시 포함:<br /><br /><span style={{ fontSize: 13, color: TM }}>"식품공전/첨가물공전 원문을 근거로 답변해줘. 확인 불가한 정보는 '미확인'으로 표시해줘"</span></> },
+    { num: "STEP 2", title: "교차 검증", icon: "🔍", color: GRN, bg: "#F0FFF5", border: "#C0E8D0",
+      body: <>AI 답변을 아래 사이트에서 반드시 재확인:<br /><br />
+        <span style={{ fontSize: 13 }}>• 식품안전나라<br />• 식품공전 (foodcode.mfds.go.kr)<br />• 식품첨가물공전</span></> },
+    { num: "STEP 3", title: "팩트체크 습관화", icon: "✅", color: ORG, bg: "#FFFDE8", border: "#E8D880",
+      body: <>검증 포인트:<br /><br />
+        <span style={{ fontSize: 13 }}>✓ 원료명이 공전에 존재하는가?<br />✓ 사용 기준 수치가 정확한가?<br />✓ 허용 식품유형이 맞는가?<br />✓ 인용된 법령/고시가 실재하는가?</span></> },
+  ];
+  return (
+    <SectionWrapper>
+      <SectionTitle color={B}>AI 결과물 검증 3단계</SectionTitle>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 24 }}>
+        {steps.map((st, i) => (
+          <div key={i} style={{ background: st.bg, border: `1px solid ${st.border}`, borderRadius: 12, padding: "20px 18px", position: "relative", transition: "transform 0.2s" }}>
+            <span style={{ display: "inline-block", padding: "3px 11px", borderRadius: 4, fontSize: 10, fontWeight: 800, color: "#fff", background: st.color, letterSpacing: 0.5, marginBottom: 10 }}>{st.num}</span>
+            <div style={{ position: "absolute", top: 16, right: 16, fontSize: 24, opacity: 0.6 }}>{st.icon}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: st.color, marginBottom: 12 }}>{st.title}</div>
+            <div style={{ fontSize: 14, color: TM, lineHeight: 1.65 }}>{st.body}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ background: BL, border: "1px solid #C0D8EC", borderRadius: 12, padding: "16px 22px", display: "flex", alignItems: "center", gap: 12 }}>
+        <span style={{ fontSize: 24, flexShrink: 0 }}>🛡️</span>
+        <p style={{ fontSize: 14.5, color: DT, lineHeight: 1.6, margin: 0 }}>
+          <strong style={{ color: B }}>기억하세요!</strong>&nbsp;&nbsp;AI는 보조 도구입니다. 최종 판단은 반드시 공인된 데이터베이스와 법령 원문으로 검증하세요.
+        </p>
+      </div>
+    </SectionWrapper>
+  );
+}
+
+function S3_Simulator() {
+  const [selected, setSelected] = React.useState(0);
+  const [mode, setMode] = React.useState("bad"); // bad | good
+  const [revealed, setRevealed] = React.useState(false);
+  const sc = SCENARIOS[selected];
+
+  const switchScenario = (i) => { setSelected(i); setRevealed(false); setMode("bad"); };
+
+  return (
+    <SectionWrapper>
+      <SectionTitle color={BM}>프롬프트 시뮬레이터</SectionTitle>
+      <p style={{ fontSize: 14.5, color: TM, marginBottom: 20, lineHeight: 1.7 }}>
+        같은 질문이라도 <strong>프롬프트 작성 방법</strong>에 따라 AI 답변의 신뢰도가 달라집니다. 시나리오를 선택하고 비교해보세요.
+      </p>
+
+      {/* Scenario tabs */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+        {SCENARIOS.map((s, i) => (
+          <button key={i} onClick={() => switchScenario(i)} style={{
+            padding: "8px 16px", borderRadius: 8, border: `1.5px solid ${selected === i ? B : "#ddd"}`,
+            background: selected === i ? BL : "#fff", color: selected === i ? B : TM,
+            fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s"
+          }}>
+            {s.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Toggle */}
+      <div style={{ display: "flex", marginBottom: 16, background: "#F0F0F0", borderRadius: 10, padding: 3, width: "fit-content" }}>
+        {[["bad", "❌ 나쁜 프롬프트"], ["good", "✅ 좋은 프롬프트"]].map(([m, label]) => (
+          <button key={m} onClick={() => { setMode(m); setRevealed(false); }} style={{
+            padding: "8px 20px", borderRadius: 8, border: "none",
+            background: mode === m ? (m === "bad" ? RED : GRN) : "transparent",
+            color: mode === m ? "#fff" : TM, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s"
+          }}>{label}</button>
+        ))}
+      </div>
+
+      {/* Chat simulation */}
+      <div style={{ background: "#fff", border: "1px solid #E0E0E0", borderRadius: 14, overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.06)" }}>
+        {/* Chat header */}
+        <div style={{ background: B, padding: "12px 20px", display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🤖</div>
+          <span style={{ color: "#fff", fontWeight: 600, fontSize: 14 }}>AI 식품 R&D 어시스턴트</span>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#4ADE80" }} />
+            <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 11 }}>온라인</span>
+          </div>
+        </div>
+
+        <div style={{ padding: 20, minHeight: 200 }}>
+          {/* User message */}
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 }}>
+            <div style={{ maxWidth: "85%", background: mode === "bad" ? "#FFF0F0" : "#F0FFF5", border: `1px solid ${mode === "bad" ? "#F0D0D0" : "#C0E8D0"}`, borderRadius: "14px 14px 4px 14px", padding: "12px 16px" }}>
+              <div style={{ fontSize: 14, color: DT, lineHeight: 1.6 }}>{mode === "bad" ? sc.badPrompt : sc.goodPrompt}</div>
+            </div>
+          </div>
+
+          {/* AI response */}
+          {!revealed ? (
+            <div style={{ display: "flex", justifyContent: "center", padding: 20 }}>
+              <button onClick={() => setRevealed(true)} style={{
+                padding: "12px 28px", borderRadius: 10, border: "none",
+                background: `linear-gradient(135deg, ${B}, ${BM})`, color: "#fff",
+                fontSize: 14, fontWeight: 700, cursor: "pointer",
+                boxShadow: "0 4px 16px rgba(25,117,188,0.3)", transition: "transform 0.1s"
+              }}>
+                🔍 AI 답변 확인하기
+              </button>
+            </div>
+          ) : (
+            <div style={{ animation: "fadeUp 0.4s ease" }}>
+              <div style={{ display: "flex", marginBottom: 10 }}>
+                <div style={{ maxWidth: "85%", background: "#F5F5F5", borderRadius: "14px 14px 14px 4px", padding: "12px 16px" }}>
+                  <div style={{ fontSize: 14, color: mode === "bad" ? RED : GRN, lineHeight: 1.6 }}>
+                    {mode === "bad" ? sc.badAnswer : sc.goodAnswer}
+                  </div>
+                </div>
+              </div>
+              <div style={{
+                background: mode === "bad" ? "#FFF5F5" : "#F0FFF5",
+                border: `1px solid ${mode === "bad" ? "#F0D0D0" : "#C0E8D0"}`,
+                borderRadius: 8, padding: "10px 14px", fontSize: 13, fontWeight: 600, color: TM
+              }}>
+                {mode === "bad" ? sc.badNote : sc.goodNote}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </SectionWrapper>
+  );
+}
+
+function S4_Quiz() {
+  const [current, setCurrent] = React.useState(0);
+  const [chosen, setChosen] = React.useState(null);
+  const [score, setScore] = React.useState(0);
+  const [done, setDone] = React.useState(false);
+
+  const q = QUIZ[current];
+
+  const handleChoice = (i) => {
+    if (chosen !== null) return;
+    setChosen(i);
+    if (i === q.answer) setScore(s => s + 1);
+  };
+
+  const handleNext = () => {
+    if (current < QUIZ.length - 1) { setCurrent(c => c + 1); setChosen(null); }
+    else setDone(true);
+  };
+
+  if (done) {
+    const pct = Math.round((score / QUIZ.length) * 100);
+    return (
+      <SectionWrapper>
+        <div style={{ textAlign: "center", padding: "48px 20px" }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>{pct >= 80 ? "🎉" : pct >= 50 ? "👍" : "📚"}</div>
+          <h2 style={{ fontSize: 28, fontWeight: 800, color: DT, marginBottom: 8 }}>퀴즈 완료!</h2>
+          <p style={{ fontSize: 18, color: TM, marginBottom: 24 }}>
+            {QUIZ.length}문제 중 <strong style={{ color: B, fontSize: 24 }}>{score}</strong>문제 정답
+          </p>
+          <div style={{ width: 200, height: 200, borderRadius: "50%", background: `conic-gradient(${B} ${pct}%, #E8E4E0 ${pct}%)`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
+            <div style={{ width: 160, height: 160, borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 800, color: B }}>{pct}%</div>
+          </div>
+          <p style={{ fontSize: 14.5, color: TM, lineHeight: 1.7 }}>
+            {pct >= 80 ? "훌륭합니다! 할루시네이션의 위험성과 방지 방법을 잘 이해하고 있습니다." :
+             pct >= 50 ? "좋은 시작입니다! 위의 교안을 다시 한번 복습해보세요." :
+             "교안 내용을 다시 한번 꼼꼼히 읽어보시길 추천합니다."}
+          </p>
+          <button onClick={() => { setCurrent(0); setChosen(null); setScore(0); setDone(false); }} style={{
+            marginTop: 20, padding: "10px 24px", borderRadius: 8, border: "none",
+            background: B, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer"
+          }}>다시 풀기</button>
+        </div>
+      </SectionWrapper>
+    );
+  }
+
+  return (
+    <SectionWrapper>
+      <SectionTitle color={B}>퀴즈로 확인하기</SectionTitle>
+      <p style={{ fontSize: 13, color: TL, marginBottom: 20 }}>문제 {current + 1} / {QUIZ.length}</p>
+
+      <div style={{ background: "#fff", border: "1px solid #E0E0E0", borderRadius: 14, padding: 24, boxShadow: "0 4px 16px rgba(0,0,0,0.05)" }}>
+        <p style={{ fontSize: 17, fontWeight: 700, color: DT, marginBottom: 20, lineHeight: 1.5 }}>{q.q}</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {q.options.map((opt, i) => {
+            let bg = "#FAFAFA", border = "#E0E0E0", col = DT;
+            if (chosen !== null) {
+              if (i === q.answer) { bg = "#F0FFF5"; border = GRN; col = GRN; }
+              else if (i === chosen && i !== q.answer) { bg = "#FFF5F5"; border = RED; col = RED; }
+            }
+            return (
+              <button key={i} onClick={() => handleChoice(i)} style={{
+                padding: "14px 18px", borderRadius: 10, border: `1.5px solid ${border}`,
+                background: bg, color: col, fontSize: 14.5, fontWeight: 600, textAlign: "left",
+                cursor: chosen !== null ? "default" : "pointer", transition: "all 0.2s",
+                display: "flex", alignItems: "center", gap: 10
+              }}>
+                <span style={{ width: 28, height: 28, borderRadius: "50%", background: chosen !== null && i === q.answer ? GRN : chosen === i && i !== q.answer ? RED : "#E8E4E0", color: chosen !== null && (i === q.answer || i === chosen) ? "#fff" : TM, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, flexShrink: 0 }}>
+                  {chosen !== null && i === q.answer ? "✓" : chosen === i && i !== q.answer ? "✗" : String.fromCharCode(65 + i)}
+                </span>
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+
+        {chosen !== null && (
+          <div style={{ marginTop: 16, padding: "14px 18px", background: BL, borderRadius: 10, fontSize: 14, color: DT, lineHeight: 1.6, animation: "fadeUp 0.3s ease" }}>
+            <strong style={{ color: B }}>해설</strong>&nbsp;&nbsp;{q.explain}
+          </div>
+        )}
+
+        {chosen !== null && (
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+            <button onClick={handleNext} style={{
+              padding: "10px 24px", borderRadius: 8, border: "none",
+              background: B, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer"
+            }}>{current < QUIZ.length - 1 ? "다음 문제 →" : "결과 보기 →"}</button>
+          </div>
+        )}
+      </div>
+    </SectionWrapper>
+  );
+}
+
+// ─── Main App ───
+function App() {
+  const [section, setSection] = React.useState(0);
+  const total = 5;
+
+  const sections = [S0_Overview, S1_Examples, S2_Checklist, S3_Simulator, S4_Quiz];
+  const Current = sections[section];
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#FAF8F5", fontFamily: "'Pretendard Variable', -apple-system, sans-serif" }}>
+      <style>{`
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
+        @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        button:hover { opacity: 0.92; }
+        @media (max-width: 680px) {
+          .grid-2 { grid-template-columns: 1fr !important; }
+          .grid-3 { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+
+      <Header currentSection={section} />
+      <ProgressBar current={section} total={total} />
+
+      <div key={section} style={{ animation: "fadeUp 0.4s ease" }}>
+        <Current />
+      </div>
+
+      <SectionWrapper>
+        <NavButtons
+          onPrev={() => setSection(s => s - 1)}
+          onNext={() => setSection(s => s + 1)}
+          prevLabel={section > 0 ? ["개요","사례","체크리스트","시뮬레이터","퀴즈"][section - 1] : ""}
+          nextLabel={section < total - 1 ? ["개요","사례","체크리스트","시뮬레이터","퀴즈"][section + 1] : ""}
+          disablePrev={section === 0}
+          disableNext={section === total - 1}
+        />
+      </SectionWrapper>
+
+      <div style={{ background: BD, color: "rgba(255,255,255,0.6)", padding: "16px 24px", textAlign: "center", fontSize: 12, marginTop: 32 }}>
+        <strong style={{ color: "rgba(255,255,255,0.85)" }}>한국식품정보원 (KFI)</strong> &nbsp;|&nbsp; AI 활용 식품개발 실무 교안 &nbsp;|&nbsp; 식품전공 학생 대상
+      </div>
+    </div>
+  );
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>

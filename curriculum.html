@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 활용 식품개발 실무 커리큘럼 | KFI</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>
+  :root{--b:#1975BC;--bd:#135A91;--bl:#E8F1F8;--w:#fff;--bg:#FAF8F5;--dt:#1E1E1E;--tm:#444;--tl:#888;--grn:#2E8B57;--org:#E07030;--red:#D94040;--purple:#7C3AED;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Pretendard Variable',-apple-system,sans-serif;background:var(--bg);color:var(--dt);line-height:1.7;-webkit-font-smoothing:antialiased;}
+  .header{background:linear-gradient(135deg,var(--b),var(--bd));color:var(--w);position:sticky;top:0;z-index:100;box-shadow:0 4px 24px rgba(25,117,188,0.25);}
+  .header-inner{max-width:960px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;}
+  .logo{display:flex;align-items:center;gap:10px;}
+  .logo-badge{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:6px;padding:3px 12px;font-weight:800;font-size:12px;letter-spacing:1px;}
+  .hero{background:linear-gradient(160deg,var(--b) 0%,#2A8DD4 50%,var(--bd) 100%);color:var(--w);padding:52px 28px 44px;position:relative;overflow:hidden;}
+  .hero::before{content:'';position:absolute;top:-50%;right:-15%;width:420px;height:420px;border-radius:50%;background:rgba(255,255,255,0.04);}
+  .hero-inner{max-width:960px;margin:0 auto;position:relative;z-index:1;}
+  .hero h1{font-size:32px;font-weight:800;margin-bottom:10px;}
+  .hero p{font-size:15.5px;opacity:0.88;max-width:620px;line-height:1.65;}
+  .content{max-width:960px;margin:0 auto;padding:36px 28px 60px;}
+
+  /* Overview cards */
+  .overview-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:40px;}
+  .ov-card{background:var(--w);border:1px solid #E8E4E0;border-radius:12px;padding:20px 16px;text-align:center;transition:transform 0.2s;}
+  .ov-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.06);}
+  .ov-icon{font-size:28px;margin-bottom:8px;}
+  .ov-num{font-size:24px;font-weight:800;margin-bottom:2px;}
+  .ov-label{font-size:12px;color:var(--tl);}
+
+  /* Module */
+  .module{margin-bottom:36px;background:var(--w);border:1px solid #E8E4E0;border-radius:14px;overflow:hidden;transition:box-shadow 0.2s;}
+  .module:hover{box-shadow:0 4px 20px rgba(0,0,0,0.06);}
+  .module-header{padding:22px 24px;display:flex;align-items:center;gap:16px;cursor:pointer;user-select:none;}
+  .module-num{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--w);flex-shrink:0;}
+  .module-info{flex:1;}
+  .module-title{font-size:18px;font-weight:700;color:var(--dt);margin-bottom:2px;}
+  .module-meta{font-size:12px;color:var(--tl);display:flex;gap:12px;}
+  .module-toggle{font-size:20px;color:var(--tl);transition:transform 0.3s;flex-shrink:0;}
+  .module-body{padding:0 24px 24px;display:none;}
+  .module.open .module-body{display:block;animation:fadeUp 0.3s ease;}
+  .module.open .module-toggle{transform:rotate(180deg);}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  /* Session */
+  .session{margin-bottom:16px;padding:16px 18px;background:#FAFAFA;border-radius:10px;border:1px solid #F0EDED;}
+  .session-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .session-title{font-size:15px;font-weight:700;color:var(--dt);}
+  .session-time{font-size:11px;color:var(--tl);background:#F0F0F0;padding:2px 8px;border-radius:10px;}
+  .session-desc{font-size:13.5px;color:var(--tm);line-height:1.6;margin-bottom:10px;}
+  .session-tags{display:flex;gap:6px;flex-wrap:wrap;}
+  .tag{display:inline-block;padding:2px 10px;border-radius:12px;font-size:10px;font-weight:600;letter-spacing:0.3px;}
+  .tag-lecture{background:var(--bl);color:var(--b);}
+  .tag-practice{background:#F0FFF5;color:var(--grn);}
+  .tag-discuss{background:#FFF3E8;color:var(--org);}
+  .tag-quiz{background:#F0E8FF;color:var(--purple);}
+
+  /* Learning objectives */
+  .lo-box{background:var(--bl);border:1px solid #C0D8EC;border-radius:10px;padding:14px 18px;margin-bottom:12px;}
+  .lo-title{font-size:13px;font-weight:700;color:var(--b);margin-bottom:6px;}
+  .lo-list{font-size:13px;color:var(--tm);line-height:1.6;}
+  .lo-list li{margin-bottom:3px;list-style:none;padding-left:0;}
+  .lo-list li::before{content:'✓ ';color:var(--grn);font-weight:700;}
+
+  /* Deliverables */
+  .deliverable{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:6px;background:#F8F7F5;border:1px solid #E8E4E0;font-size:12px;color:var(--tm);margin:3px 3px 0 0;}
+
+  /* Timeline */
+  .timeline{position:relative;padding-left:28px;}
+  .timeline::before{content:'';position:absolute;left:10px;top:8px;bottom:8px;width:2px;background:#E0E0E0;}
+  .tl-item{position:relative;margin-bottom:28px;}
+  .tl-dot{position:absolute;left:-22px;top:6px;width:12px;height:12px;border-radius:50%;border:2px solid;}
+  .tl-week{font-size:12px;font-weight:700;margin-bottom:4px;}
+  .tl-content{font-size:14px;color:var(--tm);line-height:1.5;}
+
+  .footer{background:var(--bd);color:rgba(255,255,255,0.6);padding:18px 28px;text-align:center;font-size:12px;}
+  .footer strong{color:rgba(255,255,255,0.85);}
+
+  @media(max-width:680px){.overview-grid{grid-template-columns:1fr 1fr;}}
+  @media print{.header{display:none;}.module-body{display:block!important;}.module-toggle{display:none;}}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="logo"><span class="logo-badge">KFI</span><span style="font-size:13px;font-weight:500;opacity:0.9">한국식품정보원</span></div>
+    <div style="font-size:13px;font-weight:600;opacity:0.8">커리큘럼 v1.0</div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div style="display:inline-block;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;margin-bottom:14px;">🎓 식품전공 학생 대상 6주 과정</div>
+    <h1>AI 활용 식품개발 실무</h1>
+    <p>생성형 AI를 식품 R&D에 올바르게 활용하는 방법을 체계적으로 배웁니다.<br>프롬프트 설계부터 RAG, 자동화 파이프라인까지 실습 중심으로 구성됩니다.</p>
+    <div style="margin-top:18px;display:flex;gap:20px;font-size:13px;opacity:0.7;">
+      <span>📅 6주 (12차시)</span><span>⏱️ 차시당 90분</span><span>📝 실습 60%</span>
+    </div>
+  </div>
+</section>
+
+<main class="content">
+
+<!-- Overview -->
+<div class="overview-grid">
+  <div class="ov-card"><div class="ov-icon">📅</div><div class="ov-num" style="color:var(--b)">6</div><div class="ov-label">주 과정</div></div>
+  <div class="ov-card"><div class="ov-icon">📚</div><div class="ov-num" style="color:var(--grn)">12</div><div class="ov-label">차시</div></div>
+  <div class="ov-card"><div class="ov-icon">🧪</div><div class="ov-num" style="color:var(--org)">8</div><div class="ov-label">실습 과제</div></div>
+  <div class="ov-card"><div class="ov-icon">🎯</div><div class="ov-num" style="color:var(--purple)">1</div><div class="ov-label">최종 프로젝트</div></div>
+</div>
+
+<!-- Module 1 -->
+<div class="module open" onclick="this.classList.toggle('open')">
+  <div class="module-header">
+    <div class="module-num" style="background:var(--b)">M1</div>
+    <div class="module-info">
+      <div class="module-title">AI와 식품 R&D: 기초 이해</div>
+      <div class="module-meta"><span>📅 1주차</span><span>⏱️ 180분 (2차시)</span><span>🎯 기초</span></div>
+    </div>
+    <div class="module-toggle">▼</div>
+  </div>
+  <div class="module-body">
+    <div class="lo-box">
+      <div class="lo-title">학습 목표</div>
+      <ul class="lo-list">
+        <li>LLM의 작동 원리와 한계를 이해한다</li>
+        <li>식품 분야에서 AI 활용 사례를 파악한다</li>
+        <li>ChatGPT, Gemini, Claude의 특성을 비교한다</li>
+      </ul>
+    </div>
+    <div class="session">
+      <div class="session-top"><span class="session-title">1차시: 생성형 AI란 무엇인가</span><span class="session-time">90분</span></div>
+      <div class="session-desc">LLM의 기본 구조, 토큰화, 확률 기반 텍스트 생성 원리를 이해합니다. ChatGPT/Gemini/Claude의 특성을 비교하고 식품 R&D 적용 가능 영역을 탐색합니다.</div>
+      <div class="session-tags"><span class="tag tag-lecture">이론</span><span class="tag tag-discuss">토론: AI가 식품 산업을 바꿀까?</span></div>
+    </div>
+    <div class="session">
+      <div class="session-top"><span class="session-title">2차시: AI의 함정 — 할루시네이션</span><span class="session-time">90분</span></div>
+      <div class="session-desc">AI가 만들어내는 정보 왜곡(Hallucination)의 원리와 식품 분야 실제 사례를 학습합니다. 프롬프트 평가기를 활용한 실습을 진행합니다.</div>
+      <div class="session-tags"><span class="tag tag-lecture">이론</span><span class="tag tag-practice">실습: 프롬프트 평가기</span><span class="tag tag-quiz">퀴즈</span></div>
+      <div style="margin-top:10px;"><span class="deliverable">📄 할루시네이션 교안 (HTML)</span><span class="deliverable">🎯 프롬프트 평가기 (웹앱)</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Module 2 -->
+<div class="module" onclick="this.classList.toggle('open')">
+  <div class="module-header">
+    <div class="module-num" style="background:var(--grn)">M2</div>
+    <div class="module-info">
+      <div class="module-title">프롬프트 엔지니어링 실전</div>
+      <div class="module-meta"><span>📅 2주차</span><span>⏱️ 180분 (2차시)</span><span>🎯 기초~중급</span></div>
+    </div>
+    <div class="module-toggle">▼</div>
+  </div>
+  <div class="module-body">
+    <div class="lo-box">
+      <div class="lo-title">학습 목표</div>
+      <ul class="lo-list">
+        <li>프롬프트 황금 규칙 5가지를 실무에 적용한다</li>
+        <li>페르소나 프롬프트를 설계하고 활용한다</li>
+        <li>식품 R&D 상황별 프롬프트 템플릿을 작성한다</li>
+      </ul>
+    </div>
+    <div class="session">
+      <div class="session-top"><span class="session-title">3차시: 프롬프트 설계 원칙</span><span class="session-time">90분</span></div>
+      <div class="session-desc">프롬프트 황금 규칙(역할 부여, 출처 요구, 불확실성 표기, 구체성, 출력 형식)을 학습하고, Zero-shot / Few-shot / Chain-of-Thought 기법을 실습합니다.</div>
+      <div class="session-tags"><span class="tag tag-lecture">이론</span><span class="tag tag-practice">실습: 치트시트 활용</span></div>
+      <div style="margin-top:10px;"><span class="deliverable">📋 프롬프트 치트시트 (HTML)</span></div>
+    </div>
+    <div class="session">
+      <div class="session-top"><span class="session-title">4차시: 페르소나 & 역할 기반 프롬프트</span><span class="session-time">90분</span></div>
+      <div class="session-desc">식품마케터, R&D 연구원, 품질관리 담당자 등 다양한 페르소나를 설계하고 프롬프트에 적용합니다. 같은 질문에 페르소나별 답변 차이를 비교 분석합니다.</div>
+      <div class="session-tags"><span class="tag tag-practice">실습: 페르소나 설계</span><span class="tag tag-discuss">토론: 결과 비교</span></div>
+      <div style="margin-top:10px;"><span class="deliverable">📝 페르소나 스크립트 작성 과제</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Module 3 -->
+<div class="module" onclick="this.classList.toggle('open')">
+  <div class="module-header">
+    <div class="module-num" style="background:var(--org)">M3</div>
+    <div class="module-info">
+      <div class="module-title">식품 데이터와 AI: 공전·법규 활용</div>
+      <div class="module-meta"><span>📅 3주차</span><span>⏱️ 180분 (2차시)</span><span>🎯 중급</span></div>
+    </div>
+    <div class="module-toggle">▼</div>
+  </div>
+  <div class="module-body">
+    <div class="lo-box">
+      <div class="lo-title">학습 목표</div>
+      <ul class="lo-list">
+        <li>식품안전나라 API를 활용하여 데이터를 수집한다</li>
+        <li>식품공전·첨가물공전 데이터를 AI 프롬프트에 활용한다</li>
+        <li>AI 답변을 공인 데이터베이스로 교차 검증한다</li>
+      </ul>
+    </div>
+    <div class="session">
+      <div class="session-top"><span class="session-title">5차시: 식품안전나라 API 실습</span><span class="session-time">90분</span></div>
+      <div class="session-desc">식품안전나라 I1250 API를 활용하여 식품 인허가 데이터를 조회합니다. API 키 발급, 파라미터 설정, 결과 해석을 실습합니다.</div>
+      <div class="session-tags"><span class="tag tag-practice">실습: API 호출</span><span class="tag tag-lecture">이론: REST API 기초</span></div>
+    </div>
+    <div class="session">
+      <div class="session-top"><span class="session-title">6차시: 공전 데이터 기반 프롬프트</span><span class="session-time">90분</span></div>
+      <div class="session-desc">수집한 공전 데이터를 AI 프롬프트에 직접 제공하여 정확도를 높이는 방법을 학습합니다. "데이터 주입 → AI 분석 → 결과 검증" 워크플로를 실습합니다.</div>
+      <div class="session-tags"><span class="tag tag-practice">실습: 데이터 기반 프롬프트</span><span class="tag tag-quiz">퀴즈</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Module 4 -->
+<div class="module" onclick="this.classList.toggle('open')">
+  <div class="module-header">
+    <div class="module-num" style="background:var(--red)">M4</div>
+    <div class="module-info">
+      <div class="module-title">RAG: 검색 증강 생성 활용</div>
+      <div class="module-meta"><span>📅 4주차</span><span>⏱️ 180분 (2차시)</span><span>🎯 중급~심화</span></div>
+    </div>
+    <div class="module-toggle">▼</div>
+  </div>
+  <div class="module-body">
+    <div class="lo-box">
+      <div class="lo-title">학습 목표</div>
+      <ul class="lo-list">
+        <li>RAG(Retrieval-Augmented Generation)의 원리를 이해한다</li>
+        <li>식품 문서(공전, 규격서)를 벡터 DB에 저장하고 검색한다</li>
+        <li>RAG 기반 질의응답 시스템을 구축한다</li>
+      </ul>
+    </div>
+    <div class="session">
+      <div class="session-top"><span class="session-title">7차시: RAG 개념과 아키텍처</span><span class="session-time">90분</span></div>
+      <div class="session-desc">RAG의 작동 원리(문서 임베딩 → 벡터 DB 저장 → 검색 → 생성)를 학습합니다. 할루시네이션 방지에서 RAG의 역할을 이해합니다.</div>
+      <div class="session-tags"><span class="tag tag-lecture">이론</span><span class="tag tag-discuss">토론: RAG vs Fine-tuning</span></div>
+    </div>
+    <div class="session">
+      <div class="session-top"><span class="session-title">8차시: 식품 RAG 시스템 실습</span><span class="session-time">90분</span></div>
+      <div class="session-desc">ChromaDB + Gemini/OpenAI를 활용하여 식품공전 문서 기반 RAG 시스템을 구축합니다. Streamlit UI를 통한 질의응답 시스템을 만듭니다.</div>
+      <div class="session-tags"><span class="tag tag-practice">실습: ChromaDB + Streamlit</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Module 5 -->
+<div class="module" onclick="this.classList.toggle('open')">
+  <div class="module-header">
+    <div class="module-num" style="background:var(--purple)">M5</div>
+    <div class="module-info">
+      <div class="module-title">AI 기반 식품 개발 워크플로</div>
+      <div class="module-meta"><span>📅 5주차</span><span>⏱️ 180분 (2차시)</span><span>🎯 심화</span></div>
+    </div>
+    <div class="module-toggle">▼</div>
+  </div>
+  <div class="module-body">
+    <div class="lo-box">
+      <div class="lo-title">학습 목표</div>
+      <ul class="lo-list">
+        <li>AI를 NPD(신제품개발) 전 과정에 통합 활용한다</li>
+        <li>시장 분석 → 컨셉 개발 → 배합 설계 → 규격 검증 파이프라인을 구축한다</li>
+        <li>Streamlit 기반 AI 도구를 배포한다</li>
+      </ul>
+    </div>
+    <div class="session">
+      <div class="session-top"><span class="session-title">9차시: AI 기반 NPD 파이프라인</span><span class="session-time">90분</span></div>
+      <div class="session-desc">시장 트렌드 분석(Naver Shopping API) → AI 컨셉 제안 → 배합 초안 생성 → 규격 자동 검증까지 이어지는 전체 워크플로를 설계합니다.</div>
+      <div class="session-tags"><span class="tag tag-lecture">이론</span><span class="tag tag-practice">실습: 파이프라인 설계</span></div>
+    </div>
+    <div class="session">
+      <div class="session-top"><span class="session-title">10차시: Streamlit 대시보드 구축</span><span class="session-time">90분</span></div>
+      <div class="session-desc">음료 R&D 플랫폼을 Streamlit으로 구축합니다. DALL-E 이미지 생성, Gemini 배합 에이전트, 마케팅 컨셉 플로를 통합합니다.</div>
+      <div class="session-tags"><span class="tag tag-practice">실습: Streamlit 앱 개발</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Module 6 -->
+<div class="module" onclick="this.classList.toggle('open')">
+  <div class="module-header">
+    <div class="module-num" style="background:#0EA5E9">M6</div>
+    <div class="module-info">
+      <div class="module-title">최종 프로젝트 & 발표</div>
+      <div class="module-meta"><span>📅 6주차</span><span>⏱️ 180분 (2차시)</span><span>🎯 종합</span></div>
+    </div>
+    <div class="module-toggle">▼</div>
+  </div>
+  <div class="module-body">
+    <div class="lo-box">
+      <div class="lo-title">학습 목표</div>
+      <ul class="lo-list">
+        <li>AI를 활용한 신제품 개발 프로젝트를 완수한다</li>
+        <li>프로젝트 결과를 경영진 보고 형식으로 발표한다</li>
+        <li>AI 활용의 한계와 윤리적 고려사항을 정리한다</li>
+      </ul>
+    </div>
+    <div class="session">
+      <div class="session-top"><span class="session-title">11차시: 프로젝트 작업 & 멘토링</span><span class="session-time">90분</span></div>
+      <div class="session-desc">팀별 최종 프로젝트(AI 활용 신제품 개발 제안서) 작업을 진행합니다. 강사 멘토링과 팀 간 피드백을 교환합니다.</div>
+      <div class="session-tags"><span class="tag tag-practice">프로젝트 작업</span><span class="tag tag-discuss">팀 피드백</span></div>
+    </div>
+    <div class="session">
+      <div class="session-top"><span class="session-title">12차시: 최종 발표 & 회고</span><span class="session-time">90분</span></div>
+      <div class="session-desc">팀별 발표(10분) + Q&A(5분)를 진행합니다. AI 활용의 윤리적 고려사항과 향후 발전 방향을 함께 논의합니다.</div>
+      <div class="session-tags"><span class="tag tag-discuss">발표</span><span class="tag tag-quiz">동료 평가</span></div>
+      <div style="margin-top:10px;"><span class="deliverable">📊 최종 발표 PPT</span><span class="deliverable">📝 프로젝트 보고서</span><span class="deliverable">💻 Streamlit 앱 (선택)</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- 6-Week Timeline -->
+<div style="margin-top:48px;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+    <div style="width:5px;height:28px;border-radius:3px;background:var(--b);"></div>
+    <h2 style="font-size:20px;font-weight:800;">📅 6주 로드맵</h2>
+  </div>
+  <div class="timeline">
+    <div class="tl-item"><div class="tl-dot" style="border-color:var(--b);background:var(--bl);"></div><div class="tl-week" style="color:var(--b);">Week 1 — 기초</div><div class="tl-content">AI 개론 + 할루시네이션 (M1)</div></div>
+    <div class="tl-item"><div class="tl-dot" style="border-color:var(--grn);background:#F0FFF5;"></div><div class="tl-week" style="color:var(--grn);">Week 2 — 프롬프트</div><div class="tl-content">프롬프트 엔지니어링 + 페르소나 (M2)</div></div>
+    <div class="tl-item"><div class="tl-dot" style="border-color:var(--org);background:#FFFDE8;"></div><div class="tl-week" style="color:var(--org);">Week 3 — 데이터</div><div class="tl-content">식품안전나라 API + 공전 활용 (M3)</div></div>
+    <div class="tl-item"><div class="tl-dot" style="border-color:var(--red);background:#FFF5F5;"></div><div class="tl-week" style="color:var(--red);">Week 4 — RAG</div><div class="tl-content">벡터 DB + RAG 시스템 구축 (M4)</div></div>
+    <div class="tl-item"><div class="tl-dot" style="border-color:var(--purple);background:#F0E8FF;"></div><div class="tl-week" style="color:var(--purple);">Week 5 — 통합</div><div class="tl-content">NPD 파이프라인 + Streamlit (M5)</div></div>
+    <div class="tl-item"><div class="tl-dot" style="border-color:#0EA5E9;background:#E8F7FF;"></div><div class="tl-week" style="color:#0EA5E9;">Week 6 — 프로젝트</div><div class="tl-content">최종 프로젝트 발표 & 회고 (M6)</div></div>
+  </div>
+</div>
+
+<!-- Prerequisites -->
+<div style="margin-top:40px;background:var(--w);border:1px solid #E8E4E0;border-radius:14px;padding:24px;">
+  <h3 style="font-size:17px;font-weight:700;color:var(--dt);margin-bottom:14px;">📌 수강 전 준비사항</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="padding:14px;background:#FAFAFA;border-radius:8px;">
+      <div style="font-weight:700;font-size:14px;margin-bottom:6px;">🔑 API 키 발급</div>
+      <div style="font-size:13px;color:var(--tm);line-height:1.6;">
+        • OpenAI API Key<br>
+        • Google Gemini API Key<br>
+        • 네이버 검색 API (Client ID/Secret)<br>
+        • 식품안전나라 API Key
+      </div>
+    </div>
+    <div style="padding:14px;background:#FAFAFA;border-radius:8px;">
+      <div style="font-weight:700;font-size:14px;margin-bottom:6px;">💻 개발 환경</div>
+      <div style="font-size:13px;color:var(--tm);line-height:1.6;">
+        • Python 3.10+ 설치<br>
+        • VS Code 또는 Cursor IDE<br>
+        • GitHub 계정 생성<br>
+        • Streamlit 기본 설치 확인
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer class="footer">
+  <strong>한국식품정보원 (KFI)</strong> &nbsp;|&nbsp; AI 활용 식품개발 실무 커리큘럼 v1.0 &nbsp;|&nbsp; 식품전공 학생 대상 6주 과정
+</footer>
+
+</body>
+</html>

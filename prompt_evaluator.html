@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>프롬프트 평가기 | KFI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Pretendard Variable', -apple-system, sans-serif; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const B="#1975BC",BD="#135A91",BL="#E8F1F8",GRN="#2E8B57",ORG="#E07030",RED="#D94040",DT="#1E1E1E",TM="#444",TL="#888";
+
+const CRITERIA = [
+  { id: "role", label: "역할 부여", icon: "🎭", desc: "AI에게 전문가 역할을 부여했는가", weight: 20 },
+  { id: "source", label: "출처 요구", icon: "📖", desc: "식품공전 등 공인 출처를 요구했는가", weight: 25 },
+  { id: "uncertainty", label: "불확실성 표기", icon: "⚠️", desc: "'미확인' 표기 등 안전장치를 요구했는가", weight: 25 },
+  { id: "specificity", label: "구체성", icon: "🎯", desc: "원료명, 식품유형 등 구체적 조건을 명시했는가", weight: 15 },
+  { id: "format", label: "출력 형식", icon: "📋", desc: "표, 단계별 등 결과 형식을 지정했는가", weight: 15 },
+];
+
+const EXAMPLE_PROMPTS = [
+  { label: "❌ 나쁜 예시", text: "탄산음료에 스테비아 넣어도 돼?" },
+  { label: "⚠️ 보통 예시", text: "탄산음료에 스테비올배당체 사용 기준을 알려줘. 식품공전 기준으로 답해줘." },
+  { label: "✅ 좋은 예시", text: "너는 식품안전 규제 전문가야. 스테비올배당체의 탄산음료 사용 기준을 식품첨가물공전 별표3을 근거로 표 형식으로 정리해줘. 확인 불가능한 정보는 '미확인'으로 표기해줘." },
+];
+
+function ScoreCircle({ score, size = 120 }) {
+  const color = score >= 80 ? GRN : score >= 50 ? ORG : RED;
+  const pct = Math.round(score);
+  return (
+    <div style={{ width: size, height: size, borderRadius: "50%", background: `conic-gradient(${color} ${pct}%, #E8E4E0 ${pct}%)`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", transition: "all 0.5s" }}>
+      <div style={{ width: size - 20, height: size - 20, borderRadius: "50%", background: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ fontSize: size / 4, fontWeight: 800, color }}>{pct}</span>
+        <span style={{ fontSize: 10, color: TL }}>/ 100</span>
+      </div>
+    </div>
+  );
+}
+
+function CriteriaBar({ criterion, score, feedback }) {
+  const pct = Math.min(100, Math.max(0, score));
+  const color = pct >= 80 ? GRN : pct >= 50 ? ORG : RED;
+  return (
+    <div style={{ marginBottom: 16, padding: "14px 16px", background: "#FAFAFA", borderRadius: 10, border: "1px solid #eee" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 16 }}>{criterion.icon}</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: DT }}>{criterion.label}</span>
+          <span style={{ fontSize: 11, color: TL }}>({criterion.weight}점)</span>
+        </div>
+        <span style={{ fontSize: 14, fontWeight: 800, color }}>{pct >= 80 ? "우수" : pct >= 50 ? "보통" : "미흡"}</span>
+      </div>
+      <div style={{ height: 6, background: "#E8E4E0", borderRadius: 3, marginBottom: 6, overflow: "hidden" }}>
+        <div style={{ height: 6, background: color, borderRadius: 3, width: `${pct}%`, transition: "width 0.8s ease" }} />
+      </div>
+      <p style={{ fontSize: 12.5, color: TM, lineHeight: 1.5, margin: 0 }}>{feedback}</p>
+    </div>
+  );
+}
+
+function evaluateLocally(prompt) {
+  const p = prompt.toLowerCase();
+  const results = [];
+  let total = 0;
+
+  // 1. Role
+  const roleKeywords = ["전문가", "연구원", "마케터", "너는", "역할", "년차", "담당"];
+  const roleScore = roleKeywords.some(k => p.includes(k)) ? 90 : 15;
+  results.push({
+    id: "role", score: roleScore,
+    feedback: roleScore >= 80 ? "AI에게 전문가 역할을 부여하여 맥락 있는 답변을 유도하고 있습니다." : "AI에게 역할을 부여하면 더 전문적인 답변을 받을 수 있습니다. 예: '너는 식품안전 전문가야'"
+  });
+
+  // 2. Source
+  const srcKeywords = ["식품공전", "첨가물공전", "근거", "출처", "원문", "법률", "법적", "가이드라인", "별표"];
+  const srcScore = srcKeywords.filter(k => p.includes(k)).length >= 2 ? 95 : srcKeywords.some(k => p.includes(k)) ? 55 : 10;
+  results.push({
+    id: "source", score: srcScore,
+    feedback: srcScore >= 80 ? "공인 출처를 명시적으로 요구하고 있어 할루시네이션 방지에 효과적입니다." : srcScore >= 50 ? "출처 요구가 있으나 좀 더 구체적으로 (예: '식품첨가물공전 별표3') 명시하면 더 좋습니다." : "출처 요구가 없습니다. '식품공전 원문을 근거로 답변해줘'를 추가하세요."
+  });
+
+  // 3. Uncertainty
+  const uncKeywords = ["미확인", "확인 불가", "불확실", "모르면", "확인 필요", "tbd", "추정"];
+  const uncScore = uncKeywords.some(k => p.includes(k)) ? 90 : 10;
+  results.push({
+    id: "uncertainty", score: uncScore,
+    feedback: uncScore >= 80 ? "불확실한 정보에 대한 안전장치를 요구하고 있어 신뢰성이 높습니다." : "불확실성 표기 요구가 없습니다. '확인 불가능한 정보는 미확인으로 표기해줘'를 추가하세요."
+  });
+
+  // 4. Specificity
+  const specPatterns = [/\d+/, /[a-z]{2,}/i, /음료|과자|hmr|유제품|식육|주류/i, /원료|배합|성분|감미료|보존료/];
+  const specHits = specPatterns.filter(r => r.test(prompt)).length;
+  const specScore = specHits >= 3 ? 90 : specHits >= 2 ? 65 : specHits >= 1 ? 40 : 10;
+  results.push({
+    id: "specificity", score: specScore,
+    feedback: specScore >= 80 ? "구체적인 원료명, 식품유형, 조건이 명시되어 있어 정확한 답변이 기대됩니다." : specScore >= 50 ? "어느 정도 구체적이나, 식품유형이나 수치 조건을 더 명시하면 좋겠습니다." : "구체성이 부족합니다. 원료명, 식품유형, 수치 조건을 구체적으로 명시하세요."
+  });
+
+  // 5. Format
+  const fmtKeywords = ["표", "형식", "정리", "단계", "목록", "json", "비교", "리스트", "항목", "구성"];
+  const fmtScore = fmtKeywords.filter(k => p.includes(k)).length >= 2 ? 90 : fmtKeywords.some(k => p.includes(k)) ? 55 : 10;
+  results.push({
+    id: "format", score: fmtScore,
+    feedback: fmtScore >= 80 ? "결과 형식을 구체적으로 지정하고 있어 활용도 높은 답변이 기대됩니다." : fmtScore >= 50 ? "형식 지정이 있으나, '표 형식으로' 또는 '3단계로 정리해줘' 등 더 구체적으로 지정해보세요." : "출력 형식 지정이 없습니다. '표 형식으로 정리해줘'와 같이 추가하세요."
+  });
+
+  CRITERIA.forEach((c, i) => { total += results[i].score * (c.weight / 100); });
+
+  let overall = "";
+  if (total >= 80) overall = "🎉 훌륭한 프롬프트입니다! 할루시네이션 방지 요소가 잘 갖춰져 있습니다.";
+  else if (total >= 60) overall = "👍 괜찮은 프롬프트입니다. 아래 개선 포인트를 참고하면 더 좋아질 수 있습니다.";
+  else if (total >= 40) overall = "⚠️ 개선이 필요합니다. 출처 요구, 불확실성 표기 등 핵심 요소를 추가하세요.";
+  else overall = "❌ 할루시네이션 위험이 높은 프롬프트입니다. 황금 규칙 5가지를 적용해보세요.";
+
+  return { total: Math.round(total), results, overall };
+}
+
+function App() {
+  const [prompt, setPrompt] = React.useState("");
+  const [evaluation, setEvaluation] = React.useState(null);
+  const [loading, setLoading] = React.useState(false);
+  const [history, setHistory] = React.useState([]);
+  const [showHistory, setShowHistory] = React.useState(false);
+
+  const evaluate = () => {
+    if (!prompt.trim()) return;
+    setLoading(true);
+    setTimeout(() => {
+      const result = evaluateLocally(prompt);
+      setEvaluation(result);
+      setHistory(prev => [{ prompt, score: result.total, time: new Date().toLocaleTimeString() }, ...prev].slice(0, 10));
+      setLoading(false);
+    }, 800);
+  };
+
+  const loadExample = (text) => { setPrompt(text); setEvaluation(null); };
+  const grade = evaluation ? (evaluation.total >= 80 ? "A" : evaluation.total >= 60 ? "B" : evaluation.total >= 40 ? "C" : "D") : "";
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#FAF8F5", fontFamily: "'Pretendard Variable', -apple-system, sans-serif" }}>
+      <style>{`
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
+        @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        textarea:focus{outline:none;border-color:${B}!important;box-shadow:0 0 0 3px rgba(25,117,188,0.15)!important;}
+        button:hover{opacity:0.92;}
+      `}</style>
+
+      {/* Header */}
+      <div style={{ background: `linear-gradient(135deg,${B},${BD})`, color: "#fff", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 4px 24px rgba(25,117,188,0.25)" }}>
+        <div style={{ maxWidth: 800, margin: "0 auto", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 6, padding: "3px 12px", fontWeight: 800, fontSize: 12, letterSpacing: 1 }}>KFI</span>
+            <span style={{ fontSize: 13, fontWeight: 500, opacity: 0.9 }}>한국식품정보원</span>
+          </div>
+          <button onClick={() => setShowHistory(!showHistory)} style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "5px 14px", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+            📊 평가 이력 ({history.length})
+          </button>
+        </div>
+      </div>
+
+      {/* Hero */}
+      <div style={{ background: `linear-gradient(160deg,${B} 0%,#2A8DD4 50%,${BD} 100%)`, color: "#fff", padding: "40px 24px 36px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: "-50%", right: "-15%", width: 350, height: 350, borderRadius: "50%", background: "rgba(255,255,255,0.04)" }} />
+        <div style={{ maxWidth: 800, margin: "0 auto", position: "relative", zIndex: 1 }}>
+          <span style={{ display: "inline-block", background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 20, padding: "4px 14px", fontSize: 12, fontWeight: 600, marginBottom: 12 }}>🎯 실시간 AI 채점</span>
+          <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>프롬프트 평가기</h1>
+          <p style={{ fontSize: 15, opacity: 0.88, lineHeight: 1.6 }}>작성한 프롬프트가 할루시네이션을 방지할 수 있는지 5가지 기준으로 평가합니다.</p>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "32px 24px 60px" }}>
+
+        {/* History panel */}
+        {showHistory && history.length > 0 && (
+          <div style={{ background: "#fff", border: "1px solid #E0E0E0", borderRadius: 12, padding: 18, marginBottom: 24, animation: "fadeUp 0.3s ease" }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: DT, marginBottom: 12 }}>📊 평가 이력</h3>
+            {history.map((h, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: i < history.length - 1 ? "1px solid #F0F0F0" : "none" }}>
+                <span style={{ width: 36, height: 36, borderRadius: "50%", background: h.score >= 80 ? "#F0FFF5" : h.score >= 50 ? "#FFFDE8" : "#FFF5F5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: h.score >= 80 ? GRN : h.score >= 50 ? ORG : RED, flexShrink: 0 }}>{h.score}</span>
+                <span style={{ flex: 1, fontSize: 13, color: TM, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.prompt}</span>
+                <span style={{ fontSize: 11, color: TL, flexShrink: 0 }}>{h.time}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Example buttons */}
+        <div style={{ marginBottom: 16 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: TL, marginRight: 8 }}>예시 불러오기:</span>
+          {EXAMPLE_PROMPTS.map((ex, i) => (
+            <button key={i} onClick={() => loadExample(ex.text)} style={{
+              padding: "5px 12px", borderRadius: 6, border: "1px solid #ddd", background: "#fff",
+              fontSize: 12, fontWeight: 600, color: TM, cursor: "pointer", marginRight: 6, marginBottom: 4, transition: "all 0.2s"
+            }}>{ex.label}</button>
+          ))}
+        </div>
+
+        {/* Input */}
+        <div style={{ background: "#fff", border: "1px solid #E0E0E0", borderRadius: 14, padding: 24, marginBottom: 24, boxShadow: "0 4px 16px rgba(0,0,0,0.04)" }}>
+          <label style={{ fontSize: 15, fontWeight: 700, color: DT, marginBottom: 10, display: "block" }}>✍️ 프롬프트를 입력하세요</label>
+          <textarea
+            value={prompt}
+            onChange={e => { setPrompt(e.target.value); setEvaluation(null); }}
+            placeholder="예: 탄산음료에 스테비올배당체 사용 기준을 알려줘. 반드시 식품첨가물공전 원문을 근거로..."
+            rows={5}
+            style={{
+              width: "100%", padding: 16, borderRadius: 10, border: "1.5px solid #E0E0E0",
+              fontSize: 14.5, fontFamily: "inherit", lineHeight: 1.7, resize: "vertical",
+              transition: "all 0.2s", background: "#FAFAFA"
+            }}
+          />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
+            <span style={{ fontSize: 12, color: TL }}>{prompt.length}자</span>
+            <button
+              onClick={evaluate}
+              disabled={!prompt.trim() || loading}
+              style={{
+                padding: "12px 32px", borderRadius: 10, border: "none",
+                background: !prompt.trim() ? "#ccc" : `linear-gradient(135deg,${B},#2A8DD4)`,
+                color: "#fff", fontSize: 15, fontWeight: 700, cursor: !prompt.trim() ? "default" : "pointer",
+                boxShadow: prompt.trim() ? "0 4px 16px rgba(25,117,188,0.3)" : "none",
+                transition: "all 0.2s", display: "flex", alignItems: "center", gap: 8
+              }}
+            >
+              {loading ? <span style={{ animation: "pulse 1s infinite" }}>분석 중...</span> : "🔍 평가하기"}
+            </button>
+          </div>
+        </div>
+
+        {/* Results */}
+        {evaluation && (
+          <div style={{ animation: "fadeUp 0.5s ease" }}>
+            {/* Overall score */}
+            <div style={{
+              background: "#fff", border: "1px solid #E0E0E0", borderRadius: 14, padding: 28,
+              marginBottom: 24, boxShadow: "0 4px 16px rgba(0,0,0,0.04)", textAlign: "center"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 32, flexWrap: "wrap" }}>
+                <ScoreCircle score={evaluation.total} size={140} />
+                <div style={{ textAlign: "left" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                    <span style={{
+                      fontSize: 32, fontWeight: 800,
+                      color: evaluation.total >= 80 ? GRN : evaluation.total >= 60 ? ORG : RED
+                    }}>등급 {grade}</span>
+                  </div>
+                  <p style={{ fontSize: 14.5, color: TM, lineHeight: 1.6, maxWidth: 360 }}>{evaluation.overall}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Criteria details */}
+            <div style={{ background: "#fff", border: "1px solid #E0E0E0", borderRadius: 14, padding: 24, boxShadow: "0 4px 16px rgba(0,0,0,0.04)" }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: DT, marginBottom: 16 }}>📋 항목별 평가</h3>
+              {CRITERIA.map((c, i) => (
+                <CriteriaBar key={c.id} criterion={c} score={evaluation.results[i].score} feedback={evaluation.results[i].feedback} />
+              ))}
+
+              {/* Improvement suggestions */}
+              {evaluation.total < 80 && (
+                <div style={{ background: BL, borderRadius: 10, padding: "16px 18px", marginTop: 8 }}>
+                  <h4 style={{ fontSize: 14, fontWeight: 700, color: B, marginBottom: 8 }}>💡 개선 제안</h4>
+                  <p style={{ fontSize: 13, color: TM, lineHeight: 1.65 }}>
+                    {evaluation.results.filter(r => r.score < 50).length > 0 && (
+                      <>미흡 항목: <strong style={{ color: RED }}>{evaluation.results.filter((r, i) => r.score < 50).map((r, i) => CRITERIA.find(c => c.id === CRITERIA[evaluation.results.indexOf(r)].id)?.label).filter(Boolean).join(", ")}</strong><br /></>
+                    )}
+                    프롬프트 황금 규칙을 적용해보세요: 역할 부여 → 출처 요구 → 불확실성 표기 → 구체적 조건 → 출력 형식 지정
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ background: BD, color: "rgba(255,255,255,0.6)", padding: "16px 24px", textAlign: "center", fontSize: 12 }}>
+        <strong style={{ color: "rgba(255,255,255,0.85)" }}>한국식품정보원 (KFI)</strong> &nbsp;|&nbsp; 프롬프트 평가기 &nbsp;|&nbsp; 식품전공 학생 실습용
+      </div>
+    </div>
+  );
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>

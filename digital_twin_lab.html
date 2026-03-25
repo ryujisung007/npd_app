@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Twin Lab | KFI</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>
+:root{--b:#1975BC;--bd:#135A91;--bl:#E8F1F8;--bm:#2A8DD4;--w:#fff;--dt:#1E1E1E;--tm:#444;--tl:#888;--grn:#2E8B57;--org:#E07030;--red:#D94040;--pur:#7C3AED;--cyan:#0EA5E9;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Pretendard Variable',-apple-system,sans-serif;background:#F0F2F5;color:var(--dt);line-height:1.5;}
+button{font-family:inherit;cursor:pointer;border:none;transition:all 0.15s;}
+button:hover{opacity:0.88;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.header{background:linear-gradient(135deg,#0D1B2A,#1B2838,var(--bd));color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.header-left{display:flex;align-items:center;gap:12px;}
+.kfi-badge{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:3px 10px;font-weight:800;font-size:11px;letter-spacing:1px;}
+.live{font-size:9px;background:rgba(46,139,87,0.3);border:1px solid rgba(46,139,87,0.5);border-radius:4px;padding:1px 6px;font-weight:600;color:#4ADE80;}
+.header-right{display:flex;align-items:center;gap:14px;font-size:12px;}
+.header-right span{opacity:0.6;}
+.reset-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2)!important;border-radius:6px;padding:4px 12px;color:#fff;font-size:11px;font-weight:600;}
+.dashboard{background:#1A1F2E;padding:14px 20px;display:flex;gap:14px;justify-content:center;border-bottom:1px solid #2A3040;flex-wrap:wrap;}
+.gauge{text-align:center;padding:6px 8px;}
+.gauge-circle{position:relative;width:74px;height:74px;margin:0 auto 4px;}
+.gauge-circle svg{transform:rotate(-90deg);}
+.gauge-val{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:15px;font-weight:800;}
+.gauge-label{font-size:10px;font-weight:700;color:#ccc;}
+.gauge-unit{font-size:8px;color:#777;}
+.gauge-warn{font-size:8px;color:var(--red);font-weight:700;margin-top:1px;}
+.tabs{background:var(--w);border-bottom:1px solid #E0E0E0;padding:0 20px;display:flex;}
+.tab-btn{padding:10px 16px;background:transparent;color:var(--tl);font-size:12px;font-weight:700;border-bottom:3px solid transparent;}
+.tab-btn.active{color:var(--b);border-bottom-color:var(--b);}
+.main{display:flex;max-width:1200px;margin:0 auto;padding:14px;gap:14px;}
+.content-area{flex:1;min-width:0;}
+.side-panel{width:200px;flex-shrink:0;}
+.card{background:var(--w);border:1px solid #E8E4E0;border-radius:10px;padding:12px;margin-bottom:10px;}
+.card-title{font-size:11px;font-weight:700;color:var(--dt);margin-bottom:6px;}
+.ing-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media(max-width:800px){.ing-grid{grid-template-columns:1fr;}.side-panel{display:none;}}
+.ing-cat{background:var(--w);border-radius:10px;padding:10px;border:1px solid #E8E4E0;}
+.ing-cat h4{font-size:11px;font-weight:700;color:var(--dt);margin-bottom:6px;}
+.ing-row{display:flex;align-items:center;gap:4px;margin-bottom:4px;}
+.ing-icon{font-size:14px;width:18px;text-align:center;}
+.ing-name{flex:1;font-size:10px;font-weight:600;color:var(--dt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ing-amt{font-size:9px;color:var(--tl);width:44px;text-align:right;flex-shrink:0;}
+.ing-btn{width:28px;height:20px;border-radius:3px;border:1px solid #E0E0E0!important;background:#FAFAFA;font-size:8px;font-weight:700;color:var(--b);flex-shrink:0;}
+.proc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.proc-btn{background:var(--w);border:1px solid #E8E4E0!important;border-radius:10px;padding:12px;text-align:left;}
+.proc-btn:hover{box-shadow:0 3px 10px rgba(0,0,0,0.06);transform:translateY(-1px);}
+.proc-icon{font-size:18px;margin-bottom:2px;}
+.proc-name{font-size:12px;font-weight:700;color:var(--dt);margin-bottom:1px;}
+.proc-desc{font-size:9px;color:var(--tl);}
+.tl-wrap{display:flex;align-items:center;gap:3px;overflow-x:auto;padding:6px 0;}
+.tl-step{background:var(--bl);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:600;color:var(--dt);white-space:nowrap;border:1px solid #E0E0E0;flex-shrink:0;}
+.equip-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.equip-btn{background:var(--w);border:1px solid #E8E4E0!important;border-radius:10px;padding:12px;text-align:center;}
+.equip-btn:hover{box-shadow:0 3px 10px rgba(0,0,0,0.06);}
+.equip-val{margin-top:5px;padding:3px 8px;background:var(--bl);border-radius:6px;font-size:12px;font-weight:800;color:var(--b);display:inline-block;}
+.haccp-box{background:#FFF5F5;border:1px solid #F0D0D0;border-radius:10px;padding:12px;margin-top:10px;}
+.ccp-tag{background:var(--red);color:#fff;padding:1px 5px;border-radius:3px;font-size:8px;font-weight:700;margin-right:4px;}
+.ai-rpt{background:var(--w);border:1px solid #E8E4E0;border-radius:10px;padding:14px;margin-top:10px;}
+.ai-rpt h4{font-size:12px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.ai-badge{font-size:8px;background:var(--bl);color:var(--b);padding:2px 5px;border-radius:3px;font-weight:600;}
+.ai-rpt p{font-size:11px;color:var(--tm);line-height:1.6;margin-bottom:3px;}
+.log-entry{display:flex;gap:6px;padding:4px 0;border-bottom:1px solid #F5F5F5;font-size:11px;}
+.log-time{color:var(--tl);font-family:monospace;font-size:9px;min-width:36px;flex-shrink:0;}
+.log-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.log-msg{color:var(--tm);line-height:1.3;}
+.footer{background:#1A1F2E;color:rgba(255,255,255,0.4);padding:12px 20px;text-align:center;font-size:10px;}
+.footer strong{color:rgba(255,255,255,0.7);}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <span class="kfi-badge">KFI</span>
+    <div><div style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px">🧬 Digital Twin Lab <span class="live">LIVE</span></div><div style="font-size:9px;opacity:0.5">가상 식품 R&D 실험실</div></div>
+  </div>
+  <div class="header-right"><span id="ht">🌡️ 20°C</span><span id="he">⏱️ 0분</span><button class="reset-btn" onclick="resetLab()">🔄 초기화</button></div>
+</div>
+<div class="dashboard" id="dash"></div>
+<div class="tabs">
+  <button class="tab-btn active" data-t="form" onclick="go('form')">⚗️ 원료 배합</button>
+  <button class="tab-btn" data-t="proc" onclick="go('proc')">🏭 공정</button>
+  <button class="tab-btn" data-t="anal" onclick="go('anal')">🔬 분석</button>
+  <button class="tab-btn" data-t="log" onclick="go('log')">📋 일지</button>
+</div>
+<div class="main"><div class="content-area" id="ct"></div><div class="side-panel" id="sp"></div></div>
+<div class="footer"><strong>KFI 한국식품정보원</strong> · Digital Twin Lab v1.1 · 교육용</div>
+
+<script>
+const I=[
+{id:"water",n:"정제수",c:"base",u:"mL",bx:0,st:0,vi:0,ic:"💧"},
+{id:"oj_c",n:"오렌지 농축액 (65Bx)",c:"base",u:"mL",bx:.65,st:.3,vi:.03,ic:"🍊"},
+{id:"ap_c",n:"사과 농축액 (70Bx)",c:"base",u:"mL",bx:.70,st:.25,vi:.025,ic:"🍎"},
+{id:"gr_c",n:"포도 농축액 (68Bx)",c:"base",u:"mL",bx:.68,st:.2,vi:.03,ic:"🍇"},
+{id:"mg_c",n:"망고 농축액 (60Bx)",c:"base",u:"mL",bx:.60,st:.15,vi:.06,ic:"🥭"},
+{id:"pc_c",n:"복숭아 농축액 (62Bx)",c:"base",u:"mL",bx:.62,st:.1,vi:.04,ic:"🍑"},
+{id:"oj_j",n:"오렌지주스 (NFC)",c:"base",u:"mL",bx:.11,st:.15,vi:.01,ic:"🧃"},
+{id:"ap_j",n:"사과주스 (NFC)",c:"base",u:"mL",bx:.12,st:.12,vi:.008,ic:"🧃"},
+{id:"gr_j",n:"청포도주스 (NFC)",c:"base",u:"mL",bx:.15,st:.1,vi:.009,ic:"🧃"},
+{id:"lm_j",n:"레몬즙",c:"base",u:"mL",bx:.08,st:.8,vi:.005,ic:"🍋"},
+{id:"yz_j",n:"유자즙",c:"base",u:"mL",bx:.09,st:.6,vi:.006,ic:"🟡"},
+{id:"jj_j",n:"제주감귤즙",c:"base",u:"mL",bx:.10,st:.5,vi:.007,ic:"🍊"},
+{id:"sugar",n:"설탕",c:"sw",u:"g",bx:1,st:0,vi:.008,ic:"🍬"},
+{id:"allu",n:"알룰로스",c:"sw",u:"g",bx:.7,st:0,vi:.005,ic:"🧊"},
+{id:"ery",n:"에리스리톨",c:"sw",u:"g",bx:0,st:0,vi:.003,ic:"❄️"},
+{id:"stv",n:"스테비올배당체",c:"sw",u:"g",bx:0,st:0,vi:0,ic:"🌿"},
+{id:"scr",n:"수크랄로스",c:"sw",u:"g",bx:0,st:0,vi:0,ic:"💎"},
+{id:"cit",n:"구연산",c:"ac",u:"g",bx:0,st:1,vi:0,ic:"🍋"},
+{id:"mal",n:"사과산",c:"ac",u:"g",bx:0,st:1.2,vi:0,ic:"🍏"},
+{id:"lac",n:"젖산",c:"ac",u:"g",bx:0,st:.8,vi:.001,ic:"🥛"},
+{id:"tar",n:"주석산",c:"ac",u:"g",bx:0,st:1.1,vi:0,ic:"🍷"},
+{id:"nac",n:"구연산나트륨",c:"bf",u:"g",bx:0,st:-.6,vi:0,ic:"🧂"},
+{id:"nap",n:"인산나트륨",c:"bf",u:"g",bx:0,st:-.5,vi:0,ic:"⚗️"},
+{id:"fib",n:"식이섬유(이눌린)",c:"fn",u:"g",bx:.1,st:0,vi:.05,ic:"🌾"},
+{id:"col",n:"콜라겐펩타이드",c:"fn",u:"g",bx:0,st:0,vi:.02,ic:"✨"},
+{id:"vc",n:"비타민C",c:"fn",u:"g",bx:0,st:.3,vi:0,ic:"🍊"},
+{id:"pro",n:"유산균 분말",c:"fn",u:"g",bx:0,st:.05,vi:.01,ic:"🦠"},
+{id:"co2",n:"탄산가스(CO₂)",c:"gs",u:"vol",bx:0,st:.5,vi:-.1,ic:"🫧"},
+{id:"pec",n:"펙틴",c:"ad",u:"g",bx:0,st:0,vi:.15,ic:"🔶"},
+{id:"xan",n:"잔탄검",c:"ad",u:"g",bx:0,st:0,vi:.5,ic:"🔷"},
+{id:"cmc",n:"CMC",c:"ad",u:"g",bx:0,st:0,vi:.3,ic:"🔹"},
+];
+const CATS=[
+{k:"base",l:"💧 기재 (정제수 / 농축액 / 주스)"},
+{k:"sw",l:"🍬 감미료"},{k:"ac",l:"🍋 산미료"},{k:"bf",l:"🧂 완충제"},
+{k:"fn",l:"✨ 기능성"},{k:"gs",l:"🫧 가스"},{k:"ad",l:"🔶 증점제·안정제"}
+];
+const EQ=[
+{id:"bx",n:"굴절계",ic:"🔬",d:"Brix",k:"bx"},
+{id:"ph",n:"pH미터",ic:"📊",d:"pH",k:"ph"},
+{id:"vi",n:"점도계",ic:"🌀",d:"점도(cP)",k:"vi"},
+{id:"tp",n:"온도계",ic:"🌡️",d:"온도",k:"tp"},
+{id:"cl",n:"색도계",ic:"🎨",d:"색도",k:"cl"},
+{id:"mc",n:"미생물",ic:"🔎",d:"CFU/mL",k:"mc"},
+];
+const PR=[
+{id:"mix",n:"교반",ic:"🔄",d:"300rpm 5min",dT:0,dt:5},
+{id:"heat",n:"가열",ic:"🔥",d:"85°C 가열",dT:85,dt:10},
+{id:"ltlt",n:"LTLT 살균",ic:"♨️",d:"63°C 30분",dT:63,dt:30,ccp:1},
+{id:"htst",n:"HTST 살균",ic:"⚡",d:"72°C 15초",dT:72,dt:.25,ccp:1},
+{id:"uht",n:"UHT 살균",ic:"💥",d:"135°C 2~5초",dT:135,dt:.08,ccp:1},
+{id:"cool",n:"냉각",ic:"❄️",d:"5°C 냉각",dT:5,dt:15},
+{id:"carb",n:"탄산 주입",ic:"🫧",d:"CO₂ 3~4vol",dT:0,dt:2,co2:1},
+{id:"homo",n:"균질",ic:"💨",d:"150~200bar",dT:0,dt:3},
+{id:"fill",n:"충전·포장",ic:"📦",d:"무균/핫필",dT:0,dt:5},
+];
+let R={},T=20,E=0,PS=[],L=[],M={},H=[],tab="form";
+let AV={ph:4,bx:0,vi:1,tp:20,mc:3};
+function alog(t,m){let mn=Math.floor(E),s=Math.floor((E%1)*60);L.push({t:`${String(mn).padStart(2,"0")}:${String(s).padStart(2,"0")}`,y:t,m});}
+alog("info","🧪 디지털 트윈 랩이 초기화되었습니다.");
+
+function calc(){
+  let ta=0,tb=0,ts=0,wv=0,tv=0,vb=1;
+  let items=[];
+  for(let[id,a]of Object.entries(R)){if(!a)continue;let g=I.find(x=>x.id===id);if(!g)continue;items.push({...g,amount:a});if(g.st>0)ta+=a*g.st;if(g.st<0)tb+=a*Math.abs(g.st);if(g.bx>0)ts+=a*g.bx;if(g.u==="mL"){wv+=a;tv+=a;}else if(g.u==="g")tv+=a*.8;vb+=a*(g.vi||0);}
+  let w=Math.max(wv,1),net=(ta-tb)/w;
+  let ph=Math.max(1.5,Math.min(7,4-net*8));
+  let bx=Math.max(0,Math.min(30,(ts/Math.max(w+ts,1))*100));
+  let tf=Math.max(.3,1-(T-20)*.015);
+  let vi=Math.max(.8,vb*tf);
+  let gr=0;if(ph>4.6&&T>10&&T<50)gr=.5;else if(ph>3.5&&T>20)gr=.2;else if(ph<=3.5)gr=.02;
+  if(T>63)gr=-2;if(T>72)gr=-5;if(T<5)gr*=.1;if(bx>60)gr*=.1;
+  let mc=Math.max(0,Math.min(1e9,1000*Math.exp(gr*E/60)));
+  let r,g2,b2;if(ph<2.5){r=255;g2=80;b2=80;}else if(ph<3.5){r=255;g2=160;b2=80;}else if(ph<4.5){r=240;g2=220;b2=100;}else if(ph<5.5){r=180;g2=230;b2=140;}else{r=120;g2=200;b2=220;}
+  // Fruit volume
+  let fids=["oj_c","ap_c","gr_c","mg_c","pc_c","oj_j","ap_j","gr_j","lm_j","yz_j","jj_j"];
+  let fv=0;fids.forEach(f=>{if(R[f])fv+=R[f];});
+  return{ph,bx,vi,mc,tv,items,cr:r,cg:g2,cb:b2,fv,ml:Math.log10(Math.max(1,mc))};
+}
+
+function rDash(){
+  let s=calc();
+  ["ph","bx","vi","tp"].forEach(k=>{let t=k==="tp"?T:s[k];AV[k]+=(t-AV[k])*.12;});
+  AV.mc+=(s.ml-AV.mc)*.12;
+  let gs=[
+    {v:AV.ph,mn:1,mx:7,l:"pH",u:"",cl:s.ph>4.6?"#D94040":"#0EA5E9",w:s.ph>4.6},
+    {v:AV.bx,mn:0,mx:25,l:"Brix",u:"°Bx",cl:"#2A8DD4",w:0},
+    {v:AV.vi,mn:0,mx:20,l:"점도",u:"cP",cl:"#7C3AED",w:0},
+    {v:AV.tp,mn:0,mx:140,l:"온도",u:"°C",cl:T>70?"#D94040":T<10?"#0EA5E9":"#E07030",w:0},
+    {v:AV.mc,mn:0,mx:9,l:"미생물",u:"log CFU",cl:s.mc>1e5?"#D94040":"#2E8B57",w:s.mc>1e5},
+  ];
+  let h="";
+  gs.forEach(g=>{let p=Math.max(0,Math.min(100,((g.v-g.mn)/(g.mx-g.mn))*100)),d=p*2.01;
+    h+=`<div class="gauge"><div class="gauge-circle"><svg viewBox="0 0 74 74"><circle cx="37" cy="37" r="30" fill="none" stroke="#2A3040" stroke-width="7"/><circle cx="37" cy="37" r="30" fill="none" stroke="${g.cl}" stroke-width="7" stroke-dasharray="${d} 188.5" stroke-linecap="round"/></svg><div class="gauge-val" style="color:${g.cl}">${g.v.toFixed(1)}</div></div><div class="gauge-label">${g.l}</div><div class="gauge-unit">${g.u}</div>${g.w?'<div class="gauge-warn">⚠️</div>':""}</div>`;
+  });
+  document.getElementById("dash").innerHTML=h;
+  document.getElementById("ht").textContent=`🌡️ ${T.toFixed(0)}°C`;
+  document.getElementById("he").textContent=`⏱️ ${Math.floor(E)}분`;
+}
+
+function rCt(){
+  let s=calc(),h="";
+  if(tab==="form"){
+    h+='<div class="ing-grid">';
+    CATS.forEach(ct=>{let its=I.filter(x=>x.c===ct.k);if(!its.length)return;
+      h+=`<div class="ing-cat"><h4>${ct.l}</h4>`;
+      its.forEach(ig=>{let a=R[ig.id]||0;
+        let bg=ig.c==="base"?50:ig.id==="stv"||ig.id==="scr"?.1:ig.c==="ad"?.5:5;
+        let sm=ig.c==="base"?10:ig.id==="stv"||ig.id==="scr"?.05:ig.c==="ad"?.1:1;
+        h+=`<div class="ing-row"><span class="ing-icon">${ig.ic}</span><span class="ing-name">${ig.n}</span><span class="ing-amt">${a.toFixed(1)}${ig.u}</span><button class="ing-btn" onclick="addI('${ig.id}',${sm})">+${sm<1?sm:Math.round(sm)}</button><button class="ing-btn" onclick="addI('${ig.id}',${bg})">+${bg<1?bg:Math.round(bg)}</button></div>`;
+      });
+      h+='</div>';
+    });
+    h+='</div>';
+  } else if(tab==="proc"){
+    if(PS.length){h+='<div class="card"><div class="card-title">🔄 공정 흐름</div><div class="tl-wrap">';PS.forEach((p,i)=>{h+=`<div class="tl-step">${p.ic} ${p.n}</div>`;if(i<PS.length-1)h+='<span style="color:var(--tl);font-size:12px;flex-shrink:0">→</span>';});h+='</div></div>';}
+    h+='<div class="proc-grid">';PR.forEach(p=>{h+=`<button class="proc-btn" onclick="runP('${p.id}')"><div class="proc-icon">${p.ic}</div><div class="proc-name">${p.n}</div><div class="proc-desc">${p.d}</div></button>`;});h+='</div>';
+    if(H.length){h+='<div class="haccp-box"><div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:6px">🛡️ HACCP 관리점</div>';H.forEach(x=>{h+=`<div style="font-size:11px;color:var(--tm);margin-bottom:3px"><span class="ccp-tag">CCP</span>${x.s} — ${x.t}°C — ${x.n}</div>`;});h+='</div>';}
+  } else if(tab==="anal"){
+    h+='<div class="equip-grid">';EQ.forEach(e=>{let m=M[e.k];h+=`<button class="equip-btn" onclick="doM('${e.k}')"><div style="font-size:22px;margin-bottom:3px">${e.ic}</div><div style="font-size:12px;font-weight:700;color:var(--dt)">${e.n}</div><div style="font-size:9px;color:var(--tl)">${e.d}</div>${m?`<div class="equip-val">${m.v} ${m.u}</div>`:""}</button>`;});h+='</div>';
+    h+='<div class="ai-rpt"><h4>🤖 AI 분석 리포트 <span class="ai-badge">자동 생성</span></h4>';
+    if(s.tv<10){h+='<p style="color:var(--tl)">원료를 투입하면 분석이 시작됩니다.</p>';}
+    else{
+      h+=`<p>📊 <strong>현재 상태</strong></p>`;
+      h+=`<p>• pH ${s.ph.toFixed(2)} — ${s.ph<3.5?"강산성, 미생물 억제 유리":s.ph<4.6?"산성, 일반 음료 범위":"⚠️ pH>4.6 — 살균 필수"}</p>`;
+      h+=`<p>• Brix ${s.bx.toFixed(1)}°Bx — ${s.bx<5?"저당/제로":s.bx<12?"일반 음료":"고당도"}</p>`;
+      h+=`<p>• 점도 ${s.vi.toFixed(1)} cP — ${s.vi<2?"청량음료 적합":s.vi<10?"바디감 있음":"고점도, 균질 필요"}</p>`;
+      h+=`<p>• 미생물 ${s.mc<10?"<10":s.mc.toExponential(1)} CFU/mL — ${s.mc<100?"✅ 안전":s.mc<1e4?"⚠️ 주의":"❌ 살균 필수"}</p>`;
+      if(T>60)h+=`<p>🔥 ${T.toFixed(0)}°C — 열처리 중</p>`;
+      if(T<10)h+=`<p>❄️ ${T.toFixed(0)}°C — 냉장 상태</p>`;
+      if(s.fv>0&&s.tv>0){let fp=(s.fv/s.tv*100).toFixed(1);h+=`<p>🍊 과일 원료 함량 ${fp}% (${s.fv.toFixed(0)}mL/${s.tv.toFixed(0)}mL) — ${fp>=10?"✅ 과채음료 표시 가능 (10%↑)":"⚠️ 과채음료 표시 기준(10%) 미달"}</p>`;}
+      h+='<p style="margin-top:6px;color:var(--tl);font-size:10px">⚠️ 시뮬레이션 추정치. 실제 제조 시 실험 검증 필수</p>';
+    }
+    h+='</div>';
+  } else if(tab==="log"){
+    h+='<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="card-title" style="margin:0">📋 실험 일지 ('+L.length+'건)</span><button onclick="copyL()" style="background:var(--bl);border-radius:5px;padding:2px 8px;font-size:9px;font-weight:600;color:var(--b)">📋 복사</button></div><div style="max-height:420px;overflow-y:auto">';
+    let cl={info:"var(--b)",warn:"var(--org)",success:"var(--grn)",danger:"var(--red)",process:"var(--pur)"};
+    L.forEach(l=>{h+=`<div class="log-entry"><span class="log-time">${l.t}</span><span class="log-dot" style="background:${cl[l.y]||cl.info}"></span><span class="log-msg">${l.m}</span></div>`;});
+    h+='</div></div>';
+  }
+  document.getElementById("ct").innerHTML=h;
+}
+
+function rSp(){
+  let s=calc(),fp=Math.min(90,(s.tv/1000)*80+10),cy=170-fp*1.4,lh=fp*1.4-7;
+  let h=`<div class="card" style="position:sticky;top:76px"><h4 style="font-size:10px;font-weight:700;color:var(--tl);text-align:center;margin-bottom:4px">가상 비커</h4><div style="text-align:center"><svg viewBox="0 0 140 180" style="width:120px;height:160px"><path d="M25 30 L25 150 Q25 165 40 165 L100 165 Q115 165 115 150 L115 30" fill="none" stroke="#B0BEC5" stroke-width="2.5"/><path d="M20 30 L25 30" stroke="#B0BEC5" stroke-width="2.5"/><path d="M115 30 L120 30" stroke="#B0BEC5" stroke-width="2.5"/><rect x="27" y="${cy}" width="86" height="${Math.max(0,lh)}" rx="3" fill="rgba(${s.cr},${s.cg},${s.cb},0.35)"/><ellipse cx="70" cy="${cy}" rx="43" ry="4" fill="rgba(${s.cr},${s.cg},${s.cb},0.5)"/>`;
+  [200,400,600,800].forEach(ml=>{let y=160-(ml/1000)*112;h+=`<line x1="28" y1="${y}" x2="40" y2="${y}" stroke="#B0BEC5" stroke-width="1"/><text x="43" y="${y+3}" font-size="7" fill="#999">${ml}</text>`;});
+  h+=`</svg><div style="font-size:9px;color:var(--tl);margin-top:2px">${s.tv.toFixed(0)} mL</div></div>`;
+  h+='<div style="margin-top:8px;border-top:1px solid #F0F0F0;padding-top:6px"><h4 style="font-size:9px;font-weight:700;color:var(--tl);margin-bottom:4px">현재 배합</h4>';
+  if(!s.items.length)h+='<p style="font-size:9px;color:var(--tl);text-align:center">원료 없음</p>';
+  else s.items.forEach(i=>{h+=`<div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:2px;color:var(--tm)"><span>${i.ic} ${i.n}</span><span style="font-weight:700;color:var(--dt)">${R[i.id].toFixed(1)}${i.u}</span></div>`;});
+  h+='</div>';
+  if(PS.length){h+='<div style="margin-top:6px;border-top:1px solid #F0F0F0;padding-top:4px"><h4 style="font-size:9px;font-weight:700;color:var(--tl);margin-bottom:3px">공정 이력</h4>';PS.forEach(p=>{h+=`<div style="font-size:9px;color:var(--tm);margin-bottom:1px">${p.ic} ${p.n}</div>`;});h+='</div>';}
+  h+='</div>';
+  document.getElementById("sp").innerHTML=h;
+}
+
+function rAll(){rDash();rCt();rSp();}
+
+function addI(id,a){let g=I.find(x=>x.id===id);R[id]=(R[id]||0)+a;alog("info",`${g.ic} ${g.n} ${a}${g.u} 투입`);rAll();}
+
+function runP(id){
+  let p=PR.find(x=>x.id===id);PS.push(p);
+  if(p.dT)T=p.dT;E+=p.dt;
+  if(p.co2)addI("co2",3.5);
+  alog("process",`${p.ic} ${p.n} — ${p.d}`);
+  if(p.ccp){alog("success",`✅ ${p.n} 완료 — 미생물 감소`);H.push({s:p.n,t:p.dT,n:"살균 관리점"});}
+  if(id==="cool")alog("info","❄️ 냉각 완료 — 5°C");
+  if(id==="fill")alog("success","📦 충전·포장 완료");
+  let s=calc();if(s.ph>4.6&&!p.ccp)alog("warn",`⚠️ pH ${s.ph.toFixed(1)}>4.6 — 살균 필수`);
+  rAll();
+}
+
+function doM(k){
+  let s=calc(),v,u;
+  switch(k){case"bx":v=s.bx.toFixed(1);u="°Bx";break;case"ph":v=s.ph.toFixed(2);u="";break;case"vi":v=s.vi.toFixed(1);u="cP";break;case"tp":v=T.toFixed(1);u="°C";break;case"cl":v=`R${s.cr} G${s.cg} B${s.cb}`;u="";break;case"mc":v=s.mc<10?"<10":s.mc.toExponential(1);u="CFU/mL";break;}
+  M[k]={v,u};let e=EQ.find(x=>x.k===k);alog("info",`${e.ic} ${e.n}: ${v} ${u}`);rAll();
+}
+
+function go(t){tab=t;document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active",b.dataset.t===t));rCt();}
+
+function copyL(){let t=L.map(l=>`[${l.t}] ${l.m}`).join("\n");navigator.clipboard?.writeText(t).then(()=>alert("실험 일지 복사 완료!"));}
+
+function resetLab(){R={};T=20;E=0;PS=[];L=[];M={};H=[];AV={ph:4,bx:0,vi:1,tp:20,mc:3};alog("info","🧪 초기화 완료");rAll();}
+
+rAll();
+(function anim(){rDash();requestAnimationFrame(anim);})();
+</script>
+</body>
+</html>

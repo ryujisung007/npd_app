@@ -1,0 +1,178 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>제품 라벨 미리보기 | KFI</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>:root{--b:#1975BC;--bl:#E8F1F8;--w:#fff;--dt:#1E1E1E;--tm:#444;--tl:#888;--grn:#2E8B57;--org:#E07030;--red:#D94040;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Pretendard Variable',-apple-system,sans-serif;background:#FAF8F5;color:var(--dt);line-height:1.5;}
+.hd{background:linear-gradient(135deg,var(--b),#135A91);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;}
+.wrap{max-width:950px;margin:0 auto;padding:20px;}
+.card{background:var(--w);border:1px solid #E8E4E0;border-radius:12px;padding:16px;margin-bottom:12px;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+label{display:block;font-size:10px;font-weight:600;color:var(--tl);margin-bottom:2px;}
+input,select,textarea{width:100%;padding:7px 10px;border:1.5px solid #E0E0E0;border-radius:8px;font-size:12px;font-family:inherit;}
+input:focus{outline:none;border-color:var(--b);}
+.add-btn{background:var(--bl);color:var(--b);padding:5px 12px;border-radius:6px;font-size:10px;font-weight:600;border:none;cursor:pointer;margin-top:6px;}
+.del-btn{background:#FFF5F5;color:var(--red);padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;border:none;cursor:pointer;}
+
+/* LABEL PREVIEW */
+.label-preview{background:var(--w);border:2px solid #333;border-radius:4px;padding:16px;font-family:'Pretendard Variable',sans-serif;max-width:320px;margin:0 auto;}
+.label-preview h2{font-size:18px;text-align:center;border-bottom:3px solid #333;padding-bottom:6px;margin-bottom:8px;}
+.label-preview .section{border-bottom:1px solid #ccc;padding:4px 0;}
+.label-preview .section:last-child{border-bottom:none;}
+.label-preview .row{display:flex;justify-content:space-between;font-size:11px;padding:2px 0;}
+.label-preview .row .val{font-weight:700;}
+.label-preview .big-row{font-size:13px;font-weight:800;padding:3px 0;border-bottom:8px solid #333;}
+.label-preview .sub-row{padding-left:16px;font-size:10px;}
+.label-preview .pct{color:var(--tl);font-size:10px;}
+.label-preview .foot{font-size:8px;color:var(--tl);line-height:1.4;margin-top:6px;border-top:1px solid #ccc;padding-top:4px;}
+.label-preview .ing-list{font-size:9px;color:var(--tm);line-height:1.5;margin-top:6px;padding-top:4px;border-top:1px solid #ccc;}
+@media(max-width:700px){.grid{grid-template-columns:1fr;}}
+</style></head><body>
+<div class="hd"><span style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:3px 10px;font-weight:800;font-size:11px;letter-spacing:1px">KFI</span><div><div style="font-size:14px;font-weight:700">🏷️ 제품 라벨 미리보기</div><div style="font-size:9px;opacity:.5">영양성분 계산 + 라벨 시각화</div></div></div>
+<div class="wrap">
+<div class="grid">
+  <!-- LEFT: Input -->
+  <div>
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:8px">📦 제품 정보</h3>
+      <label>제품명</label><input id="pName" value="스파클링 유자" oninput="render()"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+        <div><label>내용량 (mL)</label><input type="number" id="pVol" value="350" oninput="render()"/></div>
+        <div><label>1회 제공량 (mL)</label><input type="number" id="serving" value="350" oninput="render()"/></div>
+      </div>
+      <div style="margin-top:6px"><label>식품유형</label><input id="foodType" value="탄산음료" oninput="render()"/></div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:8px">🧪 원료별 영양성분 (100g당)</h3>
+      <div style="font-size:9px;color:var(--tl);margin-bottom:6px">원료 추가 후 각 영양성분을 입력하세요</div>
+      <div id="ingInputs"></div>
+      <button class="add-btn" onclick="addIng()">+ 원료 추가</button>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:8px">📝 표시사항</h3>
+      <label>제조원/소재지</label><input id="maker" value="(주)내추럴랩 / 경기도 성남시" oninput="render()"/>
+      <label style="margin-top:6px">유통기한</label><input id="expiry" value="제조일로부터 6개월" oninput="render()"/>
+      <label style="margin-top:6px">보관방법</label><input id="storageM" value="직사광선을 피해 서늘한 곳에 보관" oninput="render()"/>
+    </div>
+  </div>
+
+  <!-- RIGHT: Preview -->
+  <div>
+    <div class="card" style="position:sticky;top:60px;">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:12px">🏷️ 라벨 미리보기</h3>
+      <div id="labelPreview"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+let ings=[
+  {name:"정제수",g:300,kcal:0,carb:0,sugar:0,protein:0,fat:0,sodium:0},
+  {name:"알룰로스",g:25,kcal:20,carb:100,sugar:0,protein:0,fat:0,sodium:0},
+  {name:"유자즙",g:17.5,kcal:30,carb:7,sugar:5,protein:0.5,fat:0,sodium:2},
+  {name:"구연산",g:1.5,kcal:0,carb:0,sugar:0,protein:0,fat:0,sodium:0},
+  {name:"스테비올배당체",g:0.05,kcal:0,carb:0,sugar:0,protein:0,fat:0,sodium:0},
+];
+
+function renderInputs(){
+  let h="";
+  ings.forEach((ing,i)=>{
+    h+=`<div style="background:#FAFAFA;border:1px solid #eee;border-radius:8px;padding:8px;margin-bottom:6px;font-size:11px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <input value="${ing.name}" style="width:120px;padding:3px 6px;font-size:11px;font-weight:700" onchange="ings[${i}].name=this.value;render()"/>
+        <span style="font-size:10px;color:var(--tl)">사용량:</span>
+        <input type="number" value="${ing.g}" step="0.1" style="width:50px;padding:3px;font-size:11px;text-align:right" onchange="ings[${i}].g=+this.value;render()"/>g
+        <button class="del-btn" onclick="ings.splice(${i},1);renderInputs();render()">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:9px">
+        <div><span style="color:var(--tl)">열량</span><input type="number" value="${ing.kcal}" style="width:100%;padding:2px;font-size:10px" onchange="ings[${i}].kcal=+this.value;render()"/></div>
+        <div><span style="color:var(--tl)">탄수화물</span><input type="number" value="${ing.carb}" style="width:100%;padding:2px;font-size:10px" onchange="ings[${i}].carb=+this.value;render()"/></div>
+        <div><span style="color:var(--tl)">당류</span><input type="number" value="${ing.sugar}" style="width:100%;padding:2px;font-size:10px" onchange="ings[${i}].sugar=+this.value;render()"/></div>
+        <div><span style="color:var(--tl)">나트륨</span><input type="number" value="${ing.sodium}" style="width:100%;padding:2px;font-size:10px" onchange="ings[${i}].sodium=+this.value;render()"/></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById("ingInputs").innerHTML=h;
+}
+
+function addIng(){ings.push({name:"새 원료",g:0,kcal:0,carb:0,sugar:0,protein:0,fat:0,sodium:0});renderInputs();render();}
+
+function render(){
+  const vol=+document.getElementById("pVol").value||350;
+  const serving=+document.getElementById("serving").value||350;
+  const ratio=serving/vol;
+
+  // Calculate per product
+  let totKcal=0,totCarb=0,totSugar=0,totPro=0,totFat=0,totNa=0;
+  ings.forEach(ig=>{
+    const f=ig.g/100;
+    totKcal+=ig.kcal*f;totCarb+=ig.carb*f;totSugar+=ig.sugar*f;totPro+=ig.protein*f;totFat+=ig.fat*f;totNa+=ig.sodium*f;
+  });
+  // Per serving
+  const sKcal=totKcal*ratio,sCarb=totCarb*ratio,sSugar=totSugar*ratio,sPro=totPro*ratio,sFat=totFat*ratio,sNa=totNa*ratio;
+
+  // DV %
+  const dvKcal=(sKcal/2000*100).toFixed(0);
+  const dvCarb=(sCarb/324*100).toFixed(0);
+  const dvSugar=(sSugar/100*100).toFixed(0);
+  const dvPro=(sPro/55*100).toFixed(0);
+  const dvFat=(sFat/54*100).toFixed(0);
+  const dvNa=(sNa/2000*100).toFixed(0);
+
+  const pName=document.getElementById("pName").value;
+  const foodType=document.getElementById("foodType").value;
+  const maker=document.getElementById("maker").value;
+  const expiry=document.getElementById("expiry").value;
+  const storageM=document.getElementById("storageM").value;
+  const ingNames=ings.filter(i=>i.g>0).sort((a,b)=>b.g-a.g).map(i=>i.name).join(", ");
+
+  let h=`<div class="label-preview">`;
+  h+=`<div style="text-align:center;font-size:10px;color:var(--tl);margin-bottom:4px">${foodType}</div>`;
+  h+=`<h2>${pName}</h2>`;
+
+  // Nutrition facts
+  h+=`<div style="font-size:13px;font-weight:800;margin-bottom:2px">영양정보</div>`;
+  h+=`<div style="font-size:9px;color:var(--tl);border-bottom:1px solid #ccc;padding-bottom:3px;margin-bottom:4px">1회 제공량 ${serving}mL, 총 제공량 1</div>`;
+  h+=`<div class="big-row"><span>열량</span><span>${Math.round(sKcal)} kcal</span></div>`;
+
+  const rows=[
+    {l:"탄수화물",v:`${sCarb.toFixed(1)}g`,dv:dvCarb,bold:1},
+    {l:"당류",v:`${sSugar.toFixed(1)}g`,dv:dvSugar,sub:1},
+    {l:"단백질",v:`${sPro.toFixed(1)}g`,dv:dvPro,bold:1},
+    {l:"지방",v:`${sFat.toFixed(1)}g`,dv:dvFat,bold:1},
+    {l:"나트륨",v:`${Math.round(sNa)}mg`,dv:dvNa,bold:1},
+  ];
+  rows.forEach(r=>{
+    h+=`<div class="row ${r.sub?'sub-row':''}"><span style="font-weight:${r.bold?'700':'400'}">${r.l}</span><span><span class="val">${r.v}</span> <span class="pct">${r.dv}%</span></span></div>`;
+  });
+
+  h+=`<div class="foot">% 1일 영양성분 기준치에 대한 비율<br>1일 영양성분 기준치: 열량 2,000kcal, 탄수화물 324g, 단백질 55g, 지방 54g, 나트륨 2,000mg</div>`;
+
+  // Ingredient list
+  h+=`<div class="ing-list"><strong>원재료명:</strong> ${ingNames||"(원료를 추가하세요)"}</div>`;
+
+  // Other info
+  h+=`<div style="font-size:9px;color:var(--tm);margin-top:6px;line-height:1.5;border-top:1px solid #ccc;padding-top:4px">`;
+  h+=`<strong>내용량:</strong> ${vol}mL<br>`;
+  h+=`<strong>유통기한:</strong> ${expiry}<br>`;
+  h+=`<strong>보관방법:</strong> ${storageM}<br>`;
+  h+=`<strong>제조원:</strong> ${maker}`;
+  h+=`</div>`;
+
+  h+=`</div>`;
+
+  // Validation warnings
+  let warns=[];
+  if(sKcal<5 && sKcal>0) warns.push("열량 5kcal 미만 → '0' 표시 가능");
+  if(sSugar<0.5) warns.push("당류 0.5g 미만 → '무당류' 표시 가능");
+  if(sNa<5) warns.push("나트륨 5mg 미만 → '무나트륨' 표시 가능");
+  if(warns.length){
+    h+=`<div style="background:#F0FFF5;border:1px solid #C0E8D0;border-radius:8px;padding:10px;margin-top:12px;font-size:11px;color:var(--grn)"><strong>💡 표시 팁</strong><br>${warns.join("<br>")}</div>`;
+  }
+  h+=`<p style="font-size:9px;color:var(--tl);text-align:center;margin-top:10px">⚠️ 교육용 시뮬레이션. 실제 라벨은 식품등의표시기준에 따라 작성하세요.</p>`;
+
+  document.getElementById("labelPreview").innerHTML=h;
+}
+
+renderInputs();render();
+</script></body></html>

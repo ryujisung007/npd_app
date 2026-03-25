@@ -1,0 +1,124 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>유통기한 예측 시뮬레이터 | KFI</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>:root{--b:#1975BC;--bl:#E8F1F8;--w:#fff;--dt:#1E1E1E;--tm:#444;--tl:#888;--grn:#2E8B57;--org:#E07030;--red:#D94040;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Pretendard Variable',-apple-system,sans-serif;background:#FAF8F5;color:var(--dt);line-height:1.6;}
+.hd{background:linear-gradient(135deg,var(--b),#135A91);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;}
+.wrap{max-width:860px;margin:0 auto;padding:20px;}
+.card{background:var(--w);border:1px solid #E8E4E0;border-radius:12px;padding:18px;margin-bottom:14px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+label{display:block;font-size:11px;font-weight:600;color:var(--tl);margin-bottom:3px;}
+input[type=number],select{width:100%;padding:8px 10px;border:1.5px solid #E0E0E0;border-radius:8px;font-size:13px;font-family:inherit;}
+input:focus,select:focus{outline:none;border-color:var(--b);}
+.btn{width:100%;padding:12px;border-radius:10px;background:linear-gradient(135deg,var(--b),#2A8DD4);color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;margin-top:8px;}
+.result{animation:fadeUp .4s ease;}
+.r-card{background:#F8F8F8;border-radius:10px;padding:14px;margin-bottom:10px;}
+.r-title{font-size:13px;font-weight:700;color:var(--b);margin-bottom:8px;}
+table{width:100%;border-collapse:collapse;font-size:12px;}th,td{padding:6px 8px;border-bottom:1px solid #eee;text-align:center;}th{background:var(--bl);color:var(--b);font-weight:700;font-size:10px;}
+.warn{background:#FFFDE8;border:1px solid #E8D880;border-radius:8px;padding:12px;font-size:12px;color:var(--tm);line-height:1.6;margin-top:12px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.grid2{grid-template-columns:1fr;}}
+</style></head><body>
+<div class="hd"><span style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:3px 10px;font-weight:800;font-size:11px;letter-spacing:1px">KFI</span><div><div style="font-size:14px;font-weight:700">📅 유통기한 예측 시뮬레이터</div><div style="font-size:9px;opacity:.5">Q10 가속 실험 설계</div></div></div>
+<div class="wrap">
+<div class="card">
+  <h3 style="font-size:15px;font-weight:800;margin-bottom:12px">🔬 제품 조건 설정</h3>
+  <div class="grid2">
+    <div><label>제품 유형</label><select id="pType"><option>음료류 (탄산)</option><option>음료류 (비탄산)</option><option>과채주스</option><option>유산균 음료</option><option>HMR (냉장)</option><option>HMR (냉동)</option></select></div>
+    <div><label>보존 조건</label><select id="storage"><option value="cold">냉장 (0~10°C)</option><option value="room">상온 (15~25°C)</option><option value="frozen">냉동 (-18°C)</option></select></div>
+    <div><label>pH</label><input type="number" id="ph" value="3.5" step="0.1" min="2" max="7"/></div>
+    <div><label>Brix (°Bx)</label><input type="number" id="brix" value="10" step="0.5" min="0" max="30"/></div>
+    <div><label>수분활성도 (Aw)</label><input type="number" id="aw" value="0.95" step="0.01" min="0.5" max="1"/></div>
+    <div><label>살균 방법</label><select id="sMethod"><option>HTST (72°C/15s)</option><option>LTLT (63°C/30min)</option><option>UHT (135°C/2~5s)</option><option>비가열 (HPP)</option><option>무살균</option></select></div>
+    <div><label>목표 유통기한 (일)</label><input type="number" id="targetDays" value="90" min="1"/></div>
+    <div><label>Q10 값</label><select id="q10"><option value="2">2.0 (일반 음료)</option><option value="2.5">2.5 (유산균/유제품)</option><option value="3" selected>3.0 (과채주스)</option><option value="4">4.0 (미생물 민감)</option></select></div>
+  </div>
+  <button class="btn" onclick="simulate()">📅 가속 실험 설계 시작</button>
+</div>
+<div id="result"></div>
+</div>
+<script>
+function simulate(){
+  const pH=+document.getElementById("ph").value;
+  const brix=+document.getElementById("brix").value;
+  const aw=+document.getElementById("aw").value;
+  const target=+document.getElementById("targetDays").value;
+  const Q10=+document.getElementById("q10").value;
+  const storage=document.getElementById("storage").value;
+  const sMethod=document.getElementById("sMethod").value;
+
+  const baseTemp=storage==="cold"?5:storage==="room"?25:-18;
+
+  // Accelerated temps
+  const accTemps=storage==="frozen"?[-5,0,5]:[baseTemp+10,baseTemp+20,baseTemp+30];
+  const accFactors=accTemps.map(t=>Math.pow(Q10,(t-baseTemp)/10));
+  const accDays=accFactors.map(f=>Math.round(target/f));
+
+  // Measurement items based on product
+  const items=["관능검사 (맛, 향, 색)","미생물 (일반세균, 대장균군)","pH","Brix"];
+  if(pH>4.0) items.push("진균류 (효모, 곰팡이)");
+  if(sMethod.includes("유산균")||document.getElementById("pType").value.includes("유산균")) items.push("유산균 수 (CFU/mL)");
+  items.push("색도 (L*, a*, b*)");
+  if(aw>0.9) items.push("수분활성도 (Aw)");
+
+  // Measurement intervals
+  const intervals=accDays.map(d=>{
+    if(d<=7) return "매일";
+    if(d<=14) return "2일마다";
+    if(d<=30) return "3일마다";
+    return "7일마다";
+  });
+
+  // Safety factor
+  const safetyFactor=storage==="cold"?0.8:storage==="room"?0.7:0.85;
+  const actualShelfLife=Math.round(target*safetyFactor);
+
+  // Judgment criteria
+  const criteria=[
+    {item:"일반세균",standard:pH<=4.6?"1×10⁴ CFU/mL 이하":"1×10³ CFU/mL 이하"},
+    {item:"대장균군",standard:"음성"},
+    {item:"pH 변화",standard:"초기값 ±0.3 이내"},
+    {item:"Brix 변화",standard:"초기값 ±0.5 이내"},
+    {item:"관능검사",standard:"5점 척도 3.0 이상"},
+  ];
+
+  let h=`<div class="result">`;
+  // Summary
+  h+=`<div class="card"><h3 style="font-size:15px;font-weight:800;margin-bottom:12px">📊 가속 실험 설계 결과</h3>`;
+  h+=`<div class="grid2"><div class="r-card"><div class="r-title">📅 목표 유통기한</div><div style="font-size:24px;font-weight:800;color:var(--b)">${target}일</div><div style="font-size:11px;color:var(--tl)">안전계수 ${(safetyFactor*100).toFixed(0)}% 적용 → 소비기한 ${actualShelfLife}일 권장</div></div>`;
+  h+=`<div class="r-card"><div class="r-title">🌡️ 보관 온도</div><div style="font-size:24px;font-weight:800;color:var(--org)">${baseTemp}°C</div><div style="font-size:11px;color:var(--tl)">${storage==="cold"?"냉장":storage==="room"?"상온":"냉동"} 유통</div></div></div>`;
+
+  // Accelerated conditions table
+  h+=`<div class="r-card"><div class="r-title">⚡ 가속 시험 조건 (Q10 = ${Q10})</div>`;
+  h+=`<table><thead><tr><th>조건</th><th>온도</th><th>가속 계수</th><th>시험 기간</th><th>측정 주기</th></tr></thead><tbody>`;
+  h+=`<tr style="background:#F0FFF5"><td>대조구 (실제)</td><td>${baseTemp}°C</td><td>1.0×</td><td>${target}일</td><td>7일마다</td></tr>`;
+  accTemps.forEach((t,i)=>{
+    h+=`<tr><td>가속 ${i+1}</td><td style="font-weight:700;color:var(--red)">${t}°C</td><td>${accFactors[i].toFixed(1)}×</td><td style="font-weight:700;color:var(--b)">${accDays[i]}일</td><td>${intervals[i]}</td></tr>`;
+  });
+  h+=`</tbody></table></div>`;
+
+  // Measurement items
+  h+=`<div class="r-card"><div class="r-title">🔬 측정 항목</div><div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+  items.forEach(it=>{h+=`<span style="background:var(--bl);color:var(--b);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600">${it}</span>`;});
+  h+=`</div></div>`;
+
+  // Judgment criteria
+  h+=`<div class="r-card"><div class="r-title">✅ 판정 기준</div>`;
+  h+=`<table><thead><tr><th>항목</th><th>판정 기준</th></tr></thead><tbody>`;
+  criteria.forEach(c=>{h+=`<tr><td style="font-weight:600">${c.item}</td><td>${c.standard}</td></tr>`;});
+  h+=`</tbody></table></div>`;
+
+  // Calculation explanation
+  h+=`<div class="r-card"><div class="r-title">📐 Q10 가속 계수 계산</div>`;
+  h+=`<div style="background:#F8F7F5;border:1px dashed #D8D4D0;border-radius:8px;padding:12px;font-size:12px;color:var(--tm);line-height:1.7;font-family:monospace">`;
+  h+=`가속 계수 = Q10^((T가속 - T보관) / 10)<br><br>`;
+  accTemps.forEach((t,i)=>{
+    h+=`${t}°C: ${Q10}^((${t}-${baseTemp})/10) = ${accFactors[i].toFixed(2)}배 → ${target}일 ÷ ${accFactors[i].toFixed(2)} = <strong>${accDays[i]}일</strong><br>`;
+  });
+  h+=`<br>소비기한 = 품질 변화 시점 × 안전계수(${safetyFactor}) = ${target} × ${safetyFactor} = <strong>${actualShelfLife}일</strong>`;
+  h+=`</div></div>`;
+
+  h+=`<div class="warn">⚠️ <strong>주의:</strong> Q10 가속 시험은 예측 도구이며, 실제 유통기한 설정은 식약처 「식품의 유통기한 설정 가이드라인」에 따라 실험적으로 검증해야 합니다. 가속 시험 결과와 실제 유통 환경의 차이를 반드시 고려하세요.</div>`;
+  h+=`</div></div>`;
+
+  document.getElementById("result").innerHTML=h;
+}
+</script></body></html>

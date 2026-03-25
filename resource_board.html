@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 식품개발 실무 | 리소스 보드</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>
+  :root{--b:#1975BC;--bd:#135A91;--bl:#E8F1F8;--w:#fff;--bg:#FAF8F5;--dt:#1E1E1E;--tm:#444;--tl:#888;--grn:#2E8B57;--org:#E07030;--red:#D94040;--pur:#7C3AED;--cyan:#0EA5E9;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Pretendard Variable',-apple-system,sans-serif;background:var(--bg);color:var(--dt);line-height:1.6;}
+  .header{background:linear-gradient(135deg,var(--b),var(--bd));color:var(--w);position:sticky;top:0;z-index:100;box-shadow:0 4px 24px rgba(25,117,188,0.25);}
+  .header-inner{max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+  .logo{display:flex;align-items:center;gap:10px;}
+  .badge{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:6px;padding:3px 12px;font-weight:800;font-size:12px;letter-spacing:1px;}
+  .hero{background:linear-gradient(160deg,var(--b) 0%,#2A8DD4 50%,var(--bd) 100%);color:var(--w);padding:36px 24px 30px;text-align:center;}
+  .hero h1{font-size:28px;font-weight:800;margin-bottom:6px;}
+  .hero p{font-size:14px;opacity:0.85;}
+  .board{max-width:1200px;margin:24px auto;padding:0 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;align-items:start;}
+  .column{min-width:0;}
+  .col-header{padding:12px 16px;border-radius:10px 10px 0 0;font-size:14px;font-weight:700;color:var(--w);display:flex;align-items:center;gap:8px;}
+  .col-body{padding:8px;}
+  .card{background:var(--w);border:1px solid #E8E4E0;border-radius:10px;padding:16px;margin-bottom:10px;transition:transform 0.2s,box-shadow 0.2s;cursor:default;}
+  .card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.06);}
+  .card-type{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;letter-spacing:0.3px;margin-bottom:8px;}
+  .type-ppt{background:#FFF3E8;color:var(--org);}
+  .type-html{background:var(--bl);color:var(--b);}
+  .type-app{background:#F0FFF5;color:var(--grn);}
+  .type-excel{background:#F0E8FF;color:var(--pur);}
+  .type-link{background:#F5F5F5;color:var(--tl);}
+  .type-video{background:#FFF5F5;color:var(--red);}
+  .card h3{font-size:14px;font-weight:700;margin-bottom:6px;color:var(--dt);}
+  .card p{font-size:12px;color:var(--tm);line-height:1.5;margin-bottom:8px;}
+  .card-tags{display:flex;gap:4px;flex-wrap:wrap;}
+  .tag{font-size:9px;padding:2px 7px;border-radius:8px;background:#F5F5F5;color:var(--tl);font-weight:600;}
+  .card-link{display:inline-block;margin-top:8px;font-size:11px;font-weight:600;color:var(--b);text-decoration:none;}
+  .card-link:hover{text-decoration:underline;}
+  .footer{max-width:1200px;margin:32px auto;padding:16px 24px;text-align:center;font-size:12px;color:var(--tl);border-top:1px solid #E8E4E0;}
+  .footer strong{color:var(--b);}
+  @media(max-width:600px){.board{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="logo"><span class="badge">KFI</span><span style="font-size:13px;opacity:0.9">한국식품정보원</span></div>
+    <span style="font-size:12px;opacity:0.7">AI 활용 식품개발 실무 · 리소스 보드</span>
+  </div>
+</header>
+
+<section class="hero">
+  <h1>📌 수업 리소스 보드</h1>
+  <p>6주 과정에 필요한 모든 자료를 한 곳에서 확인하세요</p>
+</section>
+
+<div class="board">
+
+<!-- Column 1: 강의 자료 -->
+<div class="column">
+  <div class="col-header" style="background:var(--b);">📚 강의 자료</div>
+  <div class="col-body">
+    <div class="card">
+      <span class="card-type type-ppt">PPT</span>
+      <h3>📊 6주 강의 슬라이드 풀세트</h3>
+      <p>M1~M6 전체 26장, 정보원양식</p>
+      <div class="card-tags"><span class="tag">전 차시</span><span class="tag">26슬라이드</span></div>
+    </div>
+    <div class="card">
+      <span class="card-type type-html">HTML</span>
+      <h3>📖 할루시네이션 교안</h3>
+      <p>AI 정보 왜곡의 원리, 사례, 방지 체크리스트</p>
+      <div class="card-tags"><span class="tag">M1</span><span class="tag">2차시</span></div>
+    </div>
+    <div class="card">
+      <span class="card-type type-html">HTML</span>
+      <h3>📋 프롬프트 치트시트</h3>
+      <p>6개 카테고리 18개 템플릿, 복사 버튼 포함</p>
+      <div class="card-tags"><span class="tag">M2</span><span class="tag">3차시</span><span class="tag">인쇄 가능</span></div>
+    </div>
+    <div class="card">
+      <span class="card-type type-html">HTML</span>
+      <h3>📅 6주 커리큘럼</h3>
+      <p>12차시 전체 구성, 학습목표, 산출물 안내</p>
+      <div class="card-tags"><span class="tag">전체 과정</span><span class="tag">아코디언</span></div>
+    </div>
+    <div class="card">
+      <span class="card-type type-ppt">PPT</span>
+      <h3>🎭 페르소나 프롬프트 슬라이드</h3>
+      <p>식품마케터 10년차 페르소나 스크립트 예시</p>
+      <div class="card-tags"><span class="tag">M2</span><span class="tag">4차시</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Column 2: 실습 도구 -->
+<div class="column">
+  <div class="col-header" style="background:var(--grn);">🧪 실습 도구</div>
+  <div class="col-body">
+    <div class="card">
+      <span class="card-type type-app">웹앱</span>
+      <h3>🎯 프롬프트 평가기</h3>
+      <p>5개 기준 100점 만점 실시간 채점, 예시 불러오기</p>
+      <div class="card-tags"><span class="tag">M1~M2</span><span class="tag">인터랙티브</span></div>
+    </div>
+    <div class="card">
+      <span class="card-type type-app">웹앱</span>
+      <h3>⚗️ 배합 시뮬레이터</h3>
+      <p>Brix/pH 설정 → 원료 선택 → 배합 자동 생성</p>
+      <div class="card-tags"><span class="tag">M5</span><span class="tag">9차시</span></div>
+    </div>
+    <div class="card">
+      <span class="card-type type-app">웹앱</span>
+      <h3>🤖 AI vs 사람 블라인드 테스트</h3>
+      <p>식품 Q&A 6문제, AI/전문가 답변 구분 게임</p>
+      <div class="card-tags"><span class="tag">M1</span><span class="tag">아이스브레이킹</span></div>
+    </div>
+    <div class="card">
+      <span class="card-type type-app">웹앱</span>
+      <h3>📱 할루시네이션 교안 앱</h3>
+      <p>5섹션 교안 + 프롬프트 시뮬레이터 + 퀴즈</p>
+      <div class="card-tags"><span class="tag">M1</span><span class="tag">2차시</span><span class="tag">퀴즈 포함</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Column 3: 실습 양식 -->
+<div class="column">
+  <div class="col-header" style="background:var(--pur);">📝 실습 양식</div>
+  <div class="col-body">
+    <div class="card">
+      <span class="card-type type-excel">EXCEL</span>
+      <h3>📓 실습 워크북</h3>
+      <p>프롬프트 작성 → 검증 → 개선 3단계 기록 양식</p>
+      <div class="card-tags"><span class="tag">3개 시트</span><span class="tag">6개 실습과제</span></div>
+    </div>
+    <div class="card">
+      <span class="card-type type-excel">EXCEL</span>
+      <h3>📊 평가 루브릭 + 동료평가</h3>
+      <p>최종 프로젝트 채점표 (30/25/20/15/10점) + 동료평가 시트</p>
+      <div class="card-tags"><span class="tag">M6</span><span class="tag">수식 내장</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Column 4: 외부 참고 자료 -->
+<div class="column">
+  <div class="col-header" style="background:var(--org);">🔗 참고 사이트</div>
+  <div class="col-body">
+    <div class="card">
+      <span class="card-type type-link">사이트</span>
+      <h3>🏛️ 식품안전나라</h3>
+      <p>식품공전, 인허가 데이터, API 제공</p>
+      <a class="card-link" href="https://www.foodsafetykorea.go.kr" target="_blank">foodsafetykorea.go.kr →</a>
+    </div>
+    <div class="card">
+      <span class="card-type type-link">사이트</span>
+      <h3>📖 식품공전</h3>
+      <p>식품별 기준 및 규격 원문</p>
+      <a class="card-link" href="https://various.foodsafetykorea.go.kr/fsd" target="_blank">foodsafetykorea.go.kr/fsd →</a>
+    </div>
+    <div class="card">
+      <span class="card-type type-link">사이트</span>
+      <h3>💊 식품첨가물공전</h3>
+      <p>첨가물 사용 기준, 별표3</p>
+      <a class="card-link" href="https://various.foodsafetykorea.go.kr/fsd" target="_blank">식품첨가물공전 →</a>
+    </div>
+    <div class="card">
+      <span class="card-type type-link">사이트</span>
+      <h3>🤖 OpenAI 플레이그라운드</h3>
+      <p>프롬프트 실습용 GPT 인터페이스</p>
+      <a class="card-link" href="https://platform.openai.com/playground" target="_blank">platform.openai.com →</a>
+    </div>
+    <div class="card">
+      <span class="card-type type-link">사이트</span>
+      <h3>🌐 Google AI Studio</h3>
+      <p>Gemini API 실습, 프롬프트 테스트</p>
+      <a class="card-link" href="https://aistudio.google.com" target="_blank">aistudio.google.com →</a>
+    </div>
+    <div class="card">
+      <span class="card-type type-link">사이트</span>
+      <h3>📊 네이버 개발자센터</h3>
+      <p>검색 API (쇼핑, 뉴스) 발급</p>
+      <a class="card-link" href="https://developers.naver.com" target="_blank">developers.naver.com →</a>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- API Keys Prep -->
+<div style="max-width:1200px;margin:0 auto 32px;padding:0 24px;">
+  <div style="background:var(--w);border:1px solid #E8E4E0;border-radius:12px;padding:22px;">
+    <h3 style="font-size:16px;font-weight:700;color:var(--b);margin-bottom:12px;">🔑 수업 전 준비사항 (API 키 발급)</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+      <div style="padding:12px;background:var(--bl);border-radius:8px;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:4px;">OpenAI API</div>
+        <div style="font-size:11px;color:var(--tm);">platform.openai.com → API keys</div>
+      </div>
+      <div style="padding:12px;background:#F0FFF5;border-radius:8px;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:4px;">Google Gemini API</div>
+        <div style="font-size:11px;color:var(--tm);">aistudio.google.com → API key</div>
+      </div>
+      <div style="padding:12px;background:#FFF3E8;border-radius:8px;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:4px;">네이버 검색 API</div>
+        <div style="font-size:11px;color:var(--tm);">developers.naver.com → 앱 등록</div>
+      </div>
+      <div style="padding:12px;background:#F0E8FF;border-radius:8px;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:4px;">식품안전나라 API</div>
+        <div style="font-size:11px;color:var(--tm);">foodsafetykorea.go.kr → 인증키</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <strong>한국식품정보원 (KFI)</strong> · AI 활용 식품개발 실무 · 리소스 보드 v1.0
+</footer>
+
+</body>
+</html>

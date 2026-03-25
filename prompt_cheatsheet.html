@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>식품 R&D AI 프롬프트 치트시트 | KFI</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>
+  :root {
+    --b:#1975BC;--bd:#135A91;--bl:#E8F1F8;--w:#fff;--bg:#FAF8F5;
+    --dt:#1E1E1E;--tm:#444;--tl:#888;--grn:#2E8B57;--org:#E07030;--red:#D94040;--dk:#2D3B2D;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Pretendard Variable',-apple-system,sans-serif;background:var(--bg);color:var(--dt);line-height:1.7;-webkit-font-smoothing:antialiased;}
+  .header{background:linear-gradient(135deg,var(--b),var(--bd));color:var(--w);position:sticky;top:0;z-index:100;box-shadow:0 4px 24px rgba(25,117,188,0.25);}
+  .header-inner{max-width:960px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;}
+  .logo{display:flex;align-items:center;gap:10px;}
+  .logo-badge{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:6px;padding:3px 12px;font-weight:800;font-size:12px;letter-spacing:1px;}
+  .hero{background:linear-gradient(160deg,var(--b) 0%,#2A8DD4 50%,var(--bd) 100%);color:var(--w);padding:48px 28px 40px;position:relative;overflow:hidden;}
+  .hero::before{content:'';position:absolute;top:-50%;right:-15%;width:400px;height:400px;border-radius:50%;background:rgba(255,255,255,0.04);}
+  .hero-inner{max-width:960px;margin:0 auto;position:relative;z-index:1;}
+  .hero h1{font-size:30px;font-weight:800;margin-bottom:10px;}
+  .hero p{font-size:15px;opacity:0.88;max-width:600px;line-height:1.65;}
+  .content{max-width:960px;margin:0 auto;padding:36px 28px 60px;}
+  .category{margin-bottom:40px;}
+  .cat-header{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+  .cat-bar{width:5px;height:28px;border-radius:3px;flex-shrink:0;}
+  .cat-title{font-size:20px;font-weight:800;}
+  .cat-desc{font-size:13.5px;color:var(--tm);margin-bottom:16px;padding-left:17px;}
+  .prompt-card{background:var(--w);border:1px solid #E8E4E0;border-radius:12px;padding:20px 22px;margin-bottom:14px;position:relative;transition:transform 0.2s,box-shadow 0.2s;}
+  .prompt-card:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,0.06);}
+  .pc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .pc-label{font-size:14px;font-weight:700;color:var(--dt);}
+  .pc-tag{display:inline-block;padding:2px 10px;border-radius:12px;font-size:10px;font-weight:700;letter-spacing:0.3px;}
+  .tag-basic{background:#E8F1F8;color:var(--b);}
+  .tag-adv{background:#FFF3E8;color:var(--org);}
+  .tag-pro{background:#F0E8FF;color:#7C3AED;}
+  .pc-prompt{background:#F8F7F5;border:1px dashed #D8D4D0;border-radius:8px;padding:14px 16px;font-size:13.5px;color:var(--dt);line-height:1.65;margin-bottom:10px;font-family:'Pretendard Variable',monospace;}
+  .pc-prompt .hl{background:rgba(25,117,188,0.1);color:var(--b);font-weight:700;padding:1px 4px;border-radius:3px;}
+  .pc-tip{font-size:12.5px;color:var(--tl);padding-left:4px;}
+  .pc-tip strong{color:var(--grn);font-weight:700;}
+  .copy-btn{position:absolute;top:18px;right:18px;background:var(--bl);border:1px solid #C0D8EC;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--b);cursor:pointer;transition:all 0.2s;}
+  .copy-btn:hover{background:var(--b);color:var(--w);}
+  .golden-rules{background:linear-gradient(135deg,#FFFDE8,#FFF8E0);border:1px solid #E8D880;border-radius:14px;padding:24px 26px;margin-bottom:40px;}
+  .golden-rules h3{font-size:18px;font-weight:800;color:var(--org);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .rule{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;}
+  .rule-num{width:28px;height:28px;border-radius:50%;background:var(--org);color:var(--w);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+  .rule-text{font-size:14px;color:var(--dt);line-height:1.6;}
+  .rule-text strong{color:var(--org);}
+  .footer{background:var(--bd);color:rgba(255,255,255,0.6);padding:18px 28px;text-align:center;font-size:12px;}
+  .footer strong{color:rgba(255,255,255,0.85);}
+  @media print{.header,.copy-btn{display:none;}.hero{padding:24px 20px;}.content{padding:16px 20px;}.prompt-card{break-inside:avoid;}}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="logo"><span class="logo-badge">KFI</span><span style="font-size:13px;font-weight:500;opacity:0.9">한국식품정보원</span></div>
+    <div style="font-size:13px;font-weight:600;opacity:0.8">AI 프롬프트 치트시트 v1.0</div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div style="display:inline-block;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;margin-bottom:14px;">📋 즉시 활용 가능한 템플릿</div>
+    <h1>식품 R&D AI 프롬프트 치트시트</h1>
+    <p>식품 개발 실무에서 바로 복사해서 쓸 수 있는 AI 프롬프트 템플릿 모음입니다.<br>상황별로 검증된 프롬프트를 활용하세요.</p>
+    <div style="margin-top:18px;display:flex;gap:16px;font-size:12px;opacity:0.7;">
+      <span>📌 6개 카테고리</span><span>📝 18개 템플릿</span><span>🎯 난이도별 분류</span>
+    </div>
+  </div>
+</section>
+
+<main class="content">
+
+<!-- Golden Rules -->
+<div class="golden-rules">
+  <h3>🏆 프롬프트 황금 규칙 5가지</h3>
+  <div class="rule"><div class="rule-num">1</div><div class="rule-text"><strong>출처를 요구하라</strong> — "식품공전/첨가물공전 원문 근거로 답변해줘"</div></div>
+  <div class="rule"><div class="rule-num">2</div><div class="rule-text"><strong>불확실성을 표기하라</strong> — "확인 불가능한 정보는 '미확인'으로 표시해줘"</div></div>
+  <div class="rule"><div class="rule-num">3</div><div class="rule-text"><strong>역할을 부여하라</strong> — "너는 식품안전 전문가/10년차 R&D 연구원이야"</div></div>
+  <div class="rule"><div class="rule-num">4</div><div class="rule-text"><strong>출력 형식을 지정하라</strong> — "표 형식으로 / JSON으로 / 3단계로 정리해줘"</div></div>
+  <div class="rule"><div class="rule-num">5</div><div class="rule-text"><strong>범위를 한정하라</strong> — "국내 식품공전 기준으로 / 2024년 이후 데이터로"</div></div>
+</div>
+
+<!-- Category 1: 원료 검증 -->
+<div class="category">
+  <div class="cat-header"><div class="cat-bar" style="background:var(--b)"></div><h2 class="cat-title">🔬 원료 검증 및 규격 확인</h2></div>
+  <p class="cat-desc">원료의 사용 가능 여부, 규격, 기준을 확인할 때 사용합니다.</p>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">원료 사용 가능 여부 확인</span><span class="pc-tag tag-basic">기초</span></div>
+    <div class="pc-prompt">"<span class="hl">[원료명]</span>이 한국 식품공전에서 <span class="hl">[식품유형]</span>에 사용 가능한지 확인해줘.<br><span class="hl">반드시 식품첨가물공전 원문을 근거로</span> 답변하고, 확인 불가능한 정보는 '미확인'으로 표기해줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> [원료명]과 [식품유형]을 구체적으로 — 예: 스테비올배당체, 탄산음료</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">원료 사용 기준 비교표</span><span class="pc-tag tag-adv">중급</span></div>
+    <div class="pc-prompt">"다음 감미료의 식품공전 사용 기준을 <span class="hl">표 형식으로</span> 비교 정리해줘: <span class="hl">[원료1, 원료2, 원료3]</span>.<br>비교 항목: 허용 식품유형, 사용 한도(g/kg), 병용 제한 사항.<br><span class="hl">식품첨가물공전 별표3</span>을 근거로 하되, 원문 미확인 시 '확인 필요'로 표기해줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> 표 형식을 요청하면 비교 분석에 매우 효과적</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">수입 원료 인허가 확인</span><span class="pc-tag tag-pro">심화</span></div>
+    <div class="pc-prompt">"너는 <span class="hl">식품안전 규제 전문가</span>야. <span class="hl">[수입 원료명]</span>의 한국 수입 시 다음을 확인해줘:<br>1) 식품공전 등재 여부 2) 잔류 기준 3) 필요 서류 (건강기능식품법/수입식품안전관리특별법 기준)<br><span class="hl">불확실한 항목은 '확인 필요 — [담당기관]에 문의 권장'</span>으로 표기해줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> 규제 관련은 반드시 담당기관 문의 경로까지 요청</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+</div>
+
+<!-- Category 2: 배합 설계 -->
+<div class="category">
+  <div class="cat-header"><div class="cat-bar" style="background:var(--grn)"></div><h2 class="cat-title">⚗️ 배합 설계 및 처방 개발</h2></div>
+  <p class="cat-desc">음료, HMR 등 제품 배합 설계 시 AI를 활용하는 프롬프트입니다.</p>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">음료 배합 초안 설계</span><span class="pc-tag tag-basic">기초</span></div>
+    <div class="pc-prompt">"<span class="hl">[제품 유형]</span> 배합 초안을 설계해줘.<br>조건: Brix <span class="hl">[범위]</span>, pH <span class="hl">[범위]</span>, 주요 원료 <span class="hl">[원료 리스트]</span><br>결과는 <span class="hl">원료명 / 배합비(%) / 역할</span> 표 형식으로 정리해줘.<br>식품공전상 사용 제한이 있는 원료는 별도 표시해줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> Brix, pH 등 물리화학적 조건을 명시하면 실현 가능한 배합을 얻을 수 있음</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">기존 제품 개선 배합</span><span class="pc-tag tag-adv">중급</span></div>
+    <div class="pc-prompt">"아래 기존 배합을 분석하고 개선안을 제안해줘:<br>[기존 배합 데이터 붙여넣기]<br><br>개선 목표: <span class="hl">[당류 30% 저감 / 원가 절감 / 유통기한 연장]</span><br>제약 조건: <span class="hl">[알레르기 원료 제외 / 비건 대응]</span><br><span class="hl">변경 원료의 식품공전 적합성</span>을 반드시 확인하고 답변해줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> 기존 배합 데이터를 직접 붙여넣으면 맥락을 정확히 이해함</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">물성 예측 기반 배합 최적화</span><span class="pc-tag tag-pro">심화</span></div>
+    <div class="pc-prompt">"너는 <span class="hl">음료 R&D 15년차 배합 전문가</span>야.<br>아래 배합에서 <span class="hl">[목표 물성: 점도 200cP, pH 3.5±0.2]</span>을 달성하기 위한 최적화안을 제시해줘.<br>[배합 데이터]<br><br>각 원료의 <span class="hl">pH 완충능(β), pKa 값</span>을 고려하고,<br>수분 밸런스(Water Balance)가 100%가 되도록 검증해줘.<br>계산 과정을 단계별로 보여줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> 계산 과정 요청 시 AI의 논리 오류를 직접 검증 가능</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+</div>
+
+<!-- Category 3: 시장 분석 -->
+<div class="category">
+  <div class="cat-header"><div class="cat-bar" style="background:var(--org)"></div><h2 class="cat-title">📊 시장 분석 및 트렌드</h2></div>
+  <p class="cat-desc">시장 동향, 소비자 인사이트, 경쟁 제품 분석에 활용합니다.</p>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">카테고리 트렌드 분석</span><span class="pc-tag tag-basic">기초</span></div>
+    <div class="pc-prompt">"<span class="hl">[음료/HMR/과자]</span> 카테고리의 최근 트렌드를 분석해줘.<br>포함 항목: 1) 소비 키워드 Top 5 2) 성장 카테고리 3) 주요 타겟층 변화<br><span class="hl">출처와 데이터 시점</span>을 반드시 명시하고, 불확실한 수치는 '추정'으로 표기해줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> AI의 시장 데이터는 학습 시점 한계가 있으므로 반드시 출처 확인</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">경쟁 제품 비교 분석</span><span class="pc-tag tag-adv">중급</span></div>
+    <div class="pc-prompt">"다음 제품들을 비교 분석해줘: <span class="hl">[제품A, 제품B, 제품C]</span><br>비교 항목: 포지셔닝, 주요 원료, 가격대, 타겟, 차별화 포인트<br><span class="hl">표 형식</span>으로 정리하고, 각 항목의 <span class="hl">정보 출처</span>를 함께 기재해줘.<br>온라인에서 확인 불가한 정보는 '현장 확인 필요'로 표기해줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> 경쟁사 정보는 특히 할루시네이션이 잦으므로 출처 요구 필수</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">소비자 페르소나 기반 NPD 기회 도출</span><span class="pc-tag tag-pro">심화</span></div>
+    <div class="pc-prompt">"너는 <span class="hl">식품마케팅 10년차 브랜드 매니저</span>야.<br>아래 소비자 데이터를 기반으로 <span class="hl">[카테고리]</span> 신제품 기회를 도출해줘:<br>[소비자 조사 데이터 / 트렌드 키워드]<br><br>결과 형식: 1) 페르소나 프로필 2) 미충족 니즈 3) 컨셉 제안 3개 4) 각 컨셉의 시장 리스크<br><span class="hl">데이터에 근거하지 않은 추측은 '가설'로 명확히 구분</span>해줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> 소비자 데이터를 직접 제공하면 근거 있는 인사이트를 얻을 수 있음</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+</div>
+
+<!-- Category 4: 표시/광고/규제 -->
+<div class="category">
+  <div class="cat-header"><div class="cat-bar" style="background:var(--red)"></div><h2 class="cat-title">📜 표시·광고·규제 검증</h2></div>
+  <p class="cat-desc">식품표시, 광고 문구, 법규 적합성을 확인할 때 사용합니다.</p>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">식품 표시사항 적합성 검토</span><span class="pc-tag tag-basic">기초</span></div>
+    <div class="pc-prompt">"<span class="hl">[제품 유형]</span>의 식품등의 표시기준에 따른 필수 표시사항을 정리해줘.<br><span class="hl">식품등의 표시·광고에 관한 법률</span>과 시행규칙을 근거로 답변하고,<br>각 항목의 <span class="hl">법적 근거 조항</span>을 함께 기재해줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> 법률명과 조항 번호를 요청하면 교차 검증이 훨씬 쉬워짐</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">광고 문구 법적 적합성</span><span class="pc-tag tag-adv">중급</span></div>
+    <div class="pc-prompt">"다음 광고 문구가 식품표시광고법 위반 소지가 있는지 검토해줘:<br>\"<span class="hl">[검토할 광고 문구]</span>\"<br><br>검토 기준: 1) 질병 예방/치료 암시 여부 2) 기능성 표시 적법성 3) 비교 광고 적법성<br><span class="hl">위반 가능성이 있는 표현과 수정 대안</span>을 함께 제시해줘.<br>판단이 어려운 부분은 '식약처 사전 심의 권장'으로 표기해줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> 광고 심의는 AI 판단만으로 부족 — 반드시 전문가 확인 필요</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">영양성분 표시 계산</span><span class="pc-tag tag-adv">중급</span></div>
+    <div class="pc-prompt">"아래 배합 데이터를 기반으로 <span class="hl">영양성분 표시값</span>을 계산해줘:<br>[배합 데이터 + 각 원료의 영양성분 정보]<br><br><span class="hl">1회 제공량 [X]ml 기준</span>으로 열량, 탄수화물, 당류, 단백질, 지방, 나트륨을 계산하고,<br>식품등의 표시기준에 따른 <span class="hl">표시값 허용오차 범위</span>도 함께 안내해줘.<br>계산 과정을 단계별로 보여줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> 계산 과정을 요청해야 오류를 직접 검증 가능</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+</div>
+
+<!-- Category 5: HACCP/품질 -->
+<div class="category">
+  <div class="cat-header"><div class="cat-bar" style="background:#7C3AED"></div><h2 class="cat-title">🏭 HACCP 및 품질 관리</h2></div>
+  <p class="cat-desc">HACCP 문서, 공정 설계, 위해 요소 분석에 활용합니다.</p>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">위해 요소 분석 (HA)</span><span class="pc-tag tag-adv">중급</span></div>
+    <div class="pc-prompt">"<span class="hl">[제품 유형]</span>의 제조 공정에서 발생 가능한 위해 요소를 분석해줘.<br>공정 단계: <span class="hl">[원료 입고 → 계량 → 혼합 → 살균 → 충전 → 포장]</span><br><br>각 단계별 <span class="hl">생물학적/화학적/물리적 위해 요소</span>를 표로 정리하고,<br>CCP(중요관리점) 판단 근거도 함께 제시해줘.<br>CODEX 가이드라인 기준으로 답변해줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> 공정 단계를 구체적으로 나열할수록 정확한 분석 가능</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">유통기한 설정 실험 설계</span><span class="pc-tag tag-pro">심화</span></div>
+    <div class="pc-prompt">"<span class="hl">[제품 유형, 보존 조건]</span>의 유통기한 설정을 위한 가속 실험 설계안을 제시해줘.<br>포함 항목: 1) 보관 온도 조건 2) 측정 항목 및 주기 3) 판정 기준<br>4) 가속 계수(Q10) 적용 시 <span class="hl">계산 과정</span><br><br><span class="hl">식약처 유통기한 설정 가이드라인</span>을 근거로 하되,<br>가이드라인에 명시되지 않은 부분은 '자체 판단 필요'로 표기해줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> 유통기한 설정은 법적 책임이 따르므로 AI 결과를 시작점으로만 활용</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+</div>
+
+<!-- Category 6: 보고서/발표 -->
+<div class="category">
+  <div class="cat-header"><div class="cat-bar" style="background:#0EA5E9"></div><h2 class="cat-title">📝 보고서 및 발표 자료</h2></div>
+  <p class="cat-desc">R&D 보고서, 경영진 보고, 발표 자료 작성에 활용합니다.</p>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">NPD 보고서 초안 작성</span><span class="pc-tag tag-basic">기초</span></div>
+    <div class="pc-prompt">"아래 정보를 바탕으로 <span class="hl">신제품 개발 보고서 초안</span>을 작성해줘:<br>제품 컨셉: [컨셉] / 타겟: [타겟] / 주요 원료: [원료]<br><br>보고서 구성: 1) 개발 배경 2) 시장 현황 3) 제품 컨셉 4) 원료 구성 5) 예상 원가 6) 출시 일정<br><span class="hl">각 섹션당 300자 이내</span>로 작성하고, 데이터 미확인 부분은 [TBD]로 표시해줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> 분량 제한과 불확실 표기 규칙을 미리 설정하면 실무에 바로 활용 가능</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-top"><span class="pc-label">경영진 보고용 1-pager</span><span class="pc-tag tag-adv">중급</span></div>
+    <div class="pc-prompt">"아래 NPD 프로젝트 내용을 <span class="hl">경영진 보고용 1-pager</span>로 요약해줘:<br>[프로젝트 상세 내용]<br><br>구성: 핵심 메시지(1문장) → 시장 기회 → 제품 차별점 → 예상 매출 → 핵심 리스크 → 다음 단계<br><span class="hl">총 500자 이내</span>, 숫자와 데이터 중심으로 간결하게 작성해줘."</div>
+    <div class="pc-tip"><strong>💡 TIP</strong> "경영진 보고용"이라는 맥락을 주면 AI가 핵심 중심으로 압축함</div>
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 복사</button>
+  </div>
+</div>
+
+</main>
+
+<footer class="footer">
+  <strong>한국식품정보원 (KFI)</strong> &nbsp;|&nbsp; 식품 R&D AI 프롬프트 치트시트 v1.0 &nbsp;|&nbsp; Ctrl+P로 인쇄/PDF 저장 가능
+</footer>
+
+<script>
+function copyPrompt(btn) {
+  const card = btn.closest('.prompt-card');
+  const text = card.querySelector('.pc-prompt').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✅ 복사됨!';
+    setTimeout(() => btn.textContent = '📋 복사', 1500);
+  });
+}
+</script>
+</body>
+</html>

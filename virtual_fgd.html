@@ -1,0 +1,295 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>AI 가상 소비자 FGD | KFI</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>
+:root{--b:#1975BC;--bd:#135A91;--bl:#E8F1F8;--w:#fff;--dt:#1E1E1E;--tm:#444;--tl:#888;--grn:#2E8B57;--org:#E07030;--red:#D94040;--pur:#7C3AED;}
+*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Pretendard Variable',-apple-system,sans-serif;background:#FAF8F5;color:var(--dt);line-height:1.6;}
+button{font-family:inherit;cursor:pointer;border:none;transition:all .15s;}button:hover{opacity:.88;}
+.hd{background:linear-gradient(135deg,var(--b),var(--bd));color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.badge{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:3px 10px;font-weight:800;font-size:11px;letter-spacing:1px;}
+.wrap{max-width:900px;margin:0 auto;padding:24px 20px 60px;}
+.card{background:var(--w);border:1px solid #E8E4E0;border-radius:12px;padding:18px;margin-bottom:14px;}
+.persona-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:16px;}
+.persona{border:2px solid #E8E4E0;border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:all .2s;}
+.persona.on{border-color:var(--b);background:var(--bl);}
+.persona .em{font-size:28px;margin-bottom:4px;}
+.persona .nm{font-size:13px;font-weight:700;}
+.persona .tg{font-size:10px;color:var(--tl);margin-top:2px;}
+.chat{background:#F8F8F8;border-radius:12px;padding:16px;max-height:500px;overflow-y:auto;margin-bottom:14px;}
+.msg{margin-bottom:12px;animation:fadeUp .3s ease;}
+.msg-hd{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.msg-name{font-size:12px;font-weight:700;}
+.msg-time{font-size:9px;color:var(--tl);}
+.msg-body{font-size:13px;color:var(--tm);line-height:1.6;padding:10px 14px;border-radius:10px;max-width:85%;}
+.msg-ai{background:var(--w);border:1px solid #E8E4E0;}
+.msg-mod{background:var(--bl);border:1px solid #C0D8EC;margin-left:auto;}
+.score-bar{height:6px;background:#E8E4E0;border-radius:3px;overflow:hidden;margin-top:4px;}
+.score-fill{height:6px;border-radius:3px;transition:width .5s;}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.persona-grid{grid-template-columns:1fr 1fr;}.summary-grid{grid-template-columns:1fr;}}
+</style></head><body>
+<div class="hd"><div style="display:flex;align-items:center;gap:10px"><span class="badge">KFI</span><div><div style="font-size:14px;font-weight:700">🎙️ AI 가상 소비자 FGD</div><div style="font-size:9px;opacity:.5">Virtual Focus Group Discussion</div></div></div><span style="font-size:11px;opacity:.6">교육용 시뮬레이션</span></div>
+
+<div class="wrap">
+<div class="card">
+  <h3 style="font-size:16px;font-weight:800;margin-bottom:12px">📝 제품 컨셉 입력</h3>
+  <textarea id="concept" rows="3" placeholder="예: MZ세대 타겟 제로칼로리 스파클링 유자 음료, 유자즙 5% 함유, 알룰로스+스테비아 감미, 탄산 3.5vol, 350mL PET, 편의점 유통, 1,800원" style="width:100%;padding:12px;border:1.5px solid #E0E0E0;border-radius:10px;font-size:14px;font-family:inherit;resize:vertical;"></textarea>
+</div>
+
+<div class="card">
+  <h3 style="font-size:14px;font-weight:700;margin-bottom:10px">👥 패널 선택 (3~5명)</h3>
+  <div class="persona-grid" id="personaGrid"></div>
+</div>
+
+<button id="startBtn" onclick="startFGD()" style="width:100%;padding:14px;border-radius:10px;background:linear-gradient(135deg,var(--b),var(--pur));color:#fff;font-size:15px;font-weight:700;margin-bottom:20px;box-shadow:0 4px 16px rgba(25,117,188,.3);">🎙️ FGD 시작하기</button>
+
+<div id="chatArea" style="display:none">
+  <h3 style="font-size:16px;font-weight:800;margin-bottom:12px">💬 FGD 진행</h3>
+  <div class="chat" id="chatBox"></div>
+  <div id="summaryArea"></div>
+</div>
+</div>
+
+<script>
+const PERSONAS=[
+  {id:"mz_f",em:"👩",nm:"김지윤 (25)",tg:"MZ여성·헬시플레저·인스타",traits:"건강 트렌드 민감, SNS 공유 중시, 가격 대비 가치 중요, 비주얼 중시",tone:"~인 거 아니야?",pref:"제로칼로리,비건,감성패키지",neg:"인공적 맛, 올드한 디자인"},
+  {id:"mz_m",em:"👨",nm:"박준호 (28)",tg:"MZ남성·운동·편의점",traits:"단백질/기능성 관심, 편의점 주 구매, 가성비 중시, 새로운 맛 호기심",tone:"솔직히 말하면~",pref:"기능성,가성비,새로운맛",neg:"너무 달거나, 여성 타겟 느낌"},
+  {id:"mom",em:"👩‍👧",nm:"이수진 (38)",tg:"워킹맘·건강·마트",traits:"가족 건강 최우선, 성분표 꼼꼼히 확인, 대형마트 주 구매, 가격 민감",tone:"엄마 입장에서 보면~",pref:"무첨가,저당,안전한원료",neg:"인공감미료, 불명확한 원료"},
+  {id:"senior",em:"👴",nm:"정민수 (55)",tg:"5060·건강관리·전통선호",traits:"혈당/혈압 관리, 전통적 맛 선호, TV홈쇼핑 구매, 브랜드 충성도 높음",tone:"내 경험상으로는~",pref:"전통원료,저당,큰글씨",neg:"낯선 원료명, 작은 용량"},
+  {id:"diet",em:"🧘‍♀️",nm:"한소영 (32)",tg:"다이어트·비건·프리미엄",traits:"칼로리 엄격 관리, 비건/클린라벨 선호, 프리미엄 가격 OK, 성분 전문지식",tone:"칼로리로 보면~",pref:"제로칼로리,클린라벨,비건",neg:"높은 칼로리, 화학첨가물"},
+  {id:"foodie",em:"🧑‍🍳",nm:"최태현 (30)",tg:"미식가·SNS리뷰어·트렌드",traits:"맛 퀄리티 최우선, 새로운 경험 추구, 리뷰 작성, 스토리텔링 중시",tone:"테이스팅 노트로 보면~",pref:"독특한맛,프리미엄,스토리",neg:"평범한 맛, 대량생산 느낌"},
+  {id:"student",em:"🧑‍🎓",nm:"윤서연 (22)",tg:"대학생·가성비·편의점",traits:"가격 최우선, 편의점/CU 주 구매, 1+1 프로모션 민감, 또래 입소문 중시",tone:"솔직히 가격이~",pref:"저가격,1+1,또래인기",neg:"비싼 가격, 어른 음료 느낌"},
+  {id:"exec",em:"👔",nm:"강현우 (45)",tg:"직장인·피로회복·자판기",traits:"피로회복 목적, 자판기/편의점 구매, 시간 절약 중시, 기능성 선호",tone:"바쁜 직장인 입장에서~",pref:"기능성,간편,에너지",neg:"효과 불명확, 큰 용량"},
+];
+
+let selected=new Set();
+let chatMsgs=[];
+
+function renderPersonas(){
+  let h="";PERSONAS.forEach(p=>{
+    h+=`<div class="persona ${selected.has(p.id)?'on':''}" onclick="toggleP('${p.id}')"><div class="em">${p.em}</div><div class="nm">${p.nm}</div><div class="tg">${p.tg}</div></div>`;
+  });
+  document.getElementById("personaGrid").innerHTML=h;
+}
+
+function toggleP(id){
+  if(selected.has(id))selected.delete(id);else if(selected.size<5)selected.add(id);
+  renderPersonas();
+}
+
+function startFGD(){
+  const concept=document.getElementById("concept").value.trim();
+  if(!concept){alert("제품 컨셉을 입력해주세요.");return;}
+  if(selected.size<3){alert("패널을 3명 이상 선택해주세요.");return;}
+
+  document.getElementById("chatArea").style.display="block";
+  document.getElementById("startBtn").style.display="none";
+  const chatBox=document.getElementById("chatBox");
+  chatMsgs=[];
+
+  // Moderator intro
+  addMsg("mod","사회자","안녕하세요, 오늘 FGD를 진행할 사회자입니다. 다음 제품 컨셉에 대해 의견을 나눠보겠습니다.",0);
+  addMsg("mod","사회자",`📋 컨셉: "${concept}"`,500);
+
+  // Generate responses for each persona
+  const panelists=PERSONAS.filter(p=>selected.has(p.id));
+  let delay=1200;
+
+  // Round 1: First impression
+  addMsg("mod","사회자","먼저, 이 제품을 처음 보셨을 때 첫인상은 어떠세요?",delay);
+  delay+=800;
+  panelists.forEach(p=>{
+    const resp=genResponse(p,concept,"first_impression");
+    addMsg(p.id,`${p.em} ${p.nm}`,resp,delay);
+    delay+=600;
+  });
+
+  // Round 2: Purchase intent
+  delay+=500;
+  addMsg("mod","사회자","이 제품이 실제로 출시된다면 구매하실 의향이 있으신가요?",delay);
+  delay+=800;
+  panelists.forEach(p=>{
+    const resp=genResponse(p,concept,"purchase");
+    addMsg(p.id,`${p.em} ${p.nm}`,resp,delay);
+    delay+=600;
+  });
+
+  // Round 3: Improvement
+  delay+=500;
+  addMsg("mod","사회자","마지막으로, 이 제품이 더 좋아지려면 어떤 점을 개선하면 좋을까요?",delay);
+  delay+=800;
+  panelists.forEach(p=>{
+    const resp=genResponse(p,concept,"improve");
+    addMsg(p.id,`${p.em} ${p.nm}`,resp,delay);
+    delay+=600;
+  });
+
+  // Summary
+  setTimeout(()=>renderSummary(panelists,concept),delay+500);
+}
+
+function genResponse(persona,concept,phase){
+  const c=concept.toLowerCase();
+  const has=(kw)=>kw.some(k=>c.includes(k));
+  const isZero=has(["제로","저칼로리","무설탕","다이어트"]);
+  const isSparkling=has(["탄산","스파클링","스파클"]);
+  const isFruit=has(["유자","레몬","자몽","오렌지","사과","포도","과일","과채"]);
+  const isFunctional=has(["기능","비타민","콜라겐","프로바이오"]);
+  const isCheap=has(["1000","1200","1500","가성비"]);
+  const isExpensive=has(["3000","프리미엄","고급"]);
+
+  const R={
+    mz_f:{
+      first_impression:[
+        isZero?"제로칼로리라서 일단 좋아요! 요즘 제로 아니면 안 먹거든요.":"칼로리가 좀 신경 쓰이긴 해요.",
+        isFruit?"과일 느낌이라 인스타에 올리기도 좋을 것 같아요~":"디자인이 좀 더 감성적이면 좋겠어요.",
+        isSparkling?"탄산이라 여름에 딱이네요!":"탄산이면 더 좋았을 것 같은데..."
+      ],
+      purchase:[
+        "편의점에서 보면 한번은 살 것 같아요.",isZero?"제로면 재구매도 할 것 같아요.":"칼로리 확인하고 결정할 것 같아요.",
+        "인스타에서 후기 먼저 볼 것 같아요."
+      ],
+      improve:["패키지 디자인이 SNS 감성이면 좋겠어요.","한정판이나 콜라보 에디션 나오면 대박일 것 같아요.",isZero?"":"제로 버전도 같이 출시해주세요!"]
+    },
+    mz_m:{
+      first_impression:[
+        isFunctional?"기능성이 있으면 운동 후에 마시기 좋을 것 같아요.":"운동하는 사람 입장에선 기능성이 하나쯤 있으면 좋겠어요.",
+        isSparkling?"탄산이라 시원하게 마시기 좋네요.":"개인적으로 탄산이면 더 끌렸을 것 같아요.",
+        "솔직히 맛이 제일 중요하죠."
+      ],
+      purchase:[
+        "편의점에서 새로운 거 나오면 일단 사보는 편이에요.",
+        isCheap?"가격이 괜찮으면 자주 살 것 같아요.":"가격이 좀 부담되면 가끔만 살 것 같아요.",
+        "맛있으면 재구매 100%입니다."
+      ],
+      improve:["단백질이나 BCAA 같은 거 넣어주면 운동하는 사람들한테 어필될 것 같아요.","용량 좀 더 크면 좋겠어요.","남자들도 사기 편한 디자인이면 좋겠어요."]
+    },
+    mom:{
+      first_impression:[
+        "성분표부터 확인할 것 같아요.",
+        isZero?"제로라고 해도 뭘로 단맛을 냈는지가 중요해요. 알룰로스면 그나마 괜찮고...":"아이한테도 먹여도 되는 건지 확인해봐야죠.",
+        isFruit?"과일이 들어있으면 아이들한테도 줄 수 있어서 좋아요.":"천연 원료 위주면 안심이 되는데..."
+      ],
+      purchase:[
+        "마트에서 할인할 때 묶음으로 살 것 같아요.",
+        "성분이 깨끗하면 가족용으로 구매할 의향 있어요.",
+        "아이 간식으로도 괜찮으면 정기적으로 살 것 같아요."
+      ],
+      improve:["인공감미료 대신 천연 감미료만 사용해주세요.","'무첨가' 표시가 있으면 신뢰가 가요.","어린이도 마실 수 있는 라인업이 있으면 좋겠어요."]
+    },
+    senior:{
+      first_impression:[
+        "혈당에 영향이 없는 건지가 제일 궁금해요.",
+        isFruit?"과일 맛이면 거부감이 없어요. 전통적인 맛이라 좋네요.":"요즘 젊은 사람들 음료라 저한테 맞을지...",
+        "글씨가 좀 커야 성분을 읽을 수 있어요."
+      ],
+      purchase:[
+        "TV에서 광고하면 한번 사볼 것 같아요.",
+        "내 경험상 맛있으면 계속 사게 되더라고요.",
+        isExpensive?"좀 비싸도 건강에 좋으면 사요.":"가격이 합리적이면 좋겠어요."
+      ],
+      improve:["라벨 글씨 크기를 키워주세요.","혈당지수(GI) 정보를 표시해주면 좋겠어요.","전통 원료(유자, 매실 등)를 더 강조해주세요."]
+    },
+    diet:{
+      first_impression:[
+        isZero?"제로칼로리면 일단 합격이에요. 감미료 종류가 뭔지 확인해볼게요.":"칼로리가 얼마인지부터 봐야죠.",
+        "칼로리로 보면 "+( isZero?"괜찮은 편이네요.":"조금 높은 감이 있어요."),
+        "클린라벨인지 아닌지가 중요해요. 첨가물이 최소화되어야 해요."
+      ],
+      purchase:[
+        isZero?"제로면 운동 후 마실 음료로 좋아요. 구매 의향 높아요.":"칼로리를 더 낮추면 살 것 같아요.",
+        "비건 인증이 있으면 바로 살 거예요.",
+        "프리미엄 가격이어도 성분이 깨끗하면 OK"
+      ],
+      improve:["비건 인증을 꼭 받으세요.","영양성분을 전면에 크게 표시해주세요.","식이섬유나 프리바이오틱스를 추가하면 차별화될 것 같아요."]
+    },
+    foodie:{
+      first_impression:[
+        "테이스팅 노트로 보면 "+( isFruit?"과일 베이스라 복합적인 풍미가 기대되네요.":"좀 더 유니크한 풍미 포인트가 있으면 좋겠어요."),
+        isSparkling?"탄산의 청량감과 과일 산미의 밸런스가 관건이겠네요.":"무탄산이면 바디감이 중요해질 텐데...",
+        "스토리텔링이 있는 제품이면 리뷰 쓰기 좋아요."
+      ],
+      purchase:[
+        "맛이 독특하면 무조건 사요. 리뷰도 쓸 거예요.",
+        "편의점 신상이면 일단 도전해봅니다.",
+        isExpensive?"프리미엄이면 오히려 기대가 돼요.":"가성비까지 좋으면 추천 리스트에 올릴게요."
+      ],
+      improve:["한정 에디션이나 시즌 한정 맛을 출시해주세요.","원산지 스토리를 패키지에 넣으면 좋겠어요.","바리스타/소믈리에 감수 같은 프리미엄 요소가 있으면 좋겠어요."]
+    },
+    student:{
+      first_impression:[
+        "솔직히 가격이 얼마인지가 제일 먼저 눈에 들어와요.",
+        isCheap?"이 가격이면 괜찮은데요!":"좀 비싸지 않나요...?",
+        "편의점 냉장고에서 눈에 띄는 디자인이어야 해요."
+      ],
+      purchase:[
+        "1+1이면 무조건 사요.",
+        "친구가 맛있다고 하면 사볼 것 같아요.",
+        isCheap?"이 가격이면 자주 살 수 있어요.":"가격이 좀 부담되면 가끔만..."
+      ],
+      improve:["1+1 프로모션을 자주 해주세요.","대학교 매점에도 입점해주세요.","다양한 맛 라인업이 있으면 수집하는 재미가 있을 것 같아요."]
+    },
+    exec:{
+      first_impression:[
+        "바쁜 직장인 입장에서 간편하게 마실 수 있는 게 중요해요.",
+        isFunctional?"기능성이 있으면 좋네요. 피로회복이면 더 좋고.":"기능성이 좀 더 명확했으면 해요.",
+        "사무실 자판기에 있으면 자주 사먹을 것 같아요."
+      ],
+      purchase:[
+        "효과가 체감되면 정기 구매할 의향 있어요.",
+        "점심 후에 마실 수 있는 거면 좋겠어요.",
+        "편의점에서 쉽게 살 수 있어야 해요."
+      ],
+      improve:["카페인 함량을 명시해주세요.","작은 용량(200mL)도 있으면 좋겠어요.","비타민B군이나 타우린 같은 에너지 성분을 추가해주세요."]
+    }
+  };
+
+  const pool=R[persona.id]?.[phase]||["흥미로운 컨셉이에요.","좀 더 생각해봐야 할 것 같아요.","개선 여지가 있어 보여요."];
+  const picked=pool.filter(x=>x).slice(0,2);
+  return `${persona.tone} ${picked.join(" ")}`;
+}
+
+function addMsg(type,name,text,delay){
+  setTimeout(()=>{
+    const box=document.getElementById("chatBox");
+    const cls=type==="mod"?"msg-mod":"msg-ai";
+    const html=`<div class="msg"><div class="msg-hd"><span class="msg-name">${name}</span></div><div class="msg-body ${cls}">${text}</div></div>`;
+    box.insertAdjacentHTML("beforeend",html);
+    box.scrollTop=box.scrollHeight;
+  },delay);
+}
+
+function renderSummary(panelists,concept){
+  const scores={
+    novelty:60+Math.random()*30,
+    taste:50+Math.random()*35,
+    price:45+Math.random()*40,
+    design:55+Math.random()*30,
+    repurchase:40+Math.random()*40,
+  };
+  const labels={novelty:"신선함/차별성",taste:"맛 기대도",price:"가격 적정성",design:"디자인/패키지",repurchase:"재구매 의향"};
+  const avg=Object.values(scores).reduce((a,b)=>a+b,0)/5;
+
+  let h=`<div class="card" style="margin-top:20px;animation:fadeUp .4s ease"><h3 style="font-size:16px;font-weight:800;margin-bottom:14px">📊 FGD 결과 요약</h3>`;
+  h+=`<div class="summary-grid">`;
+  h+=`<div><h4 style="font-size:13px;font-weight:700;margin-bottom:10px">항목별 평가</h4>`;
+  for(let[k,v]of Object.entries(scores)){
+    const c=v>=70?"var(--grn)":v>=50?"var(--org)":"var(--red)";
+    h+=`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px"><span style="font-weight:600">${labels[k]}</span><span style="font-weight:800;color:${c}">${v.toFixed(0)}점</span></div><div class="score-bar"><div class="score-fill" style="width:${v}%;background:${c}"></div></div></div>`;
+  }
+  h+=`</div>`;
+  h+=`<div><h4 style="font-size:13px;font-weight:700;margin-bottom:10px">종합 점수</h4>`;
+  h+=`<div style="text-align:center;padding:20px"><div style="width:100px;height:100px;border-radius:50%;background:conic-gradient(${avg>=70?"var(--grn)":avg>=50?"var(--org)":"var(--red)"} ${avg}%, #E8E4E0 ${avg}%);display:flex;align-items:center;justify-content:center;margin:0 auto"><div style="width:80px;height:80px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:${avg>=70?"var(--grn)":avg>=50?"var(--org)":"var(--red)"}">${avg.toFixed(0)}</div></div><p style="margin-top:8px;font-size:14px;font-weight:700;color:var(--dt)">${avg>=75?"출시 적극 추천 👍":avg>=60?"보완 후 출시 가능 🔄":avg>=45?"상당한 개선 필요 ⚠️":"컨셉 재검토 권장 ❌"}</p></div>`;
+  h+=`<h4 style="font-size:12px;font-weight:700;margin-top:12px;margin-bottom:6px">핵심 인사이트</h4>`;
+  h+=`<p style="font-size:12px;color:var(--tm);line-height:1.6">• 패널 ${panelists.length}명 중 긍정 반응 ${Math.round(panelists.length*avg/100)}명<br>• 주요 강점: 차별화된 컨셉<br>• 주요 우려: 가격/타겟 적정성<br>• 개선 제안: 패널별 의견 종합 필요</p>`;
+  h+=`</div></div>`;
+  h+=`<p style="margin-top:12px;font-size:10px;color:var(--tl);text-align:center">⚠️ AI 시뮬레이션 결과입니다. 실제 소비자 조사를 대체할 수 없습니다.</p>`;
+  h+=`</div>`;
+  document.getElementById("summaryArea").innerHTML=h;
+}
+
+renderPersonas();
+// Pre-select 3
+["mz_f","mom","foodie"].forEach(id=>selected.add(id));
+renderPersonas();
+</script></body></html>
