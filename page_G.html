@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><title>Stage G — 최종보고서</title><link rel="stylesheet" href="common.css"></head>
+<body>
+<canvas id="star-canvas"></canvas><div class="nebula-bg"></div>
+<nav class="sidebar"><div class="sidebar-logo"><div class="sidebar-logo-title">🍱 FOOD<br>DEV SYS</div><div class="sidebar-logo-sub"><span class="sidebar-logo-dot"></span>MISSION ACTIVE — v3.0</div></div><div class="sidebar-nav"><div class="nav-section-label">Command</div><a href="index.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label-text">Mission Home</span><span class="nav-badge">00</span></a><div class="nav-section-label">Stages</div><a href="page_A.html" class="nav-item"><span class="nav-icon">🔭</span><span class="nav-label-text">Stage A — 시장조사</span><span class="nav-badge">A</span></a><a href="page_B.html" class="nav-item"><span class="nav-icon">⚗️</span><span class="nav-label-text">Stage B — 배합설계</span><span class="nav-badge">B</span></a><a href="page_C.html" class="nav-item"><span class="nav-icon">🏭</span><span class="nav-label-text">Stage C — 제조공정</span><span class="nav-badge">C</span></a><a href="page_D.html" class="nav-item"><span class="nav-icon">🧫</span><span class="nav-label-text">Stage D — 품질안전</span><span class="nav-badge">D</span></a><a href="page_E.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label-text">Stage E — 포장표시</span><span class="nav-badge">E</span></a><a href="page_F.html" class="nav-item"><span class="nav-icon">💫</span><span class="nav-label-text">Stage F — 원가출시</span><span class="nav-badge">F</span></a><a href="page_G.html" class="nav-item active"><span class="nav-icon">🌌</span><span class="nav-label-text">Stage G — 최종보고</span><span class="nav-badge">G</span></a></div></nav>
+<div class="main">
+  <div class="page-header"><span class="header-icon">🌌</span><div class="header-text"><div class="header-title">STAGE G — 보고서 &amp; 서류관리</div><div class="header-sub">◈ FINAL REPORT / DOCUMENTS / CHECKLIST / EXPORT</div></div><div class="header-badge">FINAL</div></div>
+  <div class="status-bar"><span class="stat-item">STAGE:<span>G — FINAL BOSS</span></span><span class="stat-item">COMPLETION:<span id="g_pct">0%</span></span></div>
+  <div class="tab-section">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('g1',this)">G-1 개발보고서</button>
+      <button class="tab-btn" onclick="switchTab('g2',this)">G-2 서류업로드</button>
+      <button class="tab-btn" onclick="switchTab('g3',this)">G-3 체크리스트</button>
+      <button class="tab-btn" onclick="switchTab('g4',this)">G-4 내보내기</button>
+    </div>
+    <div class="tab-content active" id="g1">
+      <div class="info-box">◈ A~F 단계 입력 내용을 최종 보고서로 취합합니다.</div>
+      <div class="card"><div class="card-title" style="color:var(--cyan)">◈ A. 시장조사 &amp; 기획</div>
+        <div class="form-row"><label>시장 분석 요약</label><textarea rows="2" placeholder="저당·고단백 음료 시장 연 24% 성장..."></textarea></div>
+        <div class="form-row"><label>제품 컨셉</label><textarea rows="2" placeholder="선정된 최종 제품 컨셉"></textarea></div>
+      </div>
+      <div class="card"><div class="card-title" style="color:var(--violet)">◈ B. 원료 &amp; 배합</div>
+        <div class="form-row"><label>최종 배합비 요약</label><textarea rows="2" placeholder="B단계 배합비 내용"></textarea></div>
+        <div class="form-row"><label>주요 영양성분</label><input type="text" placeholder="단백질 12g, 열량 80kcal..."></div>
+      </div>
+      <div class="card"><div class="card-title" style="color:var(--amber)">◈ C. 제조공정</div>
+        <div class="form-row"><label>공정 요약</label><textarea rows="2" placeholder="원료입고→계량→균질화→살균→냉각→충전·포장→출하"></textarea></div>
+        <div class="form-row"><label>CCP 요약</label><input type="text" placeholder="CCP-1: 살균 / CCP-2: 충전포장"></div>
+      </div>
+      <div class="card"><div class="card-title" style="color:var(--emerald)">◈ D. 품질 &amp; 안전성</div>
+        <div class="form-row"><label>품질 규격 요약</label><textarea rows="2" placeholder="세균수 100 CFU/mL↓, 대장균군 음성, pH 4.0~4.5"></textarea></div>
+        <div class="form-row"><label>유통기한</label><input type="text" placeholder="제조일로부터 90일 (냉장보관)"></div>
+      </div>
+      <div class="card"><div class="card-title" style="color:var(--sky)">◈ E. 포장 &amp; 표시</div>
+        <div class="form-row"><label>포장 요약</label><input type="text" placeholder="PET 200mL, PP라벨, 스크류캡"></div>
+        <div class="form-row"><label>표시사항 법적검토</label><select><option>✓ 검토완료 (적합)</option><option>⚠ 검토완료 (주의)</option><option>✕ 미검토</option></select></div>
+      </div>
+      <div class="card"><div class="card-title" style="color:var(--rose)">◈ F. 원가 &amp; 출시</div>
+        <div class="form-row"><label>원가 요약</label><input type="text" placeholder="제조원가 700원, 판매가 2,000원, 마진율 40%"></div>
+        <div class="form-row"><label>목표 출시일</label><input type="text" placeholder="2025년 9월"></div>
+      </div>
+      <div class="btn-row"><button class="btn">◈ SAVE REPORT</button><button class="btn btn-amber" onclick="switchTab('g4',document.querySelectorAll('.tab-btn')[3])">◈ EXPORT</button></div>
+    </div>
+    <div class="tab-content" id="g2">
+      <div class="info-box">◈ 각 단계별 최종 서류를 업로드합니다. 카드를 클릭하면 업로드 폼이 열립니다.</div>
+      <div class="doc-grid" id="doc_grid"></div>
+    </div>
+    <div class="tab-content" id="g3">
+      <div class="card"><div class="card-title">◈ MISSION FINAL CHECKLIST</div>
+        <div id="final_cl"></div>
+        <div style="margin-top:16px"><label style="margin-bottom:8px">MISSION COMPLETION RATE</label><div class="progress-bar-wrap"><div class="progress-bar" id="final_bar" style="width:0%">0%</div></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="g4">
+      <div class="card"><div class="card-title">◈ REPORT EXPORT CONFIGURATION</div>
+        <div id="export_secs"></div>
+        <div class="form-row" style="margin-top:14px"><label>출력 형식</label><select><option>전체 보고서 (A~G)</option><option>요약 보고서 (2페이지)</option><option>기획서만</option><option>품질 규격서만</option></select></div>
+        <div class="btn-row">
+          <button class="btn" onclick="window.print()">◈ PRINT / PDF</button>
+          <button class="btn btn-violet" onclick="alert('Word 다운로드 (서버 구현 필요)')">◈ WORD EXPORT</button>
+        </div>
+        <div class="info-box" style="margin-top:14px">◈ PDF 저장: 인쇄 → 프린터에서 "PDF로 저장" 선택</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="common.js"></script>
+<script>
+const docs=[{step:'A',name:'제품개발 기획서',icon:'🔭',status:'CLEARED'},{step:'B',name:'원료 규격서',icon:'⚗️',status:'CLEARED'},{step:'B',name:'배합비 설계서',icon:'📊',status:'CLEARED'},{step:'C',name:'제조공정 지시서',icon:'🏭',status:'REVIEW'},{step:'C',name:'HACCP 관리계획서',icon:'⚠️',status:'PENDING'},{step:'D',name:'품질 규격서',icon:'🧫',status:'CLEARED'},{step:'D',name:'유통기한 근거서',icon:'📅',status:'REVIEW'},{step:'E',name:'포장 사양서',icon:'📦',status:'PENDING'},{step:'E',name:'표시사항 확인서',icon:'🏷️',status:'PENDING'},{step:'F',name:'원가 계산서',icon:'💫',status:'CLEARED'},{step:'F',name:'출시 계획서',icon:'🚀',status:'PENDING'},{step:'G',name:'최종 개발 보고서',icon:'🌌',status:'WIP'}];
+const stColor={CLEARED:'var(--emerald)',REVIEW:'var(--amber)',PENDING:'var(--rose)',WIP:'var(--violet)'};
+const stTag={CLEARED:'tag-emerald',REVIEW:'tag-amber',PENDING:'tag-rose',WIP:'tag-violet'};
+document.getElementById('doc_grid').innerHTML=docs.map((d,i)=>`<div class="doc-card" onclick="this.classList.toggle('open')"><div class="doc-icon">${d.icon}</div><div style="font-size:9px;color:var(--indigo-l);margin-bottom:5px;font-family:'Share Tech Mono',monospace">STEP ${d.step}</div><div class="doc-name">${d.name}</div><span class="tag ${stTag[d.status]}">${d.status}</span><div class="doc-upload"><input type="file" id="du_${i}" style="display:none" onchange="document.getElementById('dfn_${i}').textContent=this.files[0]?.name||''"><button class="btn btn-sm" style="margin-top:8px" onclick="event.stopPropagation();document.getElementById('du_${i}').click()">◈ UPLOAD</button><div id="dfn_${i}" style="font-size:9px;color:var(--text-muted);margin-top:5px;font-family:'Share Tech Mono',monospace"></div></div></div>`).join('');
+const clData=[{cat:'STAGE A',items:['시장조사 완료','제품컨셉 확정','기획서 작성']},{cat:'STAGE B',items:['배합비 확정','영양성분 계산','원료규격서']},{cat:'STAGE C',items:['공정흐름도 확정','CCP 선정','공정지시서']},{cat:'STAGE D',items:['법적기준 검토','품질규격서 작성','유통기한 설정']},{cat:'STAGE E',items:['포장재 선정','영양성분표 작성','표시사항 법적검토 ✓']},{cat:'STAGE F',items:['원가 계산','판매가 설정','출시 로드맵']},{cat:'LAUNCH',items:['식품신고/허가 완료','라벨 최종승인','양산설비 준비','품질검사 합격']}];
+let totalCL=0;
+document.getElementById('final_cl').innerHTML=clData.map(g=>`<div style="margin-bottom:16px"><div style="font-size:8px;color:var(--indigo);letter-spacing:.15em;margin-bottom:8px;font-family:'Orbitron',sans-serif">◈ ${g.cat}</div>${g.items.map(i=>{totalCL++;return`<div class="check-item"><input type="checkbox" onchange="updCL()"><span>${i}</span></div>`;}).join('')}</div>`).join('');
+function updCL(){const d=document.querySelectorAll('#final_cl input:checked').length,p=Math.round(d/totalCL*100),b=document.getElementById('final_bar');b.style.width=p+'%';b.textContent=p+'%';document.getElementById('g_pct').textContent=p+'%';}
+const expSecs=['A. 시장조사 & 기획','B. 원료 & 배합설계','C. 제조공정','D. 품질 & 안전성','E. 포장 & 표시','F. 원가 & 출시계획','G. 부록(서류목록)'];
+document.getElementById('export_secs').innerHTML=expSecs.map(s=>`<div class="check-item"><input type="checkbox" checked><span>${s}</span></div>`).join('');
+</script></body></html>

@@ -1,383 +1,148 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI 활용 식품개발 실무 | KFI 통합 포털</title>
-<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>FOOD DEV SYSTEM — Mission Control</title>
+<link rel="stylesheet" href="common.css">
 <style>
-:root{--b:#1975BC;--bd:#135A91;--bl:#E8F1F8;--bm:#2A8DD4;--w:#fff;--dt:#1E1E1E;--tm:#444;--tl:#888;--grn:#2E8B57;--org:#E07030;--red:#D94040;--pur:#7C3AED;--cyan:#0EA5E9;--bg:#F5F3F0;}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Pretendard Variable',-apple-system,sans-serif;background:var(--bg);color:var(--dt);line-height:1.6;-webkit-font-smoothing:antialiased;}
-a{text-decoration:none;color:inherit;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-
-/* NAV */
-.nav{background:linear-gradient(135deg,#0D1B2A 0%,#1B2838 40%,var(--bd) 100%);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 4px 30px rgba(0,0,0,.2);}
-.nav-left{display:flex;align-items:center;gap:14px;}
-.nav-badge{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:4px 14px;font-weight:800;font-size:12px;letter-spacing:2px;}
-.nav-title{font-size:15px;font-weight:700;}
-.nav-sub{font-size:10px;opacity:.5;margin-top:1px;}
-.nav-right{display:flex;gap:8px;align-items:center;}
-.nav-link{padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;opacity:.6;transition:all .2s;cursor:pointer;}
-.nav-link:hover,.nav-link.active{opacity:1;background:rgba(255,255,255,.12);}
-
-/* HERO */
-.hero{background:linear-gradient(160deg,#0D1B2A 0%,var(--b) 40%,var(--bm) 70%,var(--bd) 100%);color:#fff;padding:64px 28px 56px;position:relative;overflow:hidden;}
-.hero::before{content:'';position:absolute;top:-30%;right:-10%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.04),transparent 70%);}
-.hero::after{content:'';position:absolute;bottom:-40%;left:-5%;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(42,141,212,.15),transparent 70%);}
-.hero-inner{max-width:1000px;margin:0 auto;position:relative;z-index:1;}
-.hero-badge{display:inline-block;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 16px;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:16px;}
-.hero h1{font-size:36px;font-weight:800;line-height:1.2;margin-bottom:12px;}
-.hero h1 span{background:linear-gradient(90deg,#4ADE80,#22D3EE);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.hero p{font-size:16px;opacity:.8;max-width:560px;line-height:1.65;}
-.hero-stats{display:flex;gap:28px;margin-top:24px;}
-.hero-stat{text-align:center;}
-.hero-stat .num{font-size:28px;font-weight:800;background:linear-gradient(135deg,#fff,rgba(255,255,255,.7));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.hero-stat .lbl{font-size:10px;opacity:.5;margin-top:2px;}
-
-/* SECTIONS */
-.content{max-width:1000px;margin:0 auto;padding:40px 28px 60px;}
-.section{margin-bottom:48px;animation:fadeUp .5s ease both;}
-.section:nth-child(2){animation-delay:.1s;}
-.section:nth-child(3){animation-delay:.15s;}
-.section:nth-child(4){animation-delay:.2s;}
-.section:nth-child(5){animation-delay:.25s;}
-.section:nth-child(6){animation-delay:.3s;}
-
-.sec-header{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
-.sec-bar{width:5px;height:32px;border-radius:4px;}
-.sec-title{font-size:20px;font-weight:800;}
-.sec-count{font-size:11px;color:var(--tl);background:#F0F0F0;padding:2px 8px;border-radius:10px;font-weight:600;}
-
-/* CARDS */
-.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
-.card{background:var(--w);border:1px solid #E8E4E0;border-radius:14px;padding:18px 16px;position:relative;overflow:hidden;transition:all .25s;cursor:pointer;display:block;}
-.card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.08);border-color:#D0D0D0;}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;opacity:0;transition:opacity .25s;}
-.card:hover::before{opacity:1;}
-.card-icon{font-size:28px;margin-bottom:8px;display:block;}
-.card-type{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;letter-spacing:.3px;margin-bottom:8px;}
-.type-html{background:var(--bl);color:var(--b);}
-.type-app{background:#F0FFF5;color:var(--grn);}
-.type-ppt{background:#FFF3E8;color:var(--org);}
-.type-excel{background:#F0E8FF;color:var(--pur);}
-.type-tool{background:#E0F7FA;color:var(--cyan);}
-.card-name{font-size:14px;font-weight:700;color:var(--dt);margin-bottom:4px;}
-.card-desc{font-size:11px;color:var(--tl);line-height:1.5;}
-.card-arrow{position:absolute;bottom:14px;right:14px;font-size:14px;color:var(--tl);transition:all .25s;}
-.card:hover .card-arrow{color:var(--b);transform:translateX(3px);}
-.card-new{position:absolute;top:10px;right:10px;background:linear-gradient(135deg,var(--grn),#22D3EE);color:#fff;font-size:8px;font-weight:800;padding:2px 7px;border-radius:8px;letter-spacing:.5px;}
-
-/* Color accents for cards */
-.card[data-color="blue"]::before{background:linear-gradient(90deg,var(--b),var(--bm));}
-.card[data-color="green"]::before{background:linear-gradient(90deg,var(--grn),#22D3EE);}
-.card[data-color="orange"]::before{background:linear-gradient(90deg,var(--org),#F59E0B);}
-.card[data-color="red"]::before{background:linear-gradient(90deg,var(--red),#F472B6);}
-.card[data-color="purple"]::before{background:linear-gradient(90deg,var(--pur),#A78BFA);}
-.card[data-color="cyan"]::before{background:linear-gradient(90deg,var(--cyan),#22D3EE);}
-
-/* FOOTER */
-.footer{background:#0D1B2A;color:rgba(255,255,255,.4);padding:24px 28px;text-align:center;font-size:11px;}
-.footer strong{color:rgba(255,255,255,.7);}
-
-/* QUICK ACCESS BAR */
-.quick-bar{background:var(--w);border:1px solid #E8E4E0;border-radius:14px;padding:16px 20px;margin-bottom:32px;display:flex;align-items:center;gap:12px;overflow-x:auto;}
-.quick-bar span{font-size:12px;font-weight:700;color:var(--tl);white-space:nowrap;flex-shrink:0;}
-.quick-chip{display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0;transition:all .2s;}
-.quick-chip:hover{transform:scale(1.05);}
-.qc-teach{background:var(--bl);color:var(--b);}
-.qc-lab{background:#F0FFF5;color:var(--grn);}
-.qc-game{background:#FFF3E8;color:var(--org);}
-.qc-doc{background:#F0E8FF;color:var(--pur);}
-
-@media(max-width:600px){
-  .hero h1{font-size:24px;}
-  .hero-stats{gap:16px;}
-  .card-grid{grid-template-columns:1fr;}
-  .quick-bar{flex-wrap:wrap;}
-  .nav-right{display:none;}
-}
+.hero{text-align:center;padding:48px 0 32px;position:relative}
+.hero-title{font-family:'Orbitron',sans-serif;font-size:32px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;background:linear-gradient(135deg,#fff 0%,var(--indigo-l) 40%,var(--cyan) 70%,var(--violet) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;margin-bottom:10px;line-height:1.2}
+.hero-sub{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text-muted);letter-spacing:.18em;margin-bottom:28px}
+.orbit-ring{position:absolute;width:200px;height:200px;border:1px solid rgba(99,102,241,.15);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);animation:orbit 20s linear infinite}
+.orbit-ring:nth-child(2){width:300px;height:300px;animation-duration:35s;animation-direction:reverse;border-color:rgba(34,211,238,.08)}
+.orbit-dot{position:absolute;width:6px;height:6px;background:var(--indigo-l);border-radius:50%;box-shadow:var(--glow-i);top:-3px;left:50%;transform:translateX(-50%)}
+@keyframes orbit{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.steps-row{display:flex;gap:0;margin:20px 0}
+.step-node{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;position:relative}
+.step-circle{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid var(--border2);background:rgba(10,22,48,.8);font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;color:var(--text-muted);text-decoration:none;transition:all .3s;cursor:pointer}
+.step-circle:hover{border-color:var(--indigo);color:var(--indigo-l);box-shadow:var(--glow-i);transform:scale(1.1)}
+.step-circle.done{background:linear-gradient(135deg,var(--indigo-d),var(--indigo));border-color:var(--indigo);color:#fff;box-shadow:var(--glow-i)}
+.step-line{position:absolute;top:21px;left:calc(50% + 22px);right:calc(-50% + 22px);height:2px;background:linear-gradient(90deg,var(--border2),var(--border));z-index:-1}
+.step-node:last-child .step-line{display:none}
+.step-label{font-size:9px;color:var(--text-muted);text-align:center;line-height:1.5}
 </style>
 </head>
 <body>
-
-<!-- NAV -->
-<nav class="nav">
-  <div class="nav-left">
-    <span class="nav-badge">KFI</span>
-    <div><div class="nav-title">AI 활용 식품개발 실무</div><div class="nav-sub">통합 포털 v3.0</div></div>
+<canvas id="star-canvas"></canvas>
+<div class="nebula-bg"></div>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-title">🍱 FOOD<br>DEV SYS</div>
+    <div class="sidebar-logo-sub"><span class="sidebar-logo-dot"></span>MISSION ACTIVE — v3.0</div>
   </div>
-  <div class="nav-right">
-    <span class="nav-link active" onclick="scrollTo('top')">홈</span>
-    <span class="nav-link" onclick="scrollTo('teach')">교안</span>
-    <span class="nav-link" onclick="scrollTo('lab')">실험실</span>
-    <span class="nav-link" onclick="scrollTo('rd')">R&D 도구</span>
-    <span class="nav-link" onclick="scrollTo('game')">게임·퀴즈</span>
-    <span class="nav-link" onclick="scrollTo('doc')">문서·양식</span>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Command</div>
+    <a href="index.html" class="nav-item active"><span class="nav-icon">🏠</span><span class="nav-label-text">Mission Home</span><span class="nav-badge">00</span></a>
+    <div class="nav-section-label">Stages</div>
+    <a href="page_A.html" class="nav-item"><span class="nav-icon">🔭</span><span class="nav-label-text">Stage A — 시장조사</span><span class="nav-badge">A</span></a>
+    <a href="page_B.html" class="nav-item"><span class="nav-icon">⚗️</span><span class="nav-label-text">Stage B — 배합설계</span><span class="nav-badge">B</span></a>
+    <a href="page_C.html" class="nav-item"><span class="nav-icon">🏭</span><span class="nav-label-text">Stage C — 제조공정</span><span class="nav-badge">C</span></a>
+    <a href="page_D.html" class="nav-item"><span class="nav-icon">🧫</span><span class="nav-label-text">Stage D — 품질안전</span><span class="nav-badge">D</span></a>
+    <a href="page_E.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label-text">Stage E — 포장표시</span><span class="nav-badge">E</span></a>
+    <a href="page_F.html" class="nav-item"><span class="nav-icon">💫</span><span class="nav-label-text">Stage F — 원가출시</span><span class="nav-badge">F</span></a>
+    <a href="page_G.html" class="nav-item"><span class="nav-icon">🌌</span><span class="nav-label-text">Stage G — 최종보고</span><span class="nav-badge">G</span></a>
   </div>
 </nav>
-
-<!-- HERO -->
-<section class="hero" id="top">
-  <div class="hero-inner">
-    <div class="hero-badge">🎓 식품전공 학생 대상 · 6주 과정 · 전체 자료 올인원</div>
-    <h1>AI 활용 <span>식품개발 실무</span><br>통합 포털</h1>
-    <p>교안, 실습 도구, 게임, 시뮬레이터, 문서 양식까지<br>수업에 필요한 모든 자료를 한 곳에서 사용하세요.</p>
-    <div class="hero-stats">
-      <div class="hero-stat"><div class="num">19</div><div class="lbl">총 자료 수</div></div>
-      <div class="hero-stat"><div class="num">6</div><div class="lbl">주 과정</div></div>
-      <div class="hero-stat"><div class="num">12</div><div class="lbl">차시</div></div>
-      <div class="hero-stat"><div class="num">8</div><div class="lbl">인터랙티브 도구</div></div>
+<div class="main">
+  <div class="page-header">
+    <span class="header-icon">🌌</span>
+    <div class="header-text">
+      <div class="header-title">AI FOOD DEVELOPMENT SYSTEM</div>
+      <div class="header-sub">◈ MISSION CONTROL — DEEP SPACE EDITION</div>
     </div>
+    <div class="header-badge">HOME</div>
   </div>
-</section>
+  <div class="status-bar">
+    <span class="stat-item">MISSION:<span id="sd_mission">--</span></span>
+    <span class="stat-item">PROGRESS:<span id="sd_pct">0%</span></span>
+    <span class="stat-item">STAGES CLEARED:<span id="sd_done">0/7</span></span>
+    <span class="stat-item">STATUS:<span>ACTIVE</span></span>
+  </div>
 
-<div class="content">
+  <div style="padding:28px 36px;overflow-y:auto">
+    <!-- Hero -->
+    <div class="hero">
+      <div class="orbit-ring"><div class="orbit-dot"></div></div>
+      <div class="orbit-ring"></div>
+      <div class="hero-title">식품개발<br>미션센터</div>
+      <div class="hero-sub">◈ INITIALIZING FOOD DEVELOPMENT PROTOCOL ◈</div>
+    </div>
 
-<!-- QUICK ACCESS -->
-<div class="quick-bar">
-  <span>⚡ 바로가기</span>
-  <a class="quick-chip qc-teach" href="hallucination_lesson.html">⚠️ 할루시네이션 교안</a>
-  <a class="quick-chip qc-teach" href="prompt_cheatsheet.html">📋 치트시트</a>
-  <a class="quick-chip qc-lab" href="digital_twin_lab.html">🧬 디지털 트윈 랩</a>
-  <a class="quick-chip qc-lab" href="formulation_simulator.html">⚗️ 배합 시뮬레이터</a>
-  <a class="quick-chip qc-game" href="virtual_fgd.html">🎙️ 가상 FGD</a>
-  <a class="quick-chip qc-doc" href="haccp_generator.html">🛡️ HACCP 생성기</a>
-</div>
+    <!-- Project Info -->
+    <div class="card">
+      <div class="card-title">◈ MISSION BRIEFING — 프로젝트 정보</div>
+      <div class="card-2col">
+        <div class="form-row"><label>Product Name</label><input type="text" id="prod_name" placeholder="예) 저당 그릭요거트 음료" oninput="updateMission()"></div>
+        <div class="form-row"><label>Category</label>
+          <select><option>음료류</option><option>유제품류</option><option>과자·스낵류</option><option>즉석식품류</option><option>건강기능식품</option></select>
+        </div>
+        <div class="form-row"><label>Lead Scientist</label><input type="text" placeholder="담당자 이름"></div>
+        <div class="form-row"><label>Target Launch Date</label><input type="text" placeholder="2025년 9월"></div>
+        <div class="form-row" style="grid-column:1/-1"><label>Mission Concept</label><textarea placeholder="제품 컨셉을 입력하세요..."></textarea></div>
+      </div>
+      <div class="btn-row"><button class="btn" onclick="alert('◈ MISSION DATA SAVED')">◈ SAVE MISSION DATA</button></div>
+    </div>
 
-<!-- 1. 교안·커리큘럼 -->
-<div class="section" id="teach">
-  <div class="sec-header">
-    <div class="sec-bar" style="background:var(--b)"></div>
-    <h2 class="sec-title">📚 교안 · 커리큘럼</h2>
-    <span class="sec-count">5종</span>
-  </div>
-  <div class="card-grid">
-    <a class="card" data-color="blue" href="curriculum.html">
-      <span class="card-icon">📅</span>
-      <span class="card-type type-html">HTML</span>
-      <div class="card-name">6주 커리큘럼</div>
-      <div class="card-desc">M1~M6 모듈별 학습목표, 세션, 산출물 아코디언</div>
-      <span class="card-arrow">→</span>
-    </a>
-    <a class="card" data-color="blue" href="hallucination_lesson.html">
-      <span class="card-icon">⚠️</span>
-      <span class="card-type type-html">HTML</span>
-      <div class="card-name">할루시네이션 교안</div>
-      <div class="card-desc">정보 왜곡 원리, 실제 사례, 검증 3단계</div>
-      <span class="card-arrow">→</span>
-    </a>
-    <a class="card" data-color="blue" href="prompt_cheatsheet.html">
-      <span class="card-icon">📋</span>
-      <span class="card-type type-html">HTML</span>
-      <div class="card-name">프롬프트 치트시트</div>
-      <div class="card-desc">6개 카테고리 18개 템플릿, 복사 버튼 포함</div>
-      <span class="card-arrow">→</span>
-    </a>
-    <a class="card" data-color="blue" href="resource_board.html">
-      <span class="card-icon">📌</span>
-      <span class="card-type type-html">HTML</span>
-      <div class="card-name">리소스 보드</div>
-      <div class="card-desc">Padlet 스타일 수업 자료 모음, API 키 가이드</div>
-      <span class="card-arrow">→</span>
-    </a>
-    <a class="card" data-color="orange" href="lecture_full.pptx">
-      <span class="card-icon">📊</span>
-      <span class="card-type type-ppt">PPT 26장</span>
-      <div class="card-name">6주 강의 슬라이드</div>
-      <div class="card-desc">정보원양식 M1~M6 전체 강의 자료</div>
-      <span class="card-arrow">↓</span>
-    </a>
-  </div>
-</div>
+    <!-- Progress -->
+    <div class="card">
+      <div class="card-title">◈ MISSION PROGRESS</div>
+      <div class="metric-grid">
+        <div class="metric-card"><div class="metric-label">Total Progress</div><div class="metric-value" id="m_pct">0%</div></div>
+        <div class="metric-card"><div class="metric-label">Stages Cleared</div><div class="metric-value" id="m_done">0/7</div></div>
+        <div class="metric-card"><div class="metric-label">Current Stage</div><div class="metric-value" id="m_cur" style="font-size:28px">A</div></div>
+        <div class="metric-card"><div class="metric-label">Remaining</div><div class="metric-value" id="m_rem">7</div></div>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="main_bar" style="width:0%">0%</div></div>
 
-<!-- 2. 가상 실험실 -->
-<div class="section" id="lab">
-  <div class="sec-header">
-    <div class="sec-bar" style="background:var(--grn)"></div>
-    <h2 class="sec-title">🧬 가상 실험실</h2>
-    <span class="sec-count">2종</span>
-  </div>
-  <div class="card-grid">
-    <a class="card" data-color="green" href="digital_twin_lab.html">
-      <span class="card-new">NEW</span>
-      <span class="card-icon">🧬</span>
-      <span class="card-type type-tool">인터랙티브</span>
-      <div class="card-name">디지털 트윈 랩</div>
-      <div class="card-desc">가상 R&D 실험실 — 원료 투입, 공정 실행, 실시간 pH/Brix/미생물 계측, AI 분석</div>
-      <span class="card-arrow">→</span>
-    </a>
-    <a class="card" data-color="green" href="formulation_simulator.html">
-      <span class="card-icon">⚗️</span>
-      <span class="card-type type-tool">인터랙티브</span>
-      <div class="card-name">배합 시뮬레이터</div>
-      <div class="card-desc">제품유형·Brix/pH·원료 선택 → 배합표 자동 생성</div>
-      <span class="card-arrow">→</span>
-    </a>
-  </div>
-</div>
+      <!-- Stage Node Map -->
+      <div class="steps-row" style="margin-top:24px">
+        <div class="step-node"><a href="page_A.html" class="step-circle" id="sc_A">A</a><div class="step-line"></div><div class="step-label">시장<br>조사</div></div>
+        <div class="step-node"><a href="page_B.html" class="step-circle" id="sc_B">B</a><div class="step-line"></div><div class="step-label">배합<br>설계</div></div>
+        <div class="step-node"><a href="page_C.html" class="step-circle" id="sc_C">C</a><div class="step-line"></div><div class="step-label">제조<br>공정</div></div>
+        <div class="step-node"><a href="page_D.html" class="step-circle" id="sc_D">D</a><div class="step-line"></div><div class="step-label">품질<br>안전</div></div>
+        <div class="step-node"><a href="page_E.html" class="step-circle" id="sc_E">E</a><div class="step-line"></div><div class="step-label">포장<br>표시</div></div>
+        <div class="step-node"><a href="page_F.html" class="step-circle" id="sc_F">F</a><div class="step-line"></div><div class="step-label">원가<br>출시</div></div>
+        <div class="step-node"><a href="page_G.html" class="step-circle" id="sc_G">G</a><div class="step-label">최종<br>보고</div></div>
+      </div>
+    </div>
 
-<!-- 3. R&D 도구 -->
-<div class="section" id="rd">
-  <div class="sec-header">
-    <div class="sec-bar" style="background:var(--cyan)"></div>
-    <h2 class="sec-title">🔧 R&D 실무 도구</h2>
-    <span class="sec-count">5종</span>
-  </div>
-  <div class="card-grid">
-    <a class="card" data-color="cyan" href="cost_calculator.html">
-      <span class="card-new">NEW</span>
-      <span class="card-icon">💰</span>
-      <span class="card-type type-tool">인터랙티브</span>
-      <div class="card-name">원가 계산기</div>
-      <div class="card-desc">원료비 + 제조경비 → 공장가/소비자가 자동 산출, 파이차트</div>
-      <span class="card-arrow">→</span>
-    </a>
-    <a class="card" data-color="cyan" href="shelflife_simulator.html">
-      <span class="card-new">NEW</span>
-      <span class="card-icon">📅</span>
-      <span class="card-type type-tool">인터랙티브</span>
-      <div class="card-name">유통기한 예측 시뮬레이터</div>
-      <div class="card-desc">Q10 가속 실험 설계, 조건별 시험 기간 자동 계산</div>
-      <span class="card-arrow">→</span>
-    </a>
-    <a class="card" data-color="cyan" href="label_preview.html">
-      <span class="card-new">NEW</span>
-      <span class="card-icon">🏷️</span>
-      <span class="card-type type-tool">인터랙티브</span>
-      <div class="card-name">제품 라벨 미리보기</div>
-      <div class="card-desc">영양성분 자동 계산 + 실제 라벨 형태 시각화</div>
-      <span class="card-arrow">→</span>
-    </a>
-    <a class="card" data-color="red" href="haccp_generator.html">
-      <span class="card-new">NEW</span>
-      <span class="card-icon">🛡️</span>
-      <span class="card-type type-tool">인터랙티브</span>
-      <div class="card-name">HACCP 관리계획서 생성기</div>
-      <div class="card-desc">공정 선택 → 위해분석 + CCP 관리계획 + 선행요건 자동 생성</div>
-      <span class="card-arrow">→</span>
-    </a>
-    <a class="card" data-color="blue" href="prompt_evaluator.html">
-      <span class="card-icon">🎯</span>
-      <span class="card-type type-tool">인터랙티브</span>
-      <div class="card-name">프롬프트 평가기</div>
-      <div class="card-desc">5항목 100점 실시간 채점, 개선 제안 제공</div>
-      <span class="card-arrow">→</span>
-    </a>
-  </div>
-</div>
-
-<!-- 4. 게임·퀴즈 -->
-<div class="section" id="game">
-  <div class="sec-header">
-    <div class="sec-bar" style="background:var(--org)"></div>
-    <h2 class="sec-title">🎮 게임 · 퀴즈</h2>
-    <span class="sec-count">3종</span>
-  </div>
-  <div class="card-grid">
-    <a class="card" data-color="orange" href="virtual_fgd.html">
-      <span class="card-new">NEW</span>
-      <span class="card-icon">🎙️</span>
-      <span class="card-type type-app">게임</span>
-      <div class="card-name">AI 가상 소비자 FGD</div>
-      <div class="card-desc">8종 페르소나 패널, 3라운드 토론, 종합 점수 리포트</div>
-      <span class="card-arrow">→</span>
-    </a>
-    <a class="card" data-color="orange" href="ai_vs_human.html">
-      <span class="card-icon">🤖</span>
-      <span class="card-type type-app">게임</span>
-      <div class="card-name">AI vs 사람 블라인드 테스트</div>
-      <div class="card-desc">식품 Q&A 6문제, AI/전문가 답변 구분 게임</div>
-      <span class="card-arrow">→</span>
-    </a>
-    <a class="card" data-color="orange" href="hallucination_app.html">
-      <span class="card-icon">📝</span>
-      <span class="card-type type-app">퀴즈</span>
-      <div class="card-name">할루시네이션 교안 앱</div>
-      <div class="card-desc">5섹션 교안 + 프롬프트 시뮬레이터 + 3문항 퀴즈</div>
-      <span class="card-arrow">→</span>
-    </a>
-  </div>
-</div>
-
-<!-- 5. 문서·양식 -->
-<div class="section" id="doc">
-  <div class="sec-header">
-    <div class="sec-bar" style="background:var(--pur)"></div>
-    <h2 class="sec-title">📝 문서 · 양식</h2>
-    <span class="sec-count">4종</span>
-  </div>
-  <div class="card-grid">
-    <a class="card" data-color="purple" href="workbook.xlsx">
-      <span class="card-icon">📓</span>
-      <span class="card-type type-excel">EXCEL</span>
-      <div class="card-name">실습 워크북</div>
-      <div class="card-desc">프롬프트 작성→검증→개선 3단계 기록, 3시트</div>
-      <span class="card-arrow">↓</span>
-    </a>
-    <a class="card" data-color="purple" href="rubric.xlsx">
-      <span class="card-icon">📊</span>
-      <span class="card-type type-excel">EXCEL</span>
-      <div class="card-name">평가 루브릭 + 동료평가</div>
-      <div class="card-desc">5항목 100점 채점표 + 동료평가 시트, 수식 내장</div>
-      <span class="card-arrow">↓</span>
-    </a>
-    <a class="card" data-color="orange" href="hallucination_full.pptx">
-      <span class="card-icon">⚠️</span>
-      <span class="card-type type-ppt">PPT 3장</span>
-      <div class="card-name">할루시네이션 슬라이드</div>
-      <div class="card-desc">개요 + 사례 + 체크리스트 3장 세트</div>
-      <span class="card-arrow">↓</span>
-    </a>
-    <a class="card" data-color="orange" href="persona_prompt_slide.pptx">
-      <span class="card-icon">🎭</span>
-      <span class="card-type type-ppt">PPT</span>
-      <div class="card-name">페르소나 프롬프트 슬라이드</div>
-      <div class="card-desc">식품마케터 10년차 페르소나 스크립트</div>
-      <span class="card-arrow">↓</span>
-    </a>
-  </div>
-</div>
-
-<!-- API KEYS -->
-<div class="section">
-  <div style="background:var(--w);border:1px solid #E8E4E0;border-radius:14px;padding:22px;">
-    <h3 style="font-size:16px;font-weight:700;color:var(--b);margin-bottom:14px;">🔑 수업 전 준비사항</h3>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">
-      <div style="padding:12px;background:var(--bl);border-radius:8px;"><div style="font-weight:700;font-size:12px;">OpenAI API</div><div style="font-size:10px;color:var(--tm)">platform.openai.com</div></div>
-      <div style="padding:12px;background:#F0FFF5;border-radius:8px;"><div style="font-weight:700;font-size:12px;">Gemini API</div><div style="font-size:10px;color:var(--tm)">aistudio.google.com</div></div>
-      <div style="padding:12px;background:#FFF3E8;border-radius:8px;"><div style="font-weight:700;font-size:12px;">네이버 검색 API</div><div style="font-size:10px;color:var(--tm)">developers.naver.com</div></div>
-      <div style="padding:12px;background:#F0E8FF;border-radius:8px;"><div style="font-weight:700;font-size:12px;">식품안전나라 API</div><div style="font-size:10px;color:var(--tm)">foodsafetykorea.go.kr</div></div>
+    <!-- Stage Checklist -->
+    <div class="card">
+      <div class="card-title">◈ STAGE COMPLETION LOG</div>
+      <div class="check-item"><input type="checkbox" id="ck_A" onchange="calcProg()"> <span>🔭 Stage A — 시장조사 &amp; 기획</span></div>
+      <div class="check-item"><input type="checkbox" id="ck_B" onchange="calcProg()"> <span>⚗️ Stage B — 원료 &amp; 배합 설계</span></div>
+      <div class="check-item"><input type="checkbox" id="ck_C" onchange="calcProg()"> <span>🏭 Stage C — 제조공정 설계</span></div>
+      <div class="check-item"><input type="checkbox" id="ck_D" onchange="calcProg()"> <span>🧫 Stage D — 품질 &amp; 안전성</span></div>
+      <div class="check-item"><input type="checkbox" id="ck_E" onchange="calcProg()"> <span>📦 Stage E — 포장 &amp; 표시사항</span></div>
+      <div class="check-item"><input type="checkbox" id="ck_F" onchange="calcProg()"> <span>💫 Stage F — 원가 &amp; 출시계획</span></div>
+      <div class="check-item"><input type="checkbox" id="ck_G" onchange="calcProg()"> <span>🌌 Stage G — 최종 보고서</span></div>
     </div>
   </div>
 </div>
-
-</div>
-
-<!-- FOOTER -->
-<footer class="footer">
-  <strong>한국식품정보원 (KFI)</strong> &nbsp;·&nbsp; AI 활용 식품개발 실무 &nbsp;·&nbsp; 통합 포털 v3.0 &nbsp;·&nbsp; 19종 자료
-</footer>
-
+<script src="common.js"></script>
 <script>
-function scrollTo(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});}
-
-// Intersection observer for nav highlight
-const sections=document.querySelectorAll('.section[id]');
-const navLinks=document.querySelectorAll('.nav-link');
-const observer=new IntersectionObserver(entries=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting){
-      navLinks.forEach(l=>l.classList.remove('active'));
-      const link=document.querySelector(`.nav-link[onclick="scrollTo('${e.target.id}')"]`);
-      if(link)link.classList.add('active');
-    }
+const STAGES=['A','B','C','D','E','F','G'];
+function calcProg(){
+  const done=STAGES.filter(s=>document.getElementById('ck_'+s).checked).length;
+  const pct=Math.round(done/7*100);
+  document.getElementById('m_pct').textContent=pct+'%';
+  document.getElementById('m_done').textContent=done+'/7';
+  document.getElementById('m_rem').textContent=7-done;
+  document.getElementById('main_bar').style.width=pct+'%';
+  document.getElementById('main_bar').textContent=pct+'%';
+  const next=STAGES.find(s=>!document.getElementById('ck_'+s).checked);
+  document.getElementById('m_cur').textContent=next||'✓';
+  document.getElementById('sd_pct').textContent=pct+'%';
+  document.getElementById('sd_done').textContent=done+'/7';
+  STAGES.forEach(s=>{
+    const c=document.getElementById('sc_'+s);
+    document.getElementById('ck_'+s).checked?c.classList.add('done'):c.classList.remove('done');
   });
-},{threshold:0.3});
-sections.forEach(s=>observer.observe(s));
+}
+function updateMission(){
+  const n=document.getElementById('prod_name').value;
+  document.getElementById('sd_mission').textContent=n||'--';
+}
 </script>
 </body>
 </html>

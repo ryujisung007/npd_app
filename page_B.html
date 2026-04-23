@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Stage B — 원료 & 배합 설계</title>
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<canvas id="star-canvas"></canvas><div class="nebula-bg"></div>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-title">🍱 FOOD<br>DEV SYS</div>
+    <div class="sidebar-logo-sub"><span class="sidebar-logo-dot"></span>MISSION ACTIVE — v3.0</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Command</div>
+    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label-text">Mission Home</span><span class="nav-badge">00</span></a>
+    <div class="nav-section-label">Stages</div>
+    <a href="page_A.html" class="nav-item"><span class="nav-icon">🔭</span><span class="nav-label-text">Stage A — 시장조사</span><span class="nav-badge">A</span></a>
+    <a href="page_B.html" class="nav-item active"><span class="nav-icon">⚗️</span><span class="nav-label-text">Stage B — 배합설계</span><span class="nav-badge">B</span></a>
+    <a href="page_C.html" class="nav-item"><span class="nav-icon">🏭</span><span class="nav-label-text">Stage C — 제조공정</span><span class="nav-badge">C</span></a>
+    <a href="page_D.html" class="nav-item"><span class="nav-icon">🧫</span><span class="nav-label-text">Stage D — 품질안전</span><span class="nav-badge">D</span></a>
+    <a href="page_E.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label-text">Stage E — 포장표시</span><span class="nav-badge">E</span></a>
+    <a href="page_F.html" class="nav-item"><span class="nav-icon">💫</span><span class="nav-label-text">Stage F — 원가출시</span><span class="nav-badge">F</span></a>
+    <a href="page_G.html" class="nav-item"><span class="nav-icon">🌌</span><span class="nav-label-text">Stage G — 최종보고</span><span class="nav-badge">G</span></a>
+  </div>
+</nav>
+
+<!-- Print Modal -->
+<div class="print-overlay" id="print_modal" onclick="closePrint(event)">
+  <div class="print-box" onclick="event.stopPropagation()">
+    <div class="print-title">◈ FORMULA MATRIX — OUTPUT</div>
+    <div id="print_content"></div>
+    <div class="btn-row" style="margin-top:18px;justify-content:center">
+      <button class="btn" onclick="window.print()">◈ PRINT / PDF</button>
+      <button class="btn btn-rose" onclick="document.getElementById('print_modal').classList.remove('show')">✕ CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <span class="header-icon">⚗️</span>
+    <div class="header-text">
+      <div class="header-title">STAGE B — 원료 &amp; 배합 설계</div>
+      <div class="header-sub">◈ INGREDIENT DB / FORMULA DESIGN / NUTRITION / SPEC SHEET</div>
+    </div>
+    <div class="header-badge">B</div>
+  </div>
+  <div class="status-bar">
+    <span class="stat-item">FORMULA TOTAL:<span id="formula_total_disp">0.00%</span></span>
+    <span class="stat-item">INGREDIENTS:<span id="formula_count">0</span></span>
+    <span class="stat-item">WATER AUTO:<span id="water_disp">100.00%</span></span>
+  </div>
+
+  <div class="tab-section">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('b1',this)">B-1 원료 DB</button>
+      <button class="tab-btn" onclick="switchTab('b2',this)">B-2 배합비 설계</button>
+      <button class="tab-btn" onclick="switchTab('b3',this)">B-3 영양성분</button>
+      <button class="tab-btn" onclick="switchTab('b4',this)">B-4 원료규격서</button>
+      <button class="tab-btn ai-tab" onclick="switchTab('b_up',this)">◈ 자료업로드</button>
+      <button class="tab-btn ai-tab" onclick="switchTab('b_ai',this)">◈ AI 분석</button>
+    </div>
+
+    <!-- B-1 DB -->
+    <div class="tab-content active" id="b1">
+      <div class="info-box">◈ 원료 카드를 클릭하면 배합비 설계(B-2)에 자동으로 추가됩니다.</div>
+      <div class="card">
+        <div class="card-title">◈ INGREDIENT DATABASE</div>
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <input type="text" id="db_search" placeholder="원료명 또는 기능 검색 (예: 단백질, 감미료)" style="flex:1" oninput="searchDB()">
+          <button class="btn btn-sm" onclick="searchDB()">◈ SCAN</button>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          <span class="tag tag-cyan" style="cursor:pointer" onclick="quickDB('단백질')">단백질</span>
+          <span class="tag tag-violet" style="cursor:pointer" onclick="quickDB('감미료')">감미료</span>
+          <span class="tag" style="cursor:pointer" onclick="quickDB('유화제')">유화제</span>
+          <span class="tag tag-amber" style="cursor:pointer" onclick="quickDB('비타민')">비타민</span>
+          <span class="tag tag-emerald" style="cursor:pointer" onclick="quickDB('')">전체보기</span>
+        </div>
+        <div class="ingr-db-grid" id="db_results"></div>
+      </div>
+    </div>
+
+    <!-- B-2 Formula -->
+    <div class="tab-content" id="b2">
+      <div class="card">
+        <div class="card-title">◈ FORMULA MATRIX — 정제수 자동 조정으로 합계 100% 유지</div>
+        <div class="info-box">◈ B-1 원료 클릭 시 자동 추가 | 정제수는 나머지를 자동 계산하여 100%를 맞춥니다</div>
+        <div class="formula-head">
+          <span>원료명</span><span>비율(%)</span><span>사용목적</span><span>단가(원/kg)</span><span>개당단가(원)</span><span>100g당(g)</span><span></span>
+        </div>
+        <div id="formula_rows"></div>
+        <!-- Water row (auto) -->
+        <div class="formula-grid" style="background:rgba(34,211,238,0.04);border-radius:6px;padding:3px 0">
+          <input type="text" value="정제수 (자동조정)" readonly>
+          <input type="number" id="water_pct" value="100" readonly>
+          <input type="text" value="용매 / 충진" readonly>
+          <input type="number" value="0" readonly>
+          <input type="number" id="water_cost" value="0.00" readonly>
+          <input type="number" id="water_100g" value="100" readonly>
+          <span style="font-size:14px;color:var(--cyan);text-align:center">💧</span>
+        </div>
+        <div class="total-row" id="formula_total_bar">
+          <span>TOTAL: <strong id="ft_sum">0.0</strong> %</span>
+          <span id="ft_status" class="total-ok">◈ 계산 중...</span>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-sm" onclick="addEmptyRow()">+ 원료 추가</button>
+          <button class="btn btn-amber btn-sm" onclick="showPrint()">◈ 배합표 출력</button>
+          <button class="btn btn-rose btn-sm" onclick="clearFormula()">✕ 초기화</button>
+        </div>
+      </div>
+
+      <!-- AI Researcher Analysis (Feature 5) -->
+      <div class="card">
+        <div class="card-title">◈ AI RESEARCHER — 배합비 특성 분석</div>
+        <div class="info-box">◈ 배합비 입력 후 분석 실행 — 관능 특성, 기술적 주의사항을 AI 연구원이 분석합니다.</div>
+        <div class="btn-row">
+          <button class="btn btn-violet" onclick="runFormulaAI()">◈ LAUNCH ANALYSIS</button>
+        </div>
+        <div class="ai-output" id="formula_ai_out"></div>
+      </div>
+    </div>
+
+    <!-- B-3 Nutrition -->
+    <div class="tab-content" id="b3">
+      <div class="card">
+        <div class="card-title">◈ NUTRITION PROFILE CALCULATOR</div>
+        <div class="form-row"><label>1회 제공량 (mL/g)</label><div class="slider-wrap"><input type="range" id="sl_sv" min="50" max="500" value="200" oninput="updateSlider('sl_sv','ml');calcNutr()"><span class="slider-val" id="sl_sv_val">200ml</span></div></div>
+        <div class="card-2col">
+          <div class="form-row"><label>열량 (kcal)</label><input type="number" id="n_cal" value="80" oninput="calcNutr()"></div>
+          <div class="form-row"><label>탄수화물 (g)</label><input type="number" id="n_carb" value="8" oninput="calcNutr()"></div>
+          <div class="form-row"><label>당류 (g)</label><input type="number" id="n_sugar" value="1" oninput="calcNutr()"></div>
+          <div class="form-row"><label>단백질 (g)</label><input type="number" id="n_prot" value="12" oninput="calcNutr()"></div>
+          <div class="form-row"><label>지방 (g)</label><input type="number" id="n_fat" value="2" oninput="calcNutr()"></div>
+          <div class="form-row"><label>나트륨 (mg)</label><input type="number" id="n_sod" value="180" oninput="calcNutr()"></div>
+        </div>
+        <div style="margin-top:4px;padding-top:14px;border-top:1px solid var(--border)">
+          <div class="card-title" style="margin-bottom:12px;font-size:9px">◈ % 기준치</div>
+          <div id="nutri_bars"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B-4 Spec -->
+    <div class="tab-content" id="b4">
+      <div class="card">
+        <div class="card-title">◈ INGREDIENT SPEC SHEET</div>
+        <div class="form-row"><label>원료명 (국문)</label><input type="text" placeholder="예) 탈지분유"></div>
+        <div class="form-row"><label>원료명 (영문)</label><input type="text" placeholder="예) Skim Milk Powder"></div>
+        <div class="card-2col">
+          <div class="form-row"><label>원료 유형</label><select><option>농축·건조</option><option>액상</option><option>분말</option><option>첨가물</option><option>향료</option></select></div>
+          <div class="form-row"><label>원산지</label><input type="text" placeholder="예) 뉴질랜드"></div>
+          <div class="form-row"><label>공급업체</label><input type="text" placeholder="예) ○○식품원료(주)"></div>
+          <div class="form-row"><label>보관 조건</label><input type="text" placeholder="예) 서늘하고 건조한 곳"></div>
+        </div>
+        <div class="form-row"><label>품질 기준</label><textarea placeholder="수분 함량, pH, 단백질 함량 등..."></textarea></div>
+        <div class="btn-row"><button class="btn">◈ SAVE</button><button class="btn btn-violet">+ 다음 원료</button></div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="b_up">
+      <div class="card"><div class="card-title">◈ DATA UPLINK</div>
+        <div class="upload-zone"><input type="file" id="up_b" multiple onchange="handleUpload('up_b','prev_b')"><div class="upload-icon">◈</div><div class="upload-text">원료 스펙시트, COA, 성분표 업로드<br>PDF · EXCEL · WORD</div></div>
+        <div class="file-preview" id="prev_b"></div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="b_ai">
+      <div class="card"><div class="card-title">◈ NEURAL ANALYSIS ENGINE</div>
+        <div class="form-row"><label>Analysis Mode</label>
+          <select><option>최적 배합비 추천</option><option>영양성분 자동 계산</option><option>원료 대체재 추천</option><option>원가 절감 배합 제안</option></select>
+        </div>
+        <div class="form-row"><label>Parameters</label><textarea placeholder="예) 단백질 15g 이상, 칼로리 100kcal 이하..."></textarea></div>
+        <div class="btn-row">
+          <button class="btn btn-violet" onclick="runAI('b_ai_out',[
+            '◈ ANALYZING FORMULA MATRIX...',
+            '◈ 단백질: 12g → 목표 달성 가능',
+            '⚠ 열량: 120kcal → 100kcal 이하 조정 권장',
+            '◈ OPTIMIZATION PROTOCOL...',
+            '→ WPI 15%→18% 조정 시 단백질 15g 달성',
+            '→ 에리스리톨 0.5% 감소 + 스테비아 0.02% 추가로 원가 절감',
+            '◈ OPTIMIZED FORMULA TRANSMITTED'
+          ])">◈ RUN NEURAL ENGINE</button>
+        </div>
+        <div class="ai-output" id="b_ai_out"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="common.js"></script>
+<script>
+// ── Ingredient DB ──
+const ingrDB=[
+  {name:'WPI (유청단백분리물)',func:'단백질 강화',prot:90,cal:380,fat:1,carb:5,price:28000,purpose:'단백질 강화'},
+  {name:'WPC (유청단백농축물)',func:'단백질 강화',prot:75,cal:350,fat:5,carb:12,price:18000,purpose:'단백질 강화'},
+  {name:'탈지분유',func:'단백질·유당',prot:36,cal:358,fat:1,carb:52,price:6500,purpose:'단백질·칼슘 강화'},
+  {name:'에리스리톨',func:'저열량 감미',prot:0,cal:0,fat:0,carb:100,price:8000,purpose:'감미'},
+  {name:'스테비올배당체',func:'천연 감미',prot:0,cal:0,fat:0,carb:0,price:45000,purpose:'감미'},
+  {name:'대두 레시틴',func:'유화제',prot:0,cal:760,fat:96,carb:0,price:12000,purpose:'유화 안정성'},
+  {name:'구아검',func:'증점·안정',prot:5,cal:220,fat:1,carb:80,price:15000,purpose:'점도 조절'},
+  {name:'비타민C',func:'항산화·영양',prot:0,cal:0,fat:0,carb:0,price:22000,purpose:'항산화·보존'},
+  {name:'바닐라 향료',func:'향미 부여',prot:0,cal:0,fat:0,carb:0,price:35000,purpose:'향미'},
+  {name:'구연산',func:'산미·보존',prot:0,cal:0,fat:0,carb:0,price:3500,purpose:'pH 조절·산미'},
+];
+let dbFiltered=[...ingrDB];
+function searchDB(){const q=document.getElementById('db_search').value.toLowerCase();dbFiltered=q?ingrDB.filter(i=>i.name.toLowerCase().includes(q)||i.func.toLowerCase().includes(q)):ingrDB;renderDB();}
+function quickDB(q){document.getElementById('db_search').value=q;searchDB();}
+function renderDB(){
+  const el=document.getElementById('db_results');
+  if(!dbFiltered.length){el.innerHTML='<div class="warn-box">검색 결과 없음</div>';return;}
+  el.innerHTML=dbFiltered.map((d,i)=>{
+    const idx=ingrDB.indexOf(d);
+    return`<div class="ingr-db-item" onclick="addFromDB(${idx})">
+      <div class="iname">${d.name}</div>
+      <div class="ifunc">${d.func}</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px">
+        <span class="tag" style="font-size:9px">단백 ${d.prot}%</span>
+        <span class="tag tag-rose" style="font-size:9px">Cal ${d.cal}</span>
+        <span class="tag tag-amber" style="font-size:9px">${d.price.toLocaleString()}원/kg</span>
+      </div>
+      <button class="add-btn-small" onclick="event.stopPropagation();addFromDB(${idx})">◈ 배합에 추가</button>
+    </div>`;
+  }).join('');
+}
+
+// ── Formula ──
+let formulaRows=[
+  {name:'탈지분유',pct:15,purpose:'단백질·칼슘',price:6500},
+  {name:'에리스리톨',pct:5,purpose:'감미',price:8000},
+  {name:'바닐라 향료',pct:0.3,purpose:'향미',price:35000},
+];
+function addFromDB(idx){
+  document.querySelectorAll('.tab-btn').forEach(b=>{if(b.textContent.includes('B-2'))b.click();});
+  const d=ingrDB[idx];
+  formulaRows.push({name:d.name,pct:1,purpose:d.purpose,price:d.price});
+  renderFormula();
+}
+function addEmptyRow(){formulaRows.push({name:'',pct:0,purpose:'',price:0});renderFormula();}
+function removeRow(i){formulaRows.splice(i,1);renderFormula();}
+function clearFormula(){formulaRows=[];renderFormula();}
+function unitCost(r){return r.price/1000*r.pct/100*1000;}
+function renderFormula(){
+  document.getElementById('formula_rows').innerHTML=formulaRows.map((r,i)=>`
+    <div class="formula-grid">
+      <input type="text" value="${r.name}" placeholder="원료명" onchange="formulaRows[${i}].name=this.value">
+      <input type="number" value="${r.pct}" min="0" max="100" step="0.01" oninput="formulaRows[${i}].pct=+this.value;updateFormula()">
+      <input type="text" value="${r.purpose}" placeholder="사용목적" onchange="formulaRows[${i}].purpose=this.value">
+      <input type="number" value="${r.price}" placeholder="단가/kg" oninput="formulaRows[${i}].price=+this.value;updateFormula()">
+      <input type="number" value="${unitCost(r).toFixed(2)}" readonly>
+      <input type="number" value="${(+r.pct).toFixed(2)}" readonly>
+      <button class="btn btn-rose btn-sm" style="padding:5px 8px" onclick="removeRow(${i})">✕</button>
+    </div>`).join('');
+  updateFormula();
+}
+function updateFormula(){
+  const other=formulaRows.reduce((s,r)=>s+(+r.pct||0),0);
+  const water=Math.max(0,100-other);
+  document.getElementById('water_pct').value=water.toFixed(2);
+  document.getElementById('water_100g').value=water.toFixed(2);
+  document.getElementById('water_cost').value='0.00';
+  document.getElementById('water_disp').textContent=water.toFixed(2)+'%';
+  const total=other+water;
+  document.getElementById('ft_sum').textContent=total.toFixed(1);
+  document.getElementById('formula_total_disp').textContent=total.toFixed(2)+'%';
+  document.getElementById('formula_count').textContent=formulaRows.length+1;
+  const st=document.getElementById('ft_status');
+  if(Math.abs(total-100)<0.01){st.textContent='◈ 100% LOCKED';st.className='total-ok';}
+  else{st.textContent='⚠ ADJUSTING...';st.className='total-err';}
+  // update readonly cells
+  document.querySelectorAll('#formula_rows .formula-grid').forEach((row,i)=>{
+    const inputs=row.querySelectorAll('input');
+    const r=formulaRows[i];
+    if(r){inputs[4].value=unitCost(r).toFixed(2);inputs[5].value=(+r.pct||0).toFixed(2);}
+  });
+}
+function showPrint(){
+  const other=formulaRows.reduce((s,r)=>s+(+r.pct||0),0);
+  const water=Math.max(0,100-other);
+  const all=[...formulaRows,{name:'정제수',pct:water,purpose:'용매/충진',price:0}];
+  const totalCost=all.reduce((s,r)=>s+unitCost(r),0);
+  document.getElementById('print_content').innerHTML=`
+    <table><thead><tr><th>NO</th><th>원료명</th><th>구성비율(%)</th><th>사용목적</th><th>단위당단가(원/kg)</th><th>개당단가(원)</th></tr></thead>
+    <tbody>${all.map((r,i)=>`<tr><td style="text-align:center">${i+1}</td><td>${r.name||'-'}</td><td style="text-align:center;color:var(--amber)">${(+r.pct).toFixed(2)}%</td><td>${r.purpose||'-'}</td><td style="text-align:right">${(+r.price).toLocaleString()}</td><td style="text-align:right;color:var(--emerald)">${unitCost(r).toFixed(2)}</td></tr>`).join('')}
+    <tr style="background:rgba(99,102,241,.1)"><td colspan="2" style="color:var(--indigo-l);font-weight:700">합계</td><td style="text-align:center;color:var(--amber)">100.00%</td><td></td><td></td><td style="text-align:right;color:var(--emerald)">${totalCost.toFixed(2)}원</td></tr>
+    </tbody></table>`;
+  document.getElementById('print_modal').classList.add('show');
+}
+function closePrint(e){if(e.target===document.getElementById('print_modal'))document.getElementById('print_modal').classList.remove('show');}
+
+// ── AI Formula Analysis (Feature 5) ──
+function runFormulaAI(){
+  const out=document.getElementById('formula_ai_out');
+  out.style.display='block';
+  const other=formulaRows.reduce((s,r)=>s+(+r.pct||0),0);
+  const water=Math.max(0,100-other);
+  const hasSweetener=formulaRows.some(r=>r.name.includes('에리스리톨')||r.name.includes('스테비아'));
+  const hasProtein=formulaRows.some(r=>r.name.includes('WPI')||r.name.includes('WPC')||r.name.includes('분유'));
+  const hasEmulsifier=formulaRows.some(r=>r.name.includes('레시틴')||r.name.includes('유화'));
+  const msgs=[
+    '◈ AI RESEARCHER INITIALIZING...',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    `◈ [Formula Profile] 원료 ${formulaRows.length}종 + 정제수 ${water.toFixed(1)}%`,
+    water>70?'◈ 고수분 제품 → 청량감 우수, 묽은 질감 예상':'◈ 저수분 제품 → 농후한 질감, 충진감 우수',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '◈ [관능 특성 예측]',
+    hasSweetener?'✓ 감미료 검출 → 저칼로리 단맛 구현, 에리스리톨 냉감 주의':'⚠ 감미료 미검출 → 맛 조정 필요',
+    hasProtein?'✓ 단백질 원료 → 고소한 유제품 향미, 마이야르 반응 가능':'◈ 단백질 원료 없음 → 담백한 맛',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '◈ [기술적 주의사항]',
+    hasEmulsifier?'✓ 유화제 포함 → 안정성 양호':'⚠ 유화제 없음 → 층 분리 가능 → 레시틴 0.2~0.5% 추가 권장',
+    '⚠ pH 관리: 단백질 pH 3.5↓ 에서 침전 위험 → pH 4.0~4.5 유지',
+    '⚠ 살균: 85°C↑ 단백질 변성 최소화를 위한 시간 단축 고려',
+    hasSweetener&&hasProtein?'⚠ 에리스리톨+단백질 → 냉각 시 석출 가능, 균질화 필수':'',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '◈ ANALYSIS COMPLETE — REPORT TRANSMITTED'
+  ].filter(Boolean);
+  out.innerHTML='';
+  let i=0;
+  const iv=setInterval(()=>{
+    if(i>=msgs.length){clearInterval(iv);return;}
+    const div=document.createElement('div');
+    div.className='ai-result-item';
+    div.textContent=msgs[i];
+    div.style.opacity='0';div.style.transform='translateY(4px)';
+    out.appendChild(div);
+    requestAnimationFrame(()=>{div.style.transition='opacity .3s,transform .3s';div.style.opacity='1';div.style.transform='translateY(0)';});
+    i++;
+  },400);
+}
+
+// ── Nutrition ──
+function calcNutr(){
+  const ref={cal:2000,carb:324,sugar:100,prot:55,fat:54,sod:2000};
+  const vals={cal:+document.getElementById('n_cal').value,carb:+document.getElementById('n_carb').value,sugar:+document.getElementById('n_sugar').value,prot:+document.getElementById('n_prot').value,fat:+document.getElementById('n_fat').value,sod:+document.getElementById('n_sod').value};
+  const cols={cal:'linear-gradient(90deg,var(--indigo-d),var(--indigo))',carb:'linear-gradient(90deg,#0891b2,var(--cyan))',sugar:'linear-gradient(90deg,#9f1239,var(--rose))',prot:'linear-gradient(90deg,var(--cyan-d),var(--emerald))',fat:'linear-gradient(90deg,var(--violet-d),var(--violet))',sod:'linear-gradient(90deg,#92400e,var(--amber))'};
+  const lbls={cal:'열량',carb:'탄수화물',sugar:'당류',prot:'단백질',fat:'지방',sod:'나트륨'};
+  const units={cal:'kcal',carb:'g',sugar:'g',prot:'g',fat:'g',sod:'mg'};
+  document.getElementById('nutri_bars').innerHTML=Object.keys(vals).map(k=>{
+    const pct=Math.min(Math.round(vals[k]/ref[k]*100),100);
+    return`<div class="nutri-row"><span class="nutri-lbl">${lbls[k]}</span><div class="nutri-bg"><div class="nutri-fill" style="width:${pct}%;background:${cols[k]}">${pct}%</div></div><span class="nutri-val">${vals[k]}${units[k]} (${pct}%)</span></div>`;
+  }).join('');
+}
+document.addEventListener('DOMContentLoaded',()=>{renderDB();renderFormula();calcNutr();});
+</script>
+</body>
+</html>

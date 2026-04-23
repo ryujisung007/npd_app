@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Stage A — 시장조사 & 기획</title>
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<canvas id="star-canvas"></canvas><div class="nebula-bg"></div>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-title">🍱 FOOD<br>DEV SYS</div>
+    <div class="sidebar-logo-sub"><span class="sidebar-logo-dot"></span>MISSION ACTIVE — v3.0</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Command</div>
+    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label-text">Mission Home</span><span class="nav-badge">00</span></a>
+    <div class="nav-section-label">Stages</div>
+    <a href="page_A.html" class="nav-item active"><span class="nav-icon">🔭</span><span class="nav-label-text">Stage A — 시장조사</span><span class="nav-badge">A</span></a>
+    <a href="page_B.html" class="nav-item"><span class="nav-icon">⚗️</span><span class="nav-label-text">Stage B — 배합설계</span><span class="nav-badge">B</span></a>
+    <a href="page_C.html" class="nav-item"><span class="nav-icon">🏭</span><span class="nav-label-text">Stage C — 제조공정</span><span class="nav-badge">C</span></a>
+    <a href="page_D.html" class="nav-item"><span class="nav-icon">🧫</span><span class="nav-label-text">Stage D — 품질안전</span><span class="nav-badge">D</span></a>
+    <a href="page_E.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label-text">Stage E — 포장표시</span><span class="nav-badge">E</span></a>
+    <a href="page_F.html" class="nav-item"><span class="nav-icon">💫</span><span class="nav-label-text">Stage F — 원가출시</span><span class="nav-badge">F</span></a>
+    <a href="page_G.html" class="nav-item"><span class="nav-icon">🌌</span><span class="nav-label-text">Stage G — 최종보고</span><span class="nav-badge">G</span></a>
+  </div>
+</nav>
+<div class="main">
+  <div class="page-header">
+    <span class="header-icon">🔭</span>
+    <div class="header-text">
+      <div class="header-title">STAGE A — 시장조사 &amp; 기획</div>
+      <div class="header-sub">◈ MARKET INTELLIGENCE / COMPETITOR SCAN / CONCEPT PLANNING</div>
+    </div>
+    <div class="header-badge">A</div>
+  </div>
+  <div class="status-bar">
+    <span class="stat-item">STAGE:<span>A</span></span>
+    <span class="stat-item">MISSION:<span>Market Survey Complete</span></span>
+  </div>
+  <div class="tab-section">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('a1',this)">A-1 트렌드 스캔</button>
+      <button class="tab-btn" onclick="switchTab('a2',this)">A-2 경쟁제품</button>
+      <button class="tab-btn" onclick="switchTab('a3',this)">A-3 컨셉기획</button>
+      <button class="tab-btn" onclick="switchTab('a4',this)">A-4 기획서</button>
+      <button class="tab-btn ai-tab" onclick="switchTab('a_up',this)">◈ 자료업로드</button>
+      <button class="tab-btn ai-tab" onclick="switchTab('a_ai',this)">◈ AI 분석</button>
+    </div>
+
+    <div class="tab-content active" id="a1">
+      <div class="card">
+        <div class="card-title">◈ 2025 FOOD TREND SIGNAL MAP</div>
+        <div class="info-box">◈ 트렌드 키워드를 클릭하여 우리 제품과의 연관성을 선택하세요.</div>
+        <div id="kw_cloud">
+          <span class="kw" onclick="toggleKw(this)">저당·제로슈거</span>
+          <span class="kw" onclick="toggleKw(this)">고단백</span>
+          <span class="kw" onclick="toggleKw(this)">비건·플랜트</span>
+          <span class="kw" onclick="toggleKw(this)">간편식 HMR</span>
+          <span class="kw" onclick="toggleKw(this)">프로바이오틱스</span>
+          <span class="kw" onclick="toggleKw(this)">기능성 원료</span>
+          <span class="kw" onclick="toggleKw(this)">클린라벨</span>
+          <span class="kw" onclick="toggleKw(this)">지속가능성</span>
+          <span class="kw" onclick="toggleKw(this)">프리미엄</span>
+          <span class="kw" onclick="toggleKw(this)">헬시플레저</span>
+          <span class="kw" onclick="toggleKw(this)">개인맞춤영양</span>
+          <span class="kw" onclick="toggleKw(this)">노에이징 푸드</span>
+        </div>
+        <div id="kw_selected" style="margin-top:12px;font-size:10px;color:var(--text-muted);font-family:'Share Tech Mono',monospace">◈ 선택된 키워드: 없음</div>
+      </div>
+      <div class="card">
+        <div class="card-title">◈ CATEGORY GROWTH RATE — 2025</div>
+        <div id="trend_bars"></div>
+        <div class="btn-row"><button class="btn btn-sm" onclick="loadBars()">◈ LAUNCH SCAN</button></div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="a2">
+      <div class="card">
+        <div class="card-title">◈ COMPETITOR INTELLIGENCE ENTRY</div>
+        <div class="card-2col">
+          <div class="form-row"><label>Product Name</label><input type="text" id="comp_name" placeholder="예) 풀무원 그릭요거트"></div>
+          <div class="form-row"><label>Price Range</label><input type="text" placeholder="예) 2,500원"></div>
+        </div>
+        <div class="form-row"><label>맛/품질 Score</label><div class="slider-wrap"><input type="range" id="sl_taste" min="0" max="100" value="70" oninput="updateSlider('sl_taste','pt')"><span class="slider-val" id="sl_taste_val">70pt</span></div></div>
+        <div class="form-row"><label>가격경쟁력 Score</label><div class="slider-wrap"><input type="range" id="sl_price" min="0" max="100" value="60" oninput="updateSlider('sl_price','pt')"><span class="slider-val" id="sl_price_val">60pt</span></div></div>
+        <div class="form-row"><label>브랜드 인지도</label><div class="slider-wrap"><input type="range" id="sl_brand" min="0" max="100" value="80" oninput="updateSlider('sl_brand','pt')"><span class="slider-val" id="sl_brand_val">80pt</span></div></div>
+        <div class="btn-row"><button class="btn btn-sm" onclick="addComp()">◈ LOG COMPETITOR</button></div>
+      </div>
+      <div class="card"><div class="card-title">◈ COMPETITOR MATRIX</div><div id="comp_list"><div class="info-box">경쟁제품을 추가하면 비교 매트릭스가 표시됩니다.</div></div></div>
+    </div>
+
+    <div class="tab-content" id="a3">
+      <div class="card">
+        <div class="card-title">◈ PRODUCT CONCEPT DESIGN</div>
+        <div class="form-row"><label>핵심 가치 제안 (USP)</label><input type="text" placeholder="예) 죄책감 없이 즐기는 고단백 저당 음료"></div>
+        <div class="form-row"><label>Target Consumer</label><input type="text" placeholder="예) 다이어트 중인 20~30대 여성"></div>
+        <div class="form-row"><label>구매 동기</label><textarea placeholder="소비자가 이 제품을 구매하는 이유..."></textarea></div>
+        <div class="card-2col">
+          <div class="form-row"><label>제품명 (가칭)</label><input type="text" placeholder="예) ZeroFit 그릭 음료"></div>
+          <div class="form-row"><label>슬로건</label><input type="text" placeholder="예) 가볍게, 맛있게, 건강하게"></div>
+        </div>
+        <div class="btn-row"><button class="btn">◈ SAVE CONCEPT</button></div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="a4">
+      <div class="card">
+        <div class="card-title">◈ MISSION PLANNING DOCUMENT</div>
+        <div class="form-row"><label>1. 개발 배경 및 목적</label><textarea rows="3" placeholder="개발 배경, 시장 필요성..."></textarea></div>
+        <div class="form-row"><label>2. 제품 컨셉 및 특징</label><textarea rows="3" placeholder="핵심 특징, 차별화 포인트..."></textarea></div>
+        <div class="form-row"><label>3. 목표 시장 및 소비자</label><textarea rows="3" placeholder="목표 시장, 타겟 소비자..."></textarea></div>
+        <div class="btn-row"><button class="btn">◈ SAVE</button><button class="btn btn-violet">◈ TRANSMIT TO G</button></div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="a_up">
+      <div class="card"><div class="card-title">◈ DATA UPLINK</div>
+        <div class="upload-zone"><input type="file" id="up_a" multiple onchange="handleUpload('up_a','prev_a')"><div class="upload-icon">◈</div><div class="upload-text">CLICK OR DROP FILES TO UPLINK<br>PDF · PPT · EXCEL · WORD</div></div>
+        <div class="file-preview" id="prev_a"></div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="a_ai">
+      <div class="card">
+        <div class="card-title">◈ NEURAL ANALYSIS ENGINE</div>
+        <div class="form-row"><label>Analysis Mode</label>
+          <select><option>트렌드 키워드 자동 추출</option><option>경쟁제품 강약점 분석</option><option>제품 컨셉 제안 (3가지)</option><option>타겟 소비자 분석</option></select>
+        </div>
+        <div class="form-row"><label>Mission Parameters</label><textarea placeholder="예) 저당 음료 시장에서 차별화할 컨셉 3가지 제안..."></textarea></div>
+        <div class="btn-row">
+          <button class="btn btn-violet" onclick="runAI('ai_a_out',[
+            '◈ INITIALIZING MARKET SCAN...',
+            '◈ 저당·제로슈거 트렌드: +31% YoY 성장 감지',
+            '◈ 고단백 음료: MZ세대 헬스케어 관심 +24%',
+            '◈ 클린라벨 수요: 합성첨가물 기피 +42%',
+            '◈ GENERATING MISSION CONCEPTS...',
+            '[ Concept 1 ] 데일리 단백질 — 일상 속 쉬운 단백질 섭취',
+            '[ Concept 2 ] 클린 다이어트 파트너 — 죄책감 없는 식사 대용',
+            '[ Concept 3 ] 그릭 밀크티 — 트렌디 포맷 + 기능성',
+            '◈ ANALYSIS COMPLETE — 3 CONCEPTS TRANSMITTED'
+          ])">◈ RUN NEURAL ENGINE</button>
+        </div>
+        <div class="ai-output" id="ai_a_out"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="common.js"></script>
+<script>
+function toggleKw(el){el.classList.toggle('selected');const sel=Array.from(document.querySelectorAll('.kw.selected')).map(k=>k.textContent);document.getElementById('kw_selected').textContent='◈ Selected: '+(sel.length?sel.join(' / '):'없음');}
+function loadBars(){
+  const data=[{n:'건강기능식품',v:18,c:'#6366f1'},{n:'고단백음료',v:24,c:'#22d3ee'},{n:'저당식품',v:31,c:'#f43f5e'},{n:'비건식품',v:15,c:'#a78bfa'},{n:'간편식HMR',v:22,c:'#f59e0b'}];
+  const w=document.getElementById('trend_bars');
+  w.innerHTML='';
+  data.forEach(d=>{
+    w.innerHTML+=`<div class="bar-wrap"><span class="bar-name">${d.n}</span><div class="bar-bg"><div class="bar-fill" id="br_${d.n.replace(/·/g,'_')}" style="width:0%;background:linear-gradient(90deg,${d.c}aa,${d.c})">+${d.v}%</div></div><span class="bar-val">+${d.v}%</span></div>`;
+  });
+  setTimeout(()=>data.forEach(d=>{const b=document.getElementById('br_'+d.n.replace(/·/g,'_'));if(b)b.style.width=d.v*2.5+'%';}),100);
+}
+const comps=[];
+function addComp(){
+  const n=document.getElementById('comp_name').value||'경쟁제품',t=document.getElementById('sl_taste').value,p=document.getElementById('sl_price').value,b=document.getElementById('sl_brand').value;
+  comps.push({n,t,p,b});renderComps();
+}
+function renderComps(){
+  const w=document.getElementById('comp_list');
+  if(!comps.length){w.innerHTML='<div class="info-box">경쟁제품을 추가하세요.</div>';return;}
+  w.innerHTML=comps.map(c=>`<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+    <div style="font-size:11px;color:var(--indigo-l);font-weight:600;margin-bottom:8px;font-family:'Exo 2',sans-serif">◈ ${c.n}</div>
+    <div class="bar-wrap"><span class="bar-name">맛/품질</span><div class="bar-bg"><div class="bar-fill" style="width:${c.t}%;background:linear-gradient(90deg,var(--indigo-d),var(--indigo))">${c.t}</div></div><span class="bar-val">${c.t}pt</span></div>
+    <div class="bar-wrap"><span class="bar-name">가격</span><div class="bar-bg"><div class="bar-fill" style="width:${c.p}%;background:linear-gradient(90deg,var(--cyan-d),var(--cyan))">${c.p}</div></div><span class="bar-val">${c.p}pt</span></div>
+    <div class="bar-wrap"><span class="bar-name">브랜드</span><div class="bar-bg"><div class="bar-fill" style="width:${c.b}%;background:linear-gradient(90deg,#9f1239,var(--rose))">${c.b}</div></div><span class="bar-val">${c.b}pt</span></div>
+  </div>`).join('');
+}
+</script>
+</body>
+</html>

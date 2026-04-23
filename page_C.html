@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><title>Stage C — 제조공정</title><link rel="stylesheet" href="common.css"></head>
+<body>
+<canvas id="star-canvas"></canvas><div class="nebula-bg"></div>
+<nav class="sidebar"><div class="sidebar-logo"><div class="sidebar-logo-title">🍱 FOOD<br>DEV SYS</div><div class="sidebar-logo-sub"><span class="sidebar-logo-dot"></span>MISSION ACTIVE — v3.0</div></div><div class="sidebar-nav"><div class="nav-section-label">Command</div><a href="index.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label-text">Mission Home</span><span class="nav-badge">00</span></a><div class="nav-section-label">Stages</div><a href="page_A.html" class="nav-item"><span class="nav-icon">🔭</span><span class="nav-label-text">Stage A — 시장조사</span><span class="nav-badge">A</span></a><a href="page_B.html" class="nav-item"><span class="nav-icon">⚗️</span><span class="nav-label-text">Stage B — 배합설계</span><span class="nav-badge">B</span></a><a href="page_C.html" class="nav-item active"><span class="nav-icon">🏭</span><span class="nav-label-text">Stage C — 제조공정</span><span class="nav-badge">C</span></a><a href="page_D.html" class="nav-item"><span class="nav-icon">🧫</span><span class="nav-label-text">Stage D — 품질안전</span><span class="nav-badge">D</span></a><a href="page_E.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label-text">Stage E — 포장표시</span><span class="nav-badge">E</span></a><a href="page_F.html" class="nav-item"><span class="nav-icon">💫</span><span class="nav-label-text">Stage F — 원가출시</span><span class="nav-badge">F</span></a><a href="page_G.html" class="nav-item"><span class="nav-icon">🌌</span><span class="nav-label-text">Stage G — 최종보고</span><span class="nav-badge">G</span></a></div></nav>
+<div class="main">
+  <div class="page-header"><span class="header-icon">🏭</span><div class="header-text"><div class="header-title">STAGE C — 제조공정 설계</div><div class="header-sub">◈ PROCESS FLOW / CONDITIONS / HACCP / WORK ORDER</div></div><div class="header-badge">C</div></div>
+  <div class="status-bar"><span class="stat-item">STAGE:<span>C</span></span><span class="stat-item">CCP POINTS:<span>2</span></span></div>
+  <div class="tab-section">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('c1',this)">C-1 공정흐름도</button>
+      <button class="tab-btn" onclick="switchTab('c2',this)">C-2 공정조건</button>
+      <button class="tab-btn" onclick="switchTab('c3',this)">C-3 HACCP</button>
+      <button class="tab-btn" onclick="switchTab('c4',this)">C-4 공정지시서</button>
+      <button class="tab-btn ai-tab" onclick="switchTab('c_up',this)">◈ 자료업로드</button>
+      <button class="tab-btn ai-tab" onclick="switchTab('c_ai',this)">◈ AI 분석</button>
+    </div>
+    <div class="tab-content active" id="c1">
+      <div class="card">
+        <div class="card-title">◈ MANUFACTURING PROCESS FLOW</div>
+        <div class="info-box">◈ 각 공정 노드를 클릭하면 세부 파라미터가 표시됩니다.</div>
+        <div class="process-flow">
+          <div class="ps" onclick="showStep('원료입고')"><div class="pi">📦</div><div class="pn">원료입고</div><div class="pt">검수</div></div><span class="ps-arrow">→</span>
+          <div class="ps" onclick="showStep('계량혼합')"><div class="pi">⚖️</div><div class="pn">계량·혼합</div><div class="pt">상온</div></div><span class="ps-arrow">→</span>
+          <div class="ps" onclick="showStep('균질화')"><div class="pi">🌀</div><div class="pn">균질화</div><div class="pt">55°C/200bar</div></div><span class="ps-arrow">→</span>
+          <div class="ps" onclick="showStep('살균')"><div class="ccp">CCP-1</div><div class="pi">🌡️</div><div class="pn">살균</div><div class="pt">85°C/30min</div></div><span class="ps-arrow">→</span>
+          <div class="ps" onclick="showStep('냉각')"><div class="pi">❄️</div><div class="pn">냉각</div><div class="pt">10°C↓</div></div><span class="ps-arrow">→</span>
+          <div class="ps" onclick="showStep('충전포장')"><div class="ccp">CCP-2</div><div class="pi">🏷️</div><div class="pn">충전·포장</div><div class="pt">무균환경</div></div><span class="ps-arrow">→</span>
+          <div class="ps" onclick="showStep('보관출하')"><div class="pi">🚀</div><div class="pn">보관·출하</div><div class="pt">4°C↓</div></div>
+        </div>
+        <div id="step_detail" style="display:none;margin-top:14px"></div>
+      </div>
+    </div>
+    <div class="tab-content" id="c2">
+      <div class="card"><div class="card-title">◈ STERILIZATION PARAMETERS</div>
+        <div class="form-row"><label>살균 온도 (°C)</label><div class="slider-wrap"><input type="range" id="sl_st" min="60" max="140" value="85" oninput="updateSlider('sl_st','°C');evalSter()"><span class="slider-val" id="sl_st_val">85°C</span></div></div>
+        <div class="form-row"><label>살균 시간 (분)</label><div class="slider-wrap"><input type="range" id="sl_sm" min="1" max="60" value="30" oninput="updateSlider('sl_sm','min');evalSter()"><span class="slider-val" id="sl_sm_val">30min</span></div></div>
+        <div id="ster_eval" class="info-box">◈ 슬라이더를 조정하면 평가 결과가 표시됩니다.</div>
+      </div>
+      <div class="card"><div class="card-title">◈ HOMOGENIZATION PARAMETERS</div>
+        <div class="form-row"><label>압력 (bar)</label><div class="slider-wrap"><input type="range" id="sl_hp" min="100" max="500" value="200" oninput="updateSlider('sl_hp','bar')"><span class="slider-val" id="sl_hp_val">200bar</span></div></div>
+        <div class="form-row"><label>온도 (°C)</label><div class="slider-wrap"><input type="range" id="sl_ht" min="40" max="80" value="55" oninput="updateSlider('sl_ht','°C')"><span class="slider-val" id="sl_ht_val">55°C</span></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="c3">
+      <div class="card"><div class="card-title">◈ HACCP CCP CONTROL MATRIX</div>
+        <div class="table-wrap"><table><thead><tr><th>CCP</th><th>공정단계</th><th>위해요소</th><th>한계기준</th><th>모니터링</th><th>개선조치</th></tr></thead><tbody>
+          <tr><td><span class="tag tag-rose">CCP-1</span></td><td>살균</td><td>병원성 미생물</td><td>85°C / 30분↑</td><td>연속온도 기록</td><td>재살균 또는 폐기</td></tr>
+          <tr><td><span class="tag tag-rose">CCP-2</span></td><td>충전·포장</td><td>2차 오염</td><td>무균 충전 환경</td><td>낙하균 1회/일</td><td>세척·소독 후 재가동</td></tr>
+        </tbody></table></div>
+      </div>
+      <div class="card"><div class="card-title">◈ HACCP 7 PRINCIPLES TRAINING</div>
+        <div id="hp_list"></div>
+        <div style="margin-top:12px"><label style="margin-bottom:6px">LEARNING PROGRESS</label><div class="progress-bar-wrap"><div class="progress-bar" id="hp_bar" style="width:0%">0%</div></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="c4">
+      <div class="card"><div class="card-title">◈ MANUFACTURING WORK ORDER</div>
+        <div class="card-2col">
+          <div class="form-row"><label>제품명</label><input type="text" placeholder="제품명"></div>
+          <div class="form-row"><label>배치 사이즈</label><input type="text" placeholder="예) 1,000L/배치"></div>
+        </div>
+        <div class="form-row"><label>공정 지시 사항</label><textarea rows="5" placeholder="1. 원료 입고 후 COA 확인&#10;2. 계량 ±0.1% 오차 이내&#10;3. 혼합 순서: 정제수→분말→액상..."></textarea></div>
+        <div class="btn-row"><button class="btn">◈ SAVE</button><button class="btn btn-violet">◈ TRANSMIT TO G</button></div>
+      </div>
+    </div>
+    <div class="tab-content" id="c_up"><div class="card"><div class="card-title">◈ DATA UPLINK</div><div class="upload-zone"><input type="file" id="up_c" multiple onchange="handleUpload('up_c','prev_c')"><div class="upload-icon">◈</div><div class="upload-text">공정문서, HACCP, SOP 업로드</div></div><div class="file-preview" id="prev_c"></div></div></div>
+    <div class="tab-content" id="c_ai"><div class="card"><div class="card-title">◈ NEURAL ANALYSIS ENGINE</div>
+      <div class="form-row"><label>Mode</label><select><option>공정흐름도 자동 생성</option><option>CCP 식별 및 한계기준</option><option>공정조건 최적화</option></select></div>
+      <div class="btn-row"><button class="btn btn-violet" onclick="runAI('c_ai_out',['◈ SCANNING PROCESS DATA...','✓ CCP-1 살균: 85°C/30min 확정','✓ CCP-2 충전: 무균환경 확정','⚠ 냉각속도 모니터링 강화 권장','◈ 7단계 흐름도 완성 — TRANSMITTED'])">◈ RUN ENGINE</button></div>
+      <div class="ai-output" id="c_ai_out"></div>
+    </div></div>
+  </div>
+</div>
+<script src="common.js"></script>
+<script>
+const stepInfo={원료입고:'◈ 원료입고\n• COA(성적서) 확인\n• 외관·이취·색상 검사\n• 냉장원료 온도이력 확인',계량혼합:'◈ 계량·혼합\n• ±0.1% 오차이내 계량\n• 혼합순서: 용매→분말→액상\n• 완전용해 확인',균질화:'◈ 균질화\n• 조건: 55°C, 200bar\n• 목적: 입자균일화, 안정성 향상',살균:'◈ 살균 [CCP-1]\n• 85°C, 30분\n• 연속온도 기록계 모니터링\n• 이탈시: 재살균 또는 폐기',냉각:'◈ 냉각\n• 10°C 이하 30분 이내\n• 냉각 불충분시 미생물 재증식',충전포장:'◈ 충전·포장 [CCP-2]\n• 무균충전환경 유지\n• 낙하균 검사 1회/일\n• 충전량 ±2%이내',보관출하:'◈ 보관·출하\n• 냉장 0~4°C\n• FIFO 원칙\n• 출하전 최종품질 확인'};
+function showStep(k){
+  const el=document.getElementById('step_detail');
+  el.style.display='block';
+  el.className='info-box';
+  el.innerHTML=stepInfo[k].replace(/\n/g,'<br>');
+}
+function evalSter(){
+  const t=+document.getElementById('sl_st').value,m=+document.getElementById('sl_sm').value,el=document.getElementById('ster_eval');
+  if(t>=85&&m>=15){el.innerHTML='✓ 살균조건 적합';el.style.borderLeftColor='var(--emerald)'}
+  else if(t>=72&&m>=15){el.innerHTML='⚠ LTLT방식, 내열성균 잔존 가능';el.style.borderLeftColor='var(--amber)'}
+  else{el.innerHTML='✕ 살균 부족 — 조정 필요';el.style.borderLeftColor='var(--rose)'}
+}
+const ps=['원칙1. 위해요소 분석','원칙2. CCP 결정','원칙3. 한계기준 설정','원칙4. 모니터링 체계','원칙5. 개선조치 수립','원칙6. 검증 절차','원칙7. 문서화·기록'];
+document.getElementById('hp_list').innerHTML=ps.map(p=>`<div class="check-item"><input type="checkbox" onchange="updHP()"><span>${p}</span></div>`).join('');
+function updHP(){const d=document.querySelectorAll('#hp_list input:checked').length,p=Math.round(d/7*100),b=document.getElementById('hp_bar');b.style.width=p+'%';b.textContent=p+'%';}
+</script></body></html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Stage E — 포장 & 표시사항</title>
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<canvas id="star-canvas"></canvas><div class="nebula-bg"></div>
+<nav class="sidebar">
+  <div class="sidebar-logo"><div class="sidebar-logo-title">🍱 FOOD<br>DEV SYS</div><div class="sidebar-logo-sub"><span class="sidebar-logo-dot"></span>MISSION ACTIVE — v3.0</div></div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Command</div>
+    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label-text">Mission Home</span><span class="nav-badge">00</span></a>
+    <div class="nav-section-label">Stages</div>
+    <a href="page_A.html" class="nav-item"><span class="nav-icon">🔭</span><span class="nav-label-text">Stage A — 시장조사</span><span class="nav-badge">A</span></a>
+    <a href="page_B.html" class="nav-item"><span class="nav-icon">⚗️</span><span class="nav-label-text">Stage B — 배합설계</span><span class="nav-badge">B</span></a>
+    <a href="page_C.html" class="nav-item"><span class="nav-icon">🏭</span><span class="nav-label-text">Stage C — 제조공정</span><span class="nav-badge">C</span></a>
+    <a href="page_D.html" class="nav-item"><span class="nav-icon">🧫</span><span class="nav-label-text">Stage D — 품질안전</span><span class="nav-badge">D</span></a>
+    <a href="page_E.html" class="nav-item active"><span class="nav-icon">📦</span><span class="nav-label-text">Stage E — 포장표시</span><span class="nav-badge">E</span></a>
+    <a href="page_F.html" class="nav-item"><span class="nav-icon">💫</span><span class="nav-label-text">Stage F — 원가출시</span><span class="nav-badge">F</span></a>
+    <a href="page_G.html" class="nav-item"><span class="nav-icon">🌌</span><span class="nav-label-text">Stage G — 최종보고</span><span class="nav-badge">G</span></a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="page-header">
+    <span class="header-icon">📦</span>
+    <div class="header-text">
+      <div class="header-title">STAGE E — 포장 &amp; 표시사항</div>
+      <div class="header-sub">◈ PACKAGING / NUTRITION / LEGAL COMPLIANCE REVIEW</div>
+    </div>
+    <div class="header-badge">E</div>
+  </div>
+  <div class="status-bar">
+    <span class="stat-item">LEGAL CHECK:<span id="legal_score">0/12</span></span>
+    <span class="stat-item">COMPLIANCE:<span id="legal_pct">0%</span></span>
+    <span class="stat-item">STATUS:<span id="legal_status">PENDING</span></span>
+  </div>
+
+  <div class="tab-section">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('e1',this)">E-1 포장재 선정</button>
+      <button class="tab-btn" onclick="switchTab('e2',this)">E-2 영양성분표</button>
+      <button class="tab-btn" onclick="switchTab('e3',this)">E-3 표시사항 법적검토</button>
+      <button class="tab-btn" onclick="switchTab('e4',this)">E-4 포장사양서</button>
+      <button class="tab-btn ai-tab" onclick="switchTab('e_up',this)">◈ 자료업로드</button>
+      <button class="tab-btn ai-tab" onclick="switchTab('e_ai',this)">◈ AI 분석</button>
+    </div>
+
+    <!-- E-1 -->
+    <div class="tab-content active" id="e1">
+      <div class="card">
+        <div class="card-title">◈ PACKAGING MATERIAL SELECTOR</div>
+        <div class="form-row"><label>제품 유형</label>
+          <select id="pkg_type" onchange="showPkg()">
+            <option value="">-- SELECT PRODUCT TYPE --</option>
+            <option value="liq">액상 음료</option><option value="powder">분말 제품</option>
+            <option value="snack">과자·스낵</option><option value="sauce">소스·페이스트</option>
+          </select>
+        </div>
+        <div id="pkg_result"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">◈ BARRIER PERFORMANCE RATING</div>
+        <div class="form-row"><label>차광성</label><div class="slider-wrap"><input type="range" id="sl_light" min="0" max="10" value="7" oninput="updateSlider('sl_light','pt')"><span class="slider-val" id="sl_light_val">7pt</span></div></div>
+        <div class="form-row"><label>산소차단성</label><div class="slider-wrap"><input type="range" id="sl_o2" min="0" max="10" value="8" oninput="updateSlider('sl_o2','pt')"><span class="slider-val" id="sl_o2_val">8pt</span></div></div>
+        <div class="form-row"><label>친환경성</label><div class="slider-wrap"><input type="range" id="sl_eco" min="0" max="10" value="6" oninput="updateSlider('sl_eco','pt')"><span class="slider-val" id="sl_eco_val">6pt</span></div></div>
+      </div>
+    </div>
+
+    <!-- E-2 -->
+    <div class="tab-content" id="e2">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+        <div>
+          <div class="card">
+            <div class="card-title">◈ NUTRITION INPUT</div>
+            <div class="form-row"><label>제품명</label><input type="text" id="lbl_name" value="ZeroFit 그릭음료" oninput="updateLabel()"></div>
+            <div class="form-row"><label>1회 제공량 (mL)</label><input type="number" id="lbl_sv" value="200" oninput="updateLabel()"></div>
+            <div class="form-row"><label>열량 (kcal)</label><input type="number" id="lbl_cal" value="80" oninput="updateLabel()"></div>
+            <div class="form-row"><label>탄수화물 (g)</label><input type="number" id="lbl_carb" value="8" oninput="updateLabel()"></div>
+            <div class="form-row"><label>당류 (g)</label><input type="number" id="lbl_sugar" value="1" oninput="updateLabel()"></div>
+            <div class="form-row"><label>단백질 (g)</label><input type="number" id="lbl_prot" value="12" oninput="updateLabel()"></div>
+            <div class="form-row"><label>지방 (g)</label><input type="number" id="lbl_fat" value="2" oninput="updateLabel()"></div>
+            <div class="form-row"><label>나트륨 (mg)</label><input type="number" id="lbl_sod" value="180" oninput="updateLabel()"></div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">◈ LABEL PREVIEW</div>
+            <div class="label-preview" id="label_preview"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- E-3 Legal Review (Feature 1) -->
+    <div class="tab-content" id="e3">
+      <div class="card">
+        <div class="card-title">◈ LEGAL COMPLIANCE ENGINE — 표시사항 법적 검토</div>
+        <div class="info-box">◈ 아래 항목을 작성 후 [법적 검토 실행]을 클릭하면 「식품등의 표시기준」에 따라 자동 검토됩니다.</div>
+        <div class="card-2col">
+          <div class="form-row"><label>① 제품명</label><input type="text" id="lv_name" placeholder="예) ZeroFit 그릭음료"></div>
+          <div class="form-row"><label>② 식품의 유형</label><input type="text" id="lv_type" placeholder="예) 혼합음료"></div>
+          <div class="form-row"><label>③ 제조업소명</label><input type="text" id="lv_mfg" placeholder="예) ○○식품(주)"></div>
+          <div class="form-row"><label>④ 소재지</label><input type="text" id="lv_addr" placeholder="예) 서울시 강남구 ○○로 1"></div>
+          <div class="form-row"><label>⑤ 유통기한</label><input type="text" id="lv_exp" placeholder="예) 제조일로부터 90일"></div>
+          <div class="form-row"><label>⑥ 내용량</label><input type="text" id="lv_vol" placeholder="예) 200mL"></div>
+          <div class="form-row"><label>⑦ 열량</label><input type="text" id="lv_cal" placeholder="예) 80kcal"></div>
+          <div class="form-row"><label>⑧ 원재료명 (함량순)</label><input type="text" id="lv_ingr" placeholder="예) 정제수, 탈지분유, 에리스리톨..."></div>
+        </div>
+        <div class="form-row"><label>⑨ 알레르기 표시</label><input type="text" id="lv_allergy" placeholder="예) 우유 함유"></div>
+        <div class="form-row"><label>⑩ 주의사항</label><textarea id="lv_caution" rows="2" placeholder="예) 냉장보관, 개봉 후 즉시 섭취"></textarea></div>
+        <div class="form-row"><label>⑪ 영양성분표 포함 여부</label>
+          <select id="lv_nutr"><option value="yes">포함됨</option><option value="no">미포함</option></select>
+        </div>
+        <div class="form-row"><label>⑫ 원산지 표시</label><input type="text" id="lv_origin" placeholder="예) 국내산 (정제수), 뉴질랜드산 (탈지분유)"></div>
+        <div class="btn-row">
+          <button class="btn" onclick="runLegalReview()">◈ LAUNCH LEGAL COMPLIANCE CHECK</button>
+          <button class="btn btn-rose btn-sm" onclick="clearReview()">✕ 초기화</button>
+        </div>
+      </div>
+
+      <!-- Results Panel -->
+      <div class="card" id="review_result_card" style="display:none">
+        <div class="card-title">◈ COMPLIANCE REPORT</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px">
+          <div class="metric-card"><div class="metric-label">Total Items</div><div class="metric-value" id="rv_total" style="font-size:20px">0</div></div>
+          <div class="metric-card"><div class="metric-label">✓ Pass</div><div class="metric-value" id="rv_ok" style="font-size:20px;color:var(--emerald)">0</div></div>
+          <div class="metric-card"><div class="metric-label">⚠ Warning</div><div class="metric-value" id="rv_warn" style="font-size:20px;color:var(--amber)">0</div></div>
+          <div class="metric-card"><div class="metric-label">✕ Fail</div><div class="metric-value" id="rv_fail" style="font-size:20px;color:var(--rose)">0</div></div>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar" id="rv_bar" style="width:0%">0%</div></div>
+        <div id="review_items" style="margin-top:18px"></div>
+        <div id="review_summary" style="margin-top:14px"></div>
+      </div>
+    </div>
+
+    <!-- E-4 -->
+    <div class="tab-content" id="e4">
+      <div class="card">
+        <div class="card-title">◈ PACKAGING SPECIFICATION</div>
+        <div class="card-2col">
+          <div class="form-row"><label>포장재 종류</label><select><option>PET 병</option><option>알루미늄 캔</option><option>멸균 팩</option><option>유리병</option><option>파우치</option></select></div>
+          <div class="form-row"><label>용량 (mL)</label><input type="number" placeholder="200"></div>
+          <div class="form-row"><label>라벨 재질</label><select><option>PP 라벨</option><option>PET 라벨</option><option>종이 라벨</option><option>직접 인쇄</option></select></div>
+          <div class="form-row"><label>뚜껑 종류</label><select><option>PP 캡</option><option>알루미늄 캡</option><option>스크류 캡</option></select></div>
+          <div class="form-row"><label>외박스 규격</label><input type="text" placeholder="24개입, 400×300×200mm"></div>
+          <div class="form-row"><label>단위 중량 (g)</label><input type="number" placeholder="220"></div>
+        </div>
+        <div class="btn-row"><button class="btn">◈ SAVE</button><button class="btn btn-violet">◈ TRANSMIT TO G</button></div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="e_up">
+      <div class="card"><div class="card-title">◈ DATA UPLINK</div>
+        <div class="upload-zone"><input type="file" id="up_e" multiple onchange="handleUpload('up_e','prev_e')"><div class="upload-icon">◈</div><div class="upload-text">기존 라벨, 포장 이미지 업로드</div></div>
+        <div class="file-preview" id="prev_e"></div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="e_ai">
+      <div class="card"><div class="card-title">◈ NEURAL ANALYSIS ENGINE</div>
+        <div class="form-row"><label>Mode</label><select><option>표시사항 오류 검토</option><option>영양성분표 자동 생성</option><option>알레르기 원료 점검</option></select></div>
+        <div class="btn-row"><button class="btn btn-violet" onclick="runAI('e_ai_out',['◈ SCANNING LABEL DATA...','✓ 제품명: 적합','✓ 영양성분표 형식: 적합','⚠ 원재료명: 함량순 기재 확인 필요','⚠ 알레르기: 우유 성분 표시 필요','✓ 유통기한 형식: 적합','◈ 수정 권고 2건 확인됨'])">◈ RUN ENGINE</button></div>
+        <div class="ai-output" id="e_ai_out"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="common.js"></script>
+<script>
+// Packaging DB
+const pkgDB={liq:{items:[{n:'PET 병',p:'경량·투명·재활용',c:'차광성 낮음'},{n:'알루미늄 캔',p:'차광·차산소 우수',c:'단가 높음'},{n:'멸균 팩',p:'상온유통 가능',c:'재활용 복잡'}]},powder:{items:[{n:'알루미늄 파우치',p:'방습·차광 우수',c:'재사용 불가'},{n:'HDPE 용기',p:'견고·재활용',c:'차광성 보통'}]},snack:{items:[{n:'복합필름',p:'방습·차산소 우수',c:'재활용 어려움'},{n:'종이봉투',p:'친환경',c:'방습성 낮음'}]},sauce:{items:[{n:'유리병',p:'위생·프리미엄',c:'무겁고 파손위험'},{n:'PET+펌프',p:'편의성',c:'산소투과성'}]}};
+function showPkg(){
+  const t=document.getElementById('pkg_type').value,el=document.getElementById('pkg_result');
+  if(!t){el.innerHTML='';return;}
+  el.innerHTML='<div class="table-wrap"><table><thead><tr><th>포장재</th><th>장점</th><th>단점</th></tr></thead><tbody>'+pkgDB[t].items.map(i=>`<tr><td><strong style="color:var(--indigo-l)">${i.n}</strong></td><td style="color:var(--emerald)">${i.p}</td><td style="color:var(--rose)">${i.c}</td></tr>`).join('')+'</tbody></table></div>';
+}
+
+// Label Preview
+function updateLabel(){
+  const n=document.getElementById('lbl_name').value||'제품명',sv=document.getElementById('lbl_sv').value||200,cal=document.getElementById('lbl_cal').value||0,carb=document.getElementById('lbl_carb').value||0,sugar=document.getElementById('lbl_sugar').value||0,prot=document.getElementById('lbl_prot').value||0,fat=document.getElementById('lbl_fat').value||0,sod=document.getElementById('lbl_sod').value||0;
+  document.getElementById('label_preview').innerHTML=`<h3>${n}</h3><div class="brand">1회 제공량: ${sv}mL</div><table class="ntbl"><tr><th colspan="3">영 양 성 분 표</th></tr><tr><th>영양성분</th><th>1회당</th><th>%기준치</th></tr><tr><td><b>열량</b></td><td>${cal}kcal</td><td>-</td></tr><tr><td>탄수화물</td><td>${carb}g</td><td>${Math.round(carb/324*100)}%</td></tr><tr><td style="padding-left:8px">당류</td><td>${sugar}g</td><td>${Math.round(sugar/100*100)}%</td></tr><tr><td><b>단백질</b></td><td><b>${prot}g</b></td><td>${Math.round(prot/55*100)}%</td></tr><tr><td>지방</td><td>${fat}g</td><td>${Math.round(fat/54*100)}%</td></tr><tr><td>나트륨</td><td>${sod}mg</td><td>${Math.round(sod/2000*100)}%</td></tr></table><div style="font-size:9px;margin-top:6px;color:#666">※ 2,000kcal 기준</div>`;
+}
+
+// Legal Review Engine (Feature 1)
+const legalRules=[
+  {id:'name',  label:'① 제품명',       field:'lv_name',    rule:v=>v.length>0?{ok:true,msg:'제품명 기재 적합'}:{ok:false,fail:true,msg:'제품명 누락 — 필수 표시사항 (식품표시기준 §4)'}},
+  {id:'type',  label:'② 식품의 유형',  field:'lv_type',    rule:v=>v.length>0?{ok:true,msg:'식품의 유형 기재 적합'}:{ok:false,fail:true,msg:'식품의 유형 누락 — 필수'}},
+  {id:'mfg',   label:'③ 제조업소명',   field:'lv_mfg',     rule:v=>v.length>0?{ok:true,msg:'제조업소명 기재 적합'}:{ok:false,fail:true,msg:'제조업소명 누락 — 필수'}},
+  {id:'addr',  label:'④ 소재지',       field:'lv_addr',    rule:v=>v.length>0?{ok:true,msg:'소재지 기재 적합'}:{ok:false,fail:true,msg:'소재지 누락 — 필수'}},
+  {id:'exp',   label:'⑤ 유통기한',     field:'lv_exp',     rule:v=>{if(!v)return{ok:false,fail:true,msg:'유통기한 누락 — 필수'};if(v.includes('제조일로부터')||v.includes('까지'))return{ok:true,msg:'유통기한 형식 적합'};return{ok:false,warn:true,msg:'형식 확인 필요 — "제조일로부터 N일" 또는 "YYYY.MM.DD까지" 권장'};}},
+  {id:'vol',   label:'⑥ 내용량',       field:'lv_vol',     rule:v=>{if(!v)return{ok:false,fail:true,msg:'내용량 누락 — 필수'};if(v.includes('mL')||v.includes('g')||v.includes('L'))return{ok:true,msg:'내용량 및 단위 기재 적합'};return{ok:false,warn:true,msg:'내용량 단위(mL,g 등) 명시 필요'};}},
+  {id:'cal',   label:'⑦ 열량',         field:'lv_cal',     rule:v=>{if(!v)return{ok:false,fail:true,msg:'열량 누락 — 영양성분표 내 필수'};if(v.includes('kcal'))return{ok:true,msg:'열량 단위(kcal) 기재 적합'};return{ok:false,warn:true,msg:'열량 단위 "kcal" 명시 필요'};}},
+  {id:'ingr',  label:'⑧ 원재료명',     field:'lv_ingr',    rule:v=>{if(!v)return{ok:false,fail:true,msg:'원재료명 누락 — 필수'};if(v.split(',').length>=2)return{ok:true,msg:'원재료명 기재 적합 (함량순 기재 확인 필요)'};return{ok:false,warn:true,msg:'원재료명 함량순 기재 확인 필요'};}},
+  {id:'allergy',label:'⑨ 알레르기',   field:'lv_allergy', rule:(v)=>{const ingr=(document.getElementById('lv_ingr').value||'').toLowerCase();const allergens=['우유','계란','밀','땅콩','대두','고등어','게','새우','돼지고기','복숭아','토마토'];const found=allergens.filter(a=>ingr.includes(a));if(found.length>0&&!v)return{ok:false,warn:true,msg:'알레르기 원료('+found.join(', ')+') 포함 — 표시 필요 (별지1)'};if(found.length>0&&v)return{ok:true,msg:'알레르기 표시 적합 ('+found.join(', ')+')'};return{ok:true,msg:'알레르기 원료 미검출 (원재료명 재확인 권장)'};}},
+  {id:'nutr',  label:'⑩ 영양성분표',   field:'lv_nutr',    rule:v=>v==='yes'?{ok:true,msg:'영양성분표 포함 — 적합'}:{ok:false,warn:true,msg:'영양성분표 미포함 — 대부분 식품 의무 표시 (예외 확인)'}},
+  {id:'origin',label:'⑪ 원산지',       field:'lv_origin',  rule:v=>v?{ok:true,msg:'원산지 표시 기재 적합'}:{ok:false,warn:true,msg:'원산지 미기재 — 원산지표시법 의무 대상 확인 필요'}},
+  {id:'caution',label:'⑫ 주의사항',    field:'lv_caution', rule:v=>v?{ok:true,msg:'주의사항 기재 적합'}:{ok:false,warn:true,msg:'주의사항 미기재 — 해당제품 특성에 따라 필수 가능'}},
+];
+function runLegalReview(){
+  const card=document.getElementById('review_result_card');
+  card.style.display='block';
+  const results=legalRules.map(r=>({...r,result:r.rule(document.getElementById(r.field)?document.getElementById(r.field).value.trim():'')}));
+  let ok=0,warn=0,fail=0;
+  results.forEach(r=>{if(r.result.ok)ok++;else if(r.result.warn)warn++;else fail++;});
+  const total=results.length,score=Math.round(ok/total*100);
+  document.getElementById('rv_total').textContent=total;
+  document.getElementById('rv_ok').textContent=ok;
+  document.getElementById('rv_warn').textContent=warn;
+  document.getElementById('rv_fail').textContent=fail;
+  document.getElementById('rv_bar').style.width=score+'%';
+  document.getElementById('rv_bar').textContent=score+'%';
+  document.getElementById('legal_score').textContent=ok+'/'+total;
+  document.getElementById('legal_pct').textContent=score+'%';
+  document.getElementById('legal_status').textContent=fail>0?'✕ VIOLATION':warn>0?'⚠ WARNING':'✓ COMPLIANT';
+  document.getElementById('review_items').innerHTML=results.map(r=>{
+    const cls=r.result.ok?'review-ok':r.result.warn?'review-warn':'review-fail';
+    const icon=r.result.ok?'✓':r.result.warn?'⚠':'✕';
+    return`<div class="review-result ${cls}">${icon} ${r.label}<br><span style="opacity:.8;font-size:10px">${r.result.msg}</span></div>`;
+  }).join('');
+  const sumEl=document.getElementById('review_summary');
+  if(fail>0){sumEl.innerHTML=`<div class="warn-box">✕ ${fail}개 항목 위반 — 출시 전 반드시 수정 필요<br>⚠ ${warn}개 항목 주의<br>관련 법령: 「식품등의 표시기준」(식약처 고시)</div>`;}
+  else if(warn>0){sumEl.innerHTML=`<div class="yellow-box">⚠ ${warn}개 항목 주의 — 검토 권장<br>전반적으로 양호하나 주의 항목 확인 후 최종 승인 진행</div>`;}
+  else{sumEl.innerHTML=`<div class="info-box">✓ 모든 항목 적합 — 법적 검토 완료<br>최종 라벨 인쇄 전 식약처 표시기준 재확인 권장</div>`;}
+  card.scrollIntoView({behavior:'smooth'});
+}
+function clearReview(){
+  ['lv_name','lv_type','lv_mfg','lv_addr','lv_exp','lv_vol','lv_cal','lv_ingr','lv_allergy','lv_caution','lv_origin'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('lv_nutr').value='yes';
+  document.getElementById('review_result_card').style.display='none';
+}
+document.addEventListener('DOMContentLoaded',()=>updateLabel());
+</script>
+</body>
+</html>

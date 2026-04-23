@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><title>Stage D — 품질안전</title><link rel="stylesheet" href="common.css"></head>
+<body>
+<canvas id="star-canvas"></canvas><div class="nebula-bg"></div>
+<nav class="sidebar"><div class="sidebar-logo"><div class="sidebar-logo-title">🍱 FOOD<br>DEV SYS</div><div class="sidebar-logo-sub"><span class="sidebar-logo-dot"></span>MISSION ACTIVE — v3.0</div></div><div class="sidebar-nav"><div class="nav-section-label">Command</div><a href="index.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label-text">Mission Home</span><span class="nav-badge">00</span></a><div class="nav-section-label">Stages</div><a href="page_A.html" class="nav-item"><span class="nav-icon">🔭</span><span class="nav-label-text">Stage A — 시장조사</span><span class="nav-badge">A</span></a><a href="page_B.html" class="nav-item"><span class="nav-icon">⚗️</span><span class="nav-label-text">Stage B — 배합설계</span><span class="nav-badge">B</span></a><a href="page_C.html" class="nav-item"><span class="nav-icon">🏭</span><span class="nav-label-text">Stage C — 제조공정</span><span class="nav-badge">C</span></a><a href="page_D.html" class="nav-item active"><span class="nav-icon">🧫</span><span class="nav-label-text">Stage D — 품질안전</span><span class="nav-badge">D</span></a><a href="page_E.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label-text">Stage E — 포장표시</span><span class="nav-badge">E</span></a><a href="page_F.html" class="nav-item"><span class="nav-icon">💫</span><span class="nav-label-text">Stage F — 원가출시</span><span class="nav-badge">F</span></a><a href="page_G.html" class="nav-item"><span class="nav-icon">🌌</span><span class="nav-label-text">Stage G — 최종보고</span><span class="nav-badge">G</span></a></div></nav>
+<div class="main">
+  <div class="page-header"><span class="header-icon">🧫</span><div class="header-text"><div class="header-title">STAGE D — 품질 &amp; 안전성</div><div class="header-sub">◈ LEGAL / MICROBIOLOGY / SHELF LIFE / QUALITY SPEC</div></div><div class="header-badge">D</div></div>
+  <div class="status-bar"><span class="stat-item">STAGE:<span>D</span></span><span class="stat-item">MISSION:<span>품질기준 확인</span></span></div>
+  <div class="tab-section">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('d1',this)">D-1 법적기준</button>
+      <button class="tab-btn" onclick="switchTab('d2',this)">D-2 미생물기준</button>
+      <button class="tab-btn" onclick="switchTab('d3',this)">D-3 유통기한</button>
+      <button class="tab-btn" onclick="switchTab('d4',this)">D-4 품질규격서</button>
+      <button class="tab-btn ai-tab" onclick="switchTab('d_up',this)">◈ 자료업로드</button>
+      <button class="tab-btn ai-tab" onclick="switchTab('d_ai',this)">◈ AI 분석</button>
+    </div>
+    <div class="tab-content active" id="d1">
+      <div class="card"><div class="card-title">◈ CODEX — 식품공전 기준 조회</div>
+        <div class="form-row"><label>식품 유형</label><select id="food_type" onchange="showStd()"><option value="">-- SELECT CATEGORY --</option><option value="bev">음료류</option><option value="dairy">유가공품</option><option value="snack">과자류</option><option value="hfs">건강기능식품</option></select></div>
+        <div id="std_result"></div>
+      </div>
+      <div class="card"><div class="card-title">◈ ADDITIVE STANDARD SEARCH</div>
+        <div style="display:flex;gap:10px;margin-bottom:10px"><input type="text" id="add_q" placeholder="첨가물명 (예: 에리스리톨)" style="flex:1"><button class="btn btn-sm" onclick="searchAdd()">◈ SCAN</button></div>
+        <div id="add_result"></div>
+      </div>
+    </div>
+    <div class="tab-content" id="d2">
+      <div class="card"><div class="card-title">◈ MICROBIOLOGY STANDARD (음료류)</div>
+        <div class="table-wrap"><table><thead><tr><th>미생물</th><th>기준</th><th>검사법</th><th>비고</th></tr></thead><tbody>
+          <tr><td>세균수</td><td>100 CFU/mL↓</td><td>표준평판법</td><td>살균 제품</td></tr>
+          <tr><td>대장균군</td><td>음성</td><td>최확수법</td><td>위생 지표</td></tr>
+          <tr><td>대장균</td><td>음성</td><td>최확수법</td><td>분변오염 지표</td></tr>
+          <tr><td>황색포도상구균</td><td>음성</td><td>표준평판법</td><td>식중독균</td></tr>
+        </tbody></table></div>
+      </div>
+      <div class="card"><div class="card-title">◈ MICROBIAL GROWTH SIMULATION</div>
+        <div class="form-row"><label>보관온도 (°C)</label><div class="slider-wrap"><input type="range" id="sl_mt" min="0" max="30" value="4" oninput="updateSlider('sl_mt','°C');simMicro()"><span class="slider-val" id="sl_mt_val">4°C</span></div></div>
+        <div id="micro_sim" class="info-box">◈ 슬라이더를 조정하면 미생물 성장 예측이 표시됩니다.</div>
+      </div>
+    </div>
+    <div class="tab-content" id="d3">
+      <div class="card"><div class="card-title">◈ SHELF LIFE DESIGN</div>
+        <div class="card-2col">
+          <div class="form-row"><label>포장 형태</label><select><option>PET 병</option><option>알루미늄 캔</option><option>멸균 팩</option><option>유리병</option></select></div>
+          <div class="form-row"><label>보관 조건</label><select id="stor_cond" onchange="calcShelf()"><option value="4">냉장 (4°C)</option><option value="10">냉장유통 (10°C)</option><option value="25">상온 (25°C)</option></select></div>
+        </div>
+        <div class="form-row"><label>목표 유통기한</label><div class="slider-wrap"><input type="range" id="sl_shelf" min="7" max="365" value="90" oninput="updateSlider('sl_shelf','일');calcShelf()"><span class="slider-val" id="sl_shelf_val">90일</span></div></div>
+        <div id="shelf_eval" class="info-box">◈ 설정하면 필요 시험이 표시됩니다.</div>
+      </div>
+    </div>
+    <div class="tab-content" id="d4">
+      <div class="card"><div class="card-title">◈ QUALITY SPECIFICATION SHEET</div>
+        <div class="table-wrap"><table><thead><tr><th>검사항목</th><th>기준</th><th>시험법</th><th>실측값</th></tr></thead><tbody>
+          <tr><td>외관</td><td>백색 균일 유상액</td><td>육안</td><td><input type="text" placeholder="입력" style="width:100px"></td></tr>
+          <tr><td>pH</td><td>4.0~4.5</td><td>pH미터</td><td><input type="number" placeholder="입력" style="width:100px"></td></tr>
+          <tr><td>Brix</td><td>8.0±0.5°Bx</td><td>굴절당도계</td><td><input type="number" placeholder="입력" style="width:100px"></td></tr>
+          <tr><td>단백질</td><td>1.5g/100mL↑</td><td>Kjeldahl법</td><td><input type="number" placeholder="입력" style="width:100px"></td></tr>
+          <tr><td>세균수</td><td>100 CFU/mL↓</td><td>표준평판법</td><td><input type="text" placeholder="입력" style="width:100px"></td></tr>
+        </tbody></table></div>
+        <div class="btn-row"><button class="btn">◈ SAVE</button><button class="btn btn-violet">◈ TRANSMIT TO G</button></div>
+      </div>
+    </div>
+    <div class="tab-content" id="d_up"><div class="card"><div class="card-title">◈ DATA UPLINK</div><div class="upload-zone"><input type="file" id="up_d" multiple onchange="handleUpload('up_d','prev_d')"><div class="upload-icon">◈</div><div class="upload-text">시험성적서, 규격문서 업로드</div></div><div class="file-preview" id="prev_d"></div></div></div>
+    <div class="tab-content" id="d_ai"><div class="card"><div class="card-title">◈ NEURAL ANALYSIS ENGINE</div>
+      <div class="form-row"><label>Mode</label><select><option>법적기준 대비 검토</option><option>품질위험 항목 식별</option><option>유통기한 예측</option><option>규격서 초안 작성</option></select></div>
+      <div class="btn-row"><button class="btn btn-violet" onclick="runAI('d_ai_out',['◈ SCANNING QUALITY DATA...','✓ pH: 적합 (4.0~4.5)','✓ 단백질: 기준 충족','⚠ 나트륨: 기준치 89% — 주의','◈ 가속시험 2주 후 유통기한 확정 권장','◈ QUALITY SPEC SHEET GENERATED'])">◈ RUN ENGINE</button></div>
+      <div class="ai-output" id="d_ai_out"></div>
+    </div></div>
+  </div>
+</div>
+<script src="common.js"></script>
+<script>
+const stds={bev:{r:[['세균수','100 CFU/mL↓'],['대장균군','음성'],['pH','제품유형별']]},dairy:{r:[['세균수','1만 CFU/g↓'],['대장균군','음성'],['유산균수','1천만 CFU/mL↑']]},snack:{r:[['세균수','규격없음'],['대장균군','음성'],['산가','5.0↓']]},hfs:{r:[['세균수','1,000 CFU/g↓'],['대장균군','음성'],['중금속','납 3.0mg/kg↓']]}};
+function showStd(){const t=document.getElementById('food_type').value,el=document.getElementById('std_result');if(!t){el.innerHTML='';return;}const s=stds[t];el.innerHTML='<table><thead><tr><th>검사항목</th><th>기준</th></tr></thead><tbody>'+s.r.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')+'</tbody></table>';}
+const adds={에리스리톨:{use:'감미료',limit:'적당량',note:'당알코올, 0kcal'},스테비올배당체:{use:'감미료',limit:'5.7mg/kg↓',note:'천연 고감미'},대두레시틴:{use:'유화제',limit:'적당량',note:'천연유화제'}};
+function searchAdd(){const q=document.getElementById('add_q').value.trim(),el=document.getElementById('add_result');const f=Object.entries(adds).find(([k])=>k.includes(q));if(f){const[k,v]=f;el.innerHTML=`<div class="info-box">◈ ${k}<br>용도: ${v.use} | 기준: ${v.limit}<br>${v.note}</div>`;}else el.innerHTML='<div class="warn-box">검색결과 없음 — 식품첨가물공전 확인 필요</div>';}
+function simMicro(){const t=+document.getElementById('sl_mt').value,el=document.getElementById('micro_sim');if(t<=4){el.innerHTML='✓ 냉장(4°C) — 식중독균 성장 억제, 90일↑ 가능';el.style.borderLeftColor='var(--emerald)'}else if(t<=10){el.innerHTML='⚠ 냉장유통(10°C) — 저온성균 성장 가능, 60일↓ 권장';el.style.borderLeftColor='var(--amber)'}else{el.innerHTML='✕ 상온('+t+'°C) — 미생물 성장 위험, 살균 강화 또는 pH 조정 필요';el.style.borderLeftColor='var(--rose)'}}
+function calcShelf(){const d=+document.getElementById('sl_shelf').value,el=document.getElementById('shelf_eval');if(d<=30)el.innerHTML='◈ 단기: 실시간시험 또는 유사제품 기준 적용 가능';else if(d<=90)el.innerHTML='◈ 중기(1~3개월): 가속시험(40°C/75%RH, 2주) 권장';else el.innerHTML='◈ 장기(3개월↑): 가속시험(4주↑) + 실시간 시험 병행 필수';}
+</script></body></html>

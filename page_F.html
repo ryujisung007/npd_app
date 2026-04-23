@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><title>Stage F — 원가 & 출시</title><link rel="stylesheet" href="common.css"></head>
+<body>
+<canvas id="star-canvas"></canvas><div class="nebula-bg"></div>
+<nav class="sidebar"><div class="sidebar-logo"><div class="sidebar-logo-title">🍱 FOOD<br>DEV SYS</div><div class="sidebar-logo-sub"><span class="sidebar-logo-dot"></span>MISSION ACTIVE — v3.0</div></div><div class="sidebar-nav"><div class="nav-section-label">Command</div><a href="index.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label-text">Mission Home</span><span class="nav-badge">00</span></a><div class="nav-section-label">Stages</div><a href="page_A.html" class="nav-item"><span class="nav-icon">🔭</span><span class="nav-label-text">Stage A — 시장조사</span><span class="nav-badge">A</span></a><a href="page_B.html" class="nav-item"><span class="nav-icon">⚗️</span><span class="nav-label-text">Stage B — 배합설계</span><span class="nav-badge">B</span></a><a href="page_C.html" class="nav-item"><span class="nav-icon">🏭</span><span class="nav-label-text">Stage C — 제조공정</span><span class="nav-badge">C</span></a><a href="page_D.html" class="nav-item"><span class="nav-icon">🧫</span><span class="nav-label-text">Stage D — 품질안전</span><span class="nav-badge">D</span></a><a href="page_E.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label-text">Stage E — 포장표시</span><span class="nav-badge">E</span></a><a href="page_F.html" class="nav-item active"><span class="nav-icon">💫</span><span class="nav-label-text">Stage F — 원가출시</span><span class="nav-badge">F</span></a><a href="page_G.html" class="nav-item"><span class="nav-icon">🌌</span><span class="nav-label-text">Stage G — 최종보고</span><span class="nav-badge">G</span></a></div></nav>
+<div class="main">
+  <div class="page-header"><span class="header-icon">💫</span><div class="header-text"><div class="header-title">STAGE F — 원가 &amp; 출시 계획</div><div class="header-sub">◈ COST ANALYSIS / PRICING / ROADMAP / BEP</div></div><div class="header-badge">F</div></div>
+  <div class="status-bar"><span class="stat-item">COST:<span id="cost_disp">--</span>원</span><span class="stat-item">PRICE:<span id="price_disp">--</span>원</span><span class="stat-item">BEP:<span id="bep_disp">--</span>개/월</span></div>
+  <div class="tab-section">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('f1',this)">F-1 원가계산</button>
+      <button class="tab-btn" onclick="switchTab('f2',this)">F-2 가격전략</button>
+      <button class="tab-btn" onclick="switchTab('f3',this)">F-3 출시로드맵</button>
+      <button class="tab-btn" onclick="switchTab('f4',this)">F-4 BEP분석</button>
+      <button class="tab-btn ai-tab" onclick="switchTab('f_up',this)">◈ 자료업로드</button>
+      <button class="tab-btn ai-tab" onclick="switchTab('f_ai',this)">◈ AI 분석</button>
+    </div>
+    <div class="tab-content active" id="f1">
+      <div class="card"><div class="card-title">◈ COST STRUCTURE CALCULATOR (1개 기준)</div>
+        <div class="card-2col">
+          <div class="form-row"><label>원재료비 (원)</label><input type="number" id="c_mat" value="350" oninput="calcCost()"></div>
+          <div class="form-row"><label>포장재비 (원)</label><input type="number" id="c_pkg" value="120" oninput="calcCost()"></div>
+          <div class="form-row"><label>노무비 (원)</label><input type="number" id="c_lab" value="80" oninput="calcCost()"></div>
+          <div class="form-row"><label>제조경비 (원)</label><input type="number" id="c_mfg" value="60" oninput="calcCost()"></div>
+          <div class="form-row"><label>물류비 (원)</label><input type="number" id="c_log" value="50" oninput="calcCost()"></div>
+          <div class="form-row"><label>관리비 (원)</label><input type="number" id="c_adm" value="40" oninput="calcCost()"></div>
+        </div>
+        <div id="cost_result" style="margin-top:14px"></div>
+      </div>
+    </div>
+    <div class="tab-content" id="f2">
+      <div class="card"><div class="card-title">◈ PRICING STRATEGY SIMULATOR</div>
+        <div class="form-row"><label>제조원가 (원)</label><input type="number" id="f2_cost" value="700" oninput="calcPrice()"></div>
+        <div class="form-row"><label>목표 마진율 (%)</label><div class="slider-wrap"><input type="range" id="sl_margin" min="10" max="80" value="40" oninput="updateSlider('sl_margin','%');calcPrice()"><span class="slider-val" id="sl_margin_val">40%</span></div></div>
+        <div class="form-row"><label>채널 수수료 (%)</label><div class="slider-wrap"><input type="range" id="sl_ch" min="0" max="40" value="20" oninput="updateSlider('sl_ch','%');calcPrice()"><span class="slider-val" id="sl_ch_val">20%</span></div></div>
+        <div id="price_result" style="margin-top:14px"></div>
+      </div>
+      <div class="card"><div class="card-title">◈ CHANNEL PRICE MATRIX</div>
+        <div class="table-wrap"><table><thead><tr><th>유통채널</th><th>수수료</th><th>최소판매가</th><th>권장판매가</th></tr></thead><tbody>
+          <tr><td>편의점</td><td>35%</td><td id="cvs_p">-</td><td id="cvs_r">-</td></tr>
+          <tr><td>대형마트</td><td>25%</td><td id="mart_p">-</td><td id="mart_r">-</td></tr>
+          <tr><td>온라인몰</td><td>15%</td><td id="online_p">-</td><td id="online_r">-</td></tr>
+          <tr><td>자사몰</td><td>5%</td><td id="own_p">-</td><td id="own_r">-</td></tr>
+        </tbody></table></div>
+      </div>
+    </div>
+    <div class="tab-content" id="f3">
+      <div class="card"><div class="card-title">◈ LAUNCH MISSION ROADMAP</div>
+        <div id="roadmap"></div>
+        <div class="btn-row" style="margin-top:14px">
+          <input type="text" id="rm_step" placeholder="단계명" style="width:200px">
+          <input type="text" id="rm_period" placeholder="기간" style="width:130px">
+          <button class="btn btn-sm" onclick="addRM()">+ 추가</button>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" id="f4">
+      <div class="card"><div class="card-title">◈ BREAK-EVEN POINT ANALYSIS</div>
+        <div class="card-2col">
+          <div class="form-row"><label>고정비/월 (원)</label><input type="number" id="f_fix" value="5000000" oninput="calcBEP()"></div>
+          <div class="form-row"><label>변동비/개 (원)</label><input type="number" id="f_var" value="700" oninput="calcBEP()"></div>
+          <div class="form-row"><label>판매가 (원)</label><input type="number" id="f_price" value="2000" oninput="calcBEP()"></div>
+          <div class="form-row"><label>월 목표 판매량</label><input type="number" id="f_target" value="5000" oninput="calcBEP()"></div>
+        </div>
+        <div id="bep_result" style="margin-top:14px"></div>
+      </div>
+    </div>
+    <div class="tab-content" id="f_up"><div class="card"><div class="card-title">◈ DATA UPLINK</div><div class="upload-zone"><input type="file" id="up_f" multiple onchange="handleUpload('up_f','prev_f')"><div class="upload-icon">◈</div><div class="upload-text">견적서, 단가표 업로드</div></div><div class="file-preview" id="prev_f"></div></div></div>
+    <div class="tab-content" id="f_ai"><div class="card"><div class="card-title">◈ NEURAL ANALYSIS ENGINE</div>
+      <div class="form-row"><label>Mode</label><select><option>원가 자동 계산</option><option>원가 절감 방안</option><option>BEP 시뮬레이션</option><option>가격 전략 추천</option></select></div>
+      <div class="btn-row"><button class="btn btn-violet" onclick="runAI('f_ai_out',['◈ COST ANALYSIS INITIATED...','✓ 원재료비: 350원 (50%) — 적정','⚠ 포장재비: 120원 — 대량구매 시 20% 절감 가능','◈ 원가 절감 제안','→ 원재료 공동구매 시 연 1,800만원 절감','→ 자사몰 강화 시 마진 20%p 개선','◈ BEP: 월 3,846개 → 목표 달성시 흑자 전환'])">◈ RUN ENGINE</button></div>
+      <div class="ai-output" id="f_ai_out"></div>
+    </div></div>
+  </div>
+</div>
+<script src="common.js"></script>
+<script>
+function calcCost(){const m=+document.getElementById('c_mat').value,p=+document.getElementById('c_pkg').value,l=+document.getElementById('c_lab').value,mf=+document.getElementById('c_mfg').value,lg=+document.getElementById('c_log').value,a=+document.getElementById('c_adm').value,total=m+p+l+mf+lg+a;document.getElementById('cost_disp').textContent=total.toLocaleString();document.getElementById('cost_result').innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px"><div class="metric-card"><div class="metric-label">총 제조원가</div><div class="metric-value" style="font-size:18px">${total.toLocaleString()}원</div></div><div class="metric-card"><div class="metric-label">원재료비 비중</div><div class="metric-value" style="font-size:18px">${Math.round((m+p)/total*100)}%</div></div><div class="metric-card"><div class="metric-label">기타비 비중</div><div class="metric-value" style="font-size:18px">${Math.round((l+mf+lg+a)/total*100)}%</div></div></div>`;}
+function calcPrice(){const cost=+document.getElementById('f2_cost').value,margin=+document.getElementById('sl_margin').value/100,ch=+document.getElementById('sl_ch').value/100,base=Math.round(cost/(1-margin)),final=Math.round(base/(1-ch));document.getElementById('price_disp').textContent=final.toLocaleString();document.getElementById('price_result').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px"><div class="metric-card"><div class="metric-label">공장 출고가</div><div class="metric-value" style="font-size:16px">${base.toLocaleString()}원</div></div><div class="metric-card"><div class="metric-label">소비자 판매가</div><div class="metric-value" style="font-size:16px;color:var(--amber)">${final.toLocaleString()}원</div></div><div class="metric-card"><div class="metric-label">마진율</div><div class="metric-value" style="font-size:16px">${Math.round(margin*100)}%</div></div></div>`;const chs=[{id:'cvs',f:.35},{id:'mart',f:.25},{id:'online',f:.15},{id:'own',f:.05}];chs.forEach(c=>{const mn=Math.round(cost/(1-c.f)),rc=Math.round(mn*1.2/100)*100;document.getElementById(c.id+'_p').textContent=mn.toLocaleString()+'원';document.getElementById(c.id+'_r').textContent=rc.toLocaleString()+'원';});}
+const rmData=[{s:'시장조사 & 기획',p:'2025년 1월',done:true},{s:'원료선정 & 배합설계',p:'2025년 2월',done:true},{s:'시제품 제조',p:'2025년 3월',done:false},{s:'품질검토 & 인허가',p:'2025년 4~5월',done:false},{s:'포장 디자인 확정',p:'2025년 6월',done:false},{s:'양산 & 출시',p:'2025년 9월',done:false}];
+function renderRM(){document.getElementById('roadmap').innerHTML=rmData.map((r,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:${r.done?'linear-gradient(135deg,var(--indigo-d),var(--indigo))':'rgba(10,22,48,.8)'};border:1px solid ${r.done?'var(--indigo)':'var(--border)'};font-size:10px;font-family:\'Orbitron\',sans-serif;color:${r.done?'#fff':'var(--text-muted)'};">${i+1}</div><div style="flex:1"><div style="font-size:11.5px;color:${r.done?'var(--text)':'var(--text-muted)'};">${r.s}</div><div style="font-size:10px;color:var(--text-muted);font-family:\'Share Tech Mono\',monospace;margin-top:2px">${r.p}</div></div><span class="tag ${r.done?'tag-emerald':'tag-amber'}">${r.done?'CLEARED':'PENDING'}</span></div>`).join('');}
+function addRM(){const s=document.getElementById('rm_step').value,p=document.getElementById('rm_period').value;if(s&&p){rmData.push({s,p,done:false});renderRM();}}
+function calcBEP(){const fix=+document.getElementById('f_fix').value,vr=+document.getElementById('f_var').value,pr=+document.getElementById('f_price').value,tg=+document.getElementById('f_target').value,cont=pr-vr,bep=cont>0?Math.ceil(fix/cont):Infinity,profit=(tg-bep)*cont;document.getElementById('bep_disp').textContent=bep===Infinity?'∞':bep.toLocaleString();document.getElementById('bep_result').innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px"><div class="metric-card"><div class="metric-label">BEP / 월</div><div class="metric-value" style="font-size:16px">${bep===Infinity?'∞':bep.toLocaleString()}개</div></div><div class="metric-card"><div class="metric-label">목표 vs BEP</div><div class="metric-value" style="font-size:16px;color:${tg>=bep?'var(--emerald)':'var(--rose)'}">${tg>=bep?'PROFIT':'LOSS'}</div></div><div class="metric-card"><div class="metric-label">월 예상 이익</div><div class="metric-value" style="font-size:14px;color:var(--amber)">${profit.toLocaleString()}원</div></div></div>`;}
+document.addEventListener('DOMContentLoaded',()=>{calcCost();calcPrice();renderRM();calcBEP();});
+</script></body></html>
